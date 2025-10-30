@@ -10,6 +10,25 @@
     <script type="text/javascript"
         src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_HTMLorMML-full"></script>
     <style>
+        <style>
+/* 固定在右下角，离边 20px */
+#float-btn {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 9999;
+  padding: 12px 24px;
+  background: #0969da;
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 16px;
+  box-shadow: 0 4px 10px rgba(0,0,0,.25);
+  transition: background .25s;
+}
+#float-btn:hover { background: #0549aa; }
+</style>
+<a id="float-btn" href="example/1.html">
         @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap');
 
         :root {
