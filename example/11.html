@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>双物块·配色统一·最终版</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap');
+
+        :root {
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --primary: #2196f3;
+            --primary-dark: #1976d2;
+            --text: #212121;
+            --grid: #e8eaf0;
+            --shadow: 0 8px 32px rgba(31, 38, 135, .15);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background: var(--bg);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* ---------- 左侧参数 ---------- */
+        .panel {
+            width: 280px;
+            background: var(--card);
+            border-radius: 16px;
+            margin: 12px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .panel h3 {
+            margin: 0 0 10px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text)
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            font-size: 14px
+        }
+
+        .row label {
+            width: 150px;
+            padding-right: 8px;
+            color: var(--text)
+        }
+
+        .row input {
+            width: 70px;
+            padding: 6px 8px;
+            border: 1.5px solid #ccd1d9;
+            border-radius: 8px;
+            transition: border .2s
+        }
+
+        .row input:focus {
+            border-color: var(--primary);
+            outline: none
+        }
+
+        .row span {
+            margin-left: 6px;
+            font-size: 12px;
+            color: #6b7280
+        }
+
+        /* ---------- 右侧画布 ---------- */
+        .right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 12px
+        }
+
+        .top {
+            display: flex;
+            gap: 12px;
+            height: 45%
+        }
+
+        .top canvas {
+            flex: 1;
+            background: var(--card);
+            border-radius: 16px;
+            box-shadow: var(--shadow)
+        }
+
+        .bottom {
+            flex: 1;
+            background: var(--card);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px
+        }
+
+        .bottom canvas {
+            border-radius: 12px
+        }
+
+        /* ---------- 按钮 ---------- */
+        .ctrl {
+            display: flex;
+            gap: 12px
+        }
+
+        button {
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #fff;
+            cursor: pointer;
+            transition: all .2s;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, .3)
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, .4)
+        }
+
+        button:active {
+            transform: translateY(0)
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c8d6;
+            border-radius: 3px
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a7b0c2
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ================= 左侧参数面板 ================= -->
+    <div class="panel">
+        <h3 id="title">物块A 属性</h3>
+
+        <div class="row"><label>初速度大小</label><input id="v0Mag" type="number" value="0" step="0.1"
+                min="0"><span>m/s</span></div>
+        <div class="row"><label>初速度方向(0=向右)</label><input id="v0Dir" type="number" value="0" step="1"><span>°</span>
+        </div>
+        <div class="row"><label>受力大小</label><input id="fMag" type="number" value="0" step="0.1"><span>N</span></div>
+        <div class="row"><label>受力方向(0=向右)</label><input id="fDir" type="number" value="0" step="1"><span>°</span></div>
+        <div class="row"><label>上表面摩擦因数</label><input id="muUp" type="number" value="0" step="0.01" min="0"></div>
+        <div class="row"><label>下表面摩擦因数</label><input id="muDown" type="number" value="0" step="0.01" min="0"></div>
+        <div class="row"><label>质量</label><input id="mass" type="number" value="1" step="0.1" min="0.1"><span>kg</span>
+        </div>
+        <div class="row"><label>重力加速度</label><input id="g" type="number" value="10" step="0.1"><span>m/s²</span></div>
+        <div class="row"><label>加速度</label><input id="accel " type="number" value="0" step="0.1"><span>m/s²</span></div>
+        <div class="row"><label>加速度方向(0=向右)</label><input id="aDir" type="number" value="0" step="1"><span>°</span>
+        </div>
+        <div class="row"><label>初始位置</label><input type="text" id="coord" value="0,0"
+                pattern="\d+(\.\d+)?,\d+(\.\d+)?"><span>m</span></div>
+
+    </div>
+
+    <!-- ================= 右侧画布 ================= -->
+    <div class="right">
+        <div class="top">
+            <canvas id="vtCvs"></canvas>
+            <canvas id="xtCvs"></canvas>
+        </div>
+        <div class="bottom">
+            <canvas id="mCvs"></canvas>
+            <div class="ctrl">
+                <button id="ctrlBtn" onclick="toggleCtrl()">开始</button>
+                <button onclick="reset()">重置</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ================= 画布尺寸 ================= */
+        const vtCvs = document.getElementById('vtCvs'), xtCvs = document.getElementById('xtCvs'), mCvs = document.getElementById('mCvs');
+        const vCtx = vtCvs.getContext('2d'), xCtx = xtCvs.getContext('2d'), mCtx = mCvs.getContext('2d');
+        function resizeCvs() {
+            const topH = document.querySelector('.top').clientHeight;
+            const bottomH = document.querySelector('.bottom').clientHeight;
+            const topW = document.querySelector('.top').clientWidth / 2 - 100;
+            vtCvs.width = topW; vtCvs.height = topH - 12;
+            xtCvs.width = topW; xtCvs.height = topH - 12;
+            mCvs.width = document.querySelector('.bottom').clientWidth - 12;
+            mCvs.height = bottomH - 70;
+        }
+        resizeCvs();
+        window.addEventListener('resize', resizeCvs);
+
+        /* ================= 工具：niceStep ================= */
+        function niceStep(raw) {
+            const pow10 = Math.pow(10, Math.floor(Math.log10(raw)));
+            if (raw / pow10 > 5) return pow10 * 10;
+            if (raw / pow10 > 2) return pow10 * 5;
+            if (raw / pow10 > 1) return pow10 * 2;
+            return pow10;
+        }
+
+
+        /* ================= 物块数据结构 ================= */
+        const blocks = {
+            A: {
+                x0: 0, y0: 0, v0Mag: 0, v0Dir: 0, fMag: 0, fDir: 0, muUp: 0, muDown: 0, mass: 1, g: 10, accel: 0, aDir: 0,
+                color: '#2196f3', shadow: '#0d47a1', braceColor: '#2196f3'
+            },
+            B: {
+                x0: 0, y0: 0, v0Mag: 0, v0Dir: 0, fMag: 0, fDir: 0, muUp: 0, muDown: 0, mass: 1, g: 10, accel: 0, aDir: 0,
+                color: '#4caf50', shadow: '#2e7d32', braceColor: '#4caf50'
+            }
+        };
+        let currentBlock = 'A';   // 默认编辑 A
+        let t = 0, dt = 0.04, aniId = null;
+        /* ================= 按钮控制 ================= */
+        function toggleCtrl() { aniId ? pause() : start(); }
+        function start() { if (!aniId) { aniId = requestAnimationFrame(frame); document.getElementById('ctrlBtn').textContent = '暂停'; } }
+        function pause() { if (aniId) { cancelAnimationFrame(aniId); aniId = null; document.getElementById('ctrlBtn').textContent = '继续'; } }
+        function reset() { pause(); t = 0; drawAll(); document.getElementById('ctrlBtn').textContent = '开始'; }
+        /* ================= 参数读写 ================= */
+        function loadToPanel(block) {
+            saveFromPanel();   // 防止覆盖
+            const b = blocks[block];
+            document.getElementById('title').textContent = `物块${block} 属性`;
+            document.getElementById('v0Mag').value = b.v0Mag;
+            document.getElementById('v0Dir').value = b.v0Dir;
+            document.getElementById('fMag').value = b.fMag;
+            document.getElementById('fDir').value = b.fDir;
+            document.getElementById('muUp').value = b.muUp;
+            document.getElementById('muDown').value = b.muDown;
+            document.getElementById('mass').value = b.mass;
+            document.getElementById('g').value = b.g;
+            document.getElementById('accel ').value = b.accel;
+            document.getElementById('aDir').value = b.aDir;
+            document.getElementById('coord').value = b.x0 + ',' + b.y0;
+            currentBlock = block;
+        }
+        function saveFromPanel() {
+            const b = blocks[currentBlock];
+            // 解析初始坐标
+            const [x, y] = document.getElementById('coord').value.split(',').map(v => parseFloat(v.trim()) || 0);
+            b.x0 = x; b.y0 = y;
+            b.v0Mag = Math.max(0, parseFloat(document.getElementById('v0Mag').value) || 0);
+            b.v0Dir = parseFloat(document.getElementById('v0Dir').value) || 0;
+            b.fMag = parseFloat(document.getElementById('fMag').value) || 0;
+            b.fDir = parseFloat(document.getElementById('fDir').value) || 0;
+            b.muUp = Math.max(0, parseFloat(document.getElementById('muUp').value) || 0);
+            b.muDown = Math.max(0, parseFloat(document.getElementById('muDown').value) || 0);
+            b.mass = Math.max(0.1, parseFloat(document.getElementById('mass').value) || 1);
+            b.g = parseFloat(document.getElementById('g').value) || 10;
+            b.accel = parseFloat(document.getElementById('accel ').value) || 0;
+            b.aDir = parseFloat(document.getElementById('aDir').value) || 0;
+            drawAll();//更新界面
+        }
+        document.querySelectorAll('input').forEach(inp => inp.addEventListener('input', saveFromPanel));
+        /* ================= 绘图 ================= */
+        function drawAll() {
+            const bA = blocks.A, bB = blocks.B;
+            const toRad = d => d * Math.PI / 180;
+            /* 一维水平分量 */
+            const v0xA = bA.v0Mag * Math.cos(toRad(bA.v0Dir));
+            const v0xB = bB.v0Mag * Math.cos(toRad(bB.v0Dir));
+            const axA = bA.accel * Math.cos(toRad(bA.aDir));
+            const axB = bB.accel * Math.cos(toRad(bB.aDir));
+            const vA = v0xA + axA * t;
+            const vB = v0xB + axB * t;
+            const sA = v0xA * t + 0.5 * axA * t * t;
+            const sB = v0xB * t + 0.5 * axB * t * t;
+            drawVT(vA, vB, v0xA, axA, v0xB, axB);
+            drawXT(sA, sB, v0xA, axA, v0xB, axB);
+            drawMotion(sA, sB);
+        }
+        function drawVT(vA, vB, v0xA, axA, v0xB, axB) {
+            console.log("drawVT called @", Date.now());
+            vCtx.clearRect(0, 0, vtCvs.width, vtCvs.height);
+            console.log("Canvas size:", vtCvs.width, vtCvs.height);
+            vCtx.strokeStyle = '#e0e0e0'; vCtx.lineWidth = 1;
+            for (let x = 0; x < vtCvs.width; x += 20) { vCtx.beginPath(); vCtx.moveTo(x, 0); vCtx.lineTo(x, vtCvs.height); vCtx.stroke(); }
+            for (let y = 0; y < vtCvs.height; y += 20) { vCtx.beginPath(); vCtx.moveTo(0, y); vCtx.lineTo(vtCvs.width, y); vCtx.stroke(); }
+            const margin = 30, tVis = Math.max(10, t * 1.2), vVis = Math.max(4, Math.max(vA, vB) * 1.2);
+            const scaleT = (vtCvs.width - 2 * margin) / tVis, scaleV = (vtCvs.height - 2 * margin) / vVis;
+            /* 坐标轴 */
+            vCtx.strokeStyle = '#333'; vCtx.lineWidth = 2;
+            vCtx.beginPath(); vCtx.moveTo(margin, vtCvs.height - margin); vCtx.lineTo(vtCvs.width, vtCvs.height - margin);
+            vCtx.moveTo(margin, vtCvs.height - margin); vCtx.lineTo(margin, 0); vCtx.stroke();
+            /* 箭头 & 标签 */
+            vCtx.fillStyle = '#333';
+            vCtx.beginPath(); vCtx.moveTo(vtCvs.width, vtCvs.height - margin); vCtx.lineTo(vtCvs.width -8, vtCvs.height - margin - 4); vCtx.lineTo(vtCvs.width - 8, vtCvs.height - margin +4); vCtx.closePath(); vCtx.fill();
+            vCtx.beginPath(); vCtx.moveTo(margin, 0); vCtx.lineTo(margin - 4, 0 + 8); vCtx.lineTo(margin + 4, 0 + 8); vCtx.closePath(); vCtx.fill();
+            vCtx.font = '14px sans-serif'; vCtx.textAlign = 'center'; vCtx.fillText('t (s)', vtCvs.width - margin + 15, vtCvs.height - margin -8);
+            vCtx.save(); vCtx.translate(margin + 30, margin - 10); vCtx.fillText('v (m/s)', 0, 0); vCtx.restore();
+            /* 刻度 */
+            const tInt = niceStep(tVis / 10),vInt = niceStep(vVis / 10);
+            vCtx.font = '12px sans-serif'; vCtx.fillStyle = '#333';
+            for (let i = 0; i <= Math.ceil(tVis / tInt) * tInt; i += tInt) {
+                const x = margin + i * scaleT;
+                vCtx.beginPath(); vCtx.moveTo(x, vtCvs.height - margin); vCtx.lineTo(x, vtCvs.height - margin + 6); vCtx.stroke();
+                vCtx.textAlign = 'center'; vCtx.fillText(i.toFixed(0), x, vtCvs.height - margin + 18);
+            }
+            for (let i = 0; i <= Math.ceil(vVis / vInt) * vInt; i += vInt) {
+                const y = vtCvs.height - margin - i * scaleV;
+                vCtx.beginPath(); vCtx.moveTo(margin - 6, y); vCtx.lineTo(margin, y); vCtx.stroke();
+                vCtx.textAlign = 'right'; vCtx.fillText(i % 1 === 0 ? i.toFixed(0) : i.toFixed(1), margin - 8, y + 4);
+            }
+
+            /* 曲线 */
+            vCtx.strokeStyle = '#2196f3'; vCtx.lineWidth = 2; vCtx.beginPath();
+            for (let tt = 0; tt <= t; tt += dt) {
+                const vv = v0xA + axA * tt;
+                const x = margin + tt * scaleT, y = vtCvs.height - margin - vv * scaleV;
+                tt === 0 ? vCtx.moveTo(x, y) : vCtx.lineTo(x, y);
+            }
+            vCtx.stroke();
+            vCtx.strokeStyle = '#4caf50'; vCtx.lineWidth = 2; vCtx.beginPath();
+            for (let tt = 0; tt <= t; tt += dt) {
+                const vv = v0xB + axB * tt;
+                const x = margin + tt * scaleT, y = vtCvs.height - margin - vv * scaleV;
+                tt === 0 ? vCtx.moveTo(x, y) : vCtx.lineTo(x, y);
+            }
+            vCtx.stroke();
+            /* 当前点 */
+            vCtx.fillStyle = '#ff9800';
+            vCtx.beginPath(); vCtx.arc(margin + t * scaleT, vtCvs
+                .height - margin - vA * scaleV, 5, 0, Math.PI * 2); vCtx.fill();
+            vCtx.beginPath(); vCtx.arc(margin + t * scaleT, vtCvs.height - margin - vB * scaleV, 5, 0, Math.PI * 2); vCtx.fill();
+        }
+        function drawXT(sA, sB, v0xA, axA, v0xB, axB) {
+            xCtx.clearRect(0, 0, xtCvs.width, xtCvs.height);
+            xCtx.strokeStyle = '#e0e0e0'; xCtx.lineWidth = 1;
+            for (let x = 0; x < xtCvs.width; x += 20) { xCtx.beginPath(); xCtx.moveTo(x, 0); xCtx.lineTo(x, xtCvs.height); xCtx.stroke(); }
+            for (let y = 0; y < xtCvs.height; y += 20) { xCtx.beginPath(); xCtx.moveTo(0, y); xCtx.lineTo(xtCvs.width, y); xCtx.stroke(); }
+            const margin = 30, tVis = Math.max(10, t * 1.2), sVis = Math.max(8, Math.max(sA, sB) * 1.2);
+            const scaleT = (xtCvs.width - 2 * margin) / tVis, scaleS = (xtCvs.height - 2 * margin) / sVis;
+            /* 坐标轴 */
+            xCtx.strokeStyle = '#333'; xCtx.lineWidth = 2;
+            xCtx.beginPath(); xCtx.moveTo(margin, xtCvs.height - margin); xCtx.lineTo(xtCvs.width , xtCvs.height - margin);
+            xCtx.moveTo(margin, xtCvs.height - margin); xCtx.lineTo(margin, 0); xCtx.stroke();
+            /* 箭头 & 标签 */
+            xCtx.fillStyle = '#333';
+            xCtx.beginPath(); xCtx.moveTo(xtCvs.width , xtCvs.height - margin); xCtx.lineTo(xtCvs.width  - 8, xtCvs.height - margin - 4); xCtx.lineTo(xtCvs.width - 8, xtCvs.height - margin + 4); xCtx.closePath(); xCtx.fill();
+            xCtx.beginPath(); xCtx.moveTo(margin, 0); xCtx.lineTo(margin - 4, 0 + 8); xCtx.lineTo(margin + 4, 0 + 8); xCtx.closePath(); xCtx.fill();
+            xCtx.font = '14px sans-serif'; xCtx.textAlign = 'center'; xCtx.fillText('t (s)', xtCvs.width - margin + 15, xtCvs.height - margin - 8);
+            xCtx.save(); xCtx.translate(margin + 30, margin - 10); xCtx.fillText('x (m)', 0, 0); xCtx.restore();
+            /* 刻度 */
+            const tInt = niceStep(tVis / 10), sInt = niceStep(sVis / 10);
+            xCtx.font = '12px sans-serif'; xCtx.fillStyle = '#333';
+            for (let i = 0; i <= Math.ceil(tVis / tInt) * tInt; i += tInt) {
+                const x = margin + i * scaleT;
+                xCtx.beginPath(); xCtx.moveTo(x, xtCvs.height - margin); xCtx.lineTo(x, xtCvs.height - margin + 6); xCtx.stroke();
+                xCtx.textAlign = 'center'; xCtx.fillText(i.toFixed(0), x, xtCvs.height - margin + 18);
+            }
+            for (let i = 0; i <= Math.ceil(sVis / sInt) * sInt; i += sInt) {
+                const y = xtCvs.height - margin - i * scaleS;
+                xCtx.beginPath(); xCtx.moveTo(margin - 6, y); xCtx.lineTo(margin, y); xCtx.stroke();
+                xCtx.textAlign = 'right'; xCtx.fillText(i % 1 === 0 ? i.toFixed(0) : i.toFixed(1), margin - 8, y + 4)
+            }
+
+            /* 曲线 */
+            xCtx.strokeStyle = '#2196f3'; xCtx.lineWidth = 2; xCtx.beginPath();
+            for (let tt = 0; tt <= t; tt += dt) {
+                const ss = blocks.A.x0+v0xA * tt + 0.5 * axA * tt * tt;
+                const x = margin + tt * scaleT, y = xtCvs.height - margin - ss * scaleS;
+                tt === 0 ? xCtx.moveTo(x, y) : xCtx.lineTo(x, y);
+            }
+            xCtx.stroke();
+            xCtx.strokeStyle = '#4caf50'; xCtx.lineWidth = 2; xCtx.beginPath();
+            for (let tt = 0; tt <= t; tt += dt) {
+                const ss = blocks.B.x0+v0xB * tt + 0.5 * axB * tt * tt;
+                const x = margin + tt * scaleT, y = xtCvs.height - margin - ss * scaleS;
+                tt === 0 ? xCtx.moveTo(x, y) : xCtx.lineTo(x, y);
+            }
+            xCtx.stroke();
+            /* 当前点 */
+            xCtx.fillStyle = '#ff9800';
+            xCtx.beginPath(); xCtx.arc(margin + t * scaleT, xtCvs.height - margin - (sA+ blocks.A.x0) * scaleS, 5, 0, Math.PI * 2); xCtx.fill();
+            xCtx.beginPath(); xCtx.arc(margin + t * scaleT, xtCvs.height - margin - (sB+ blocks.B.x0) * scaleS, 5, 0, Math.PI * 2); xCtx.fill();
+        }
+        function drawMotion(sA, sB) {
+            mCtx.clearRect(0, 0, mCvs.width, mCvs.height);
+            mCtx.strokeStyle = '#e0e0e0'; mCtx.lineWidth = 1;
+            for (let x = 0; x < mCvs.width; x += 20) { mCtx.beginPath(); mCtx.moveTo(x, 0); mCtx.lineTo(x, mCvs.height); mCtx.stroke(); }
+            for (let y = 0; y < mCvs.height; y += 20) { mCtx.beginPath(); mCtx.moveTo(0, y); mCtx.lineTo(mCvs.width, y); mCtx.stroke(); }
+            const margin = 40, groundY = mCvs.height - 50;
+            const sVis = Math.max(10, Math.max(sA, sB) * 1.4);
+            const scaleX = (mCvs.width - 2 * margin) / sVis;
+            const blockSize = 4, blockLarge = 16;
+            const isMoving = t > 0;
+            const sizeA = isMoving ? blockSize : blockLarge;
+            const sizeB = isMoving ? blockSize : blockLarge;
+            /* 地面 */
+            mCtx.strokeStyle = '#5d4037'; mCtx.lineWidth = 2;
+            mCtx.beginPath(); mCtx.moveTo(0, groundY); mCtx.lineTo(mCvs.width, groundY); mCtx.stroke();
+            /* 刻度 */
+            const tickInt = niceStep(sVis / 10);
+            mCtx.font = '13px sans-serif'; mCtx.fillStyle = '#333'; mCtx.textAlign = 'center';
+            for (let i = 0; i <= Math.ceil(sVis / tickInt) * tickInt; i += tickInt) {
+                const x = margin + i * scaleX;
+                mCtx.beginPath(); mCtx.moveTo(x, groundY); mCtx.lineTo(x, groundY + 10); mCtx.stroke();
+                mCtx.fillText(i.toFixed(0), x, groundY + 25);
+            }
+            /* 物块*/
+            // const xA = margin + sA * scaleX, yA = groundY - sizeA;
+            // const xB = margin + sB * scaleX, yB = groundY;
+            const xA = margin + blocks.A.x0 * scaleX + sA * scaleX, yA = groundY - sizeA;   // 初始 + 运动位移    
+            const xB = margin + blocks.B.x0 * scaleX + sB * scaleX, yB = groundY;
+
+            mCtx.fillStyle = '#2196f3'; mCtx.fillRect(xA - sizeA / 2, yA, sizeA, sizeA);
+            mCtx.fillStyle = '#4caf50'; mCtx.fillRect(xB - sizeB / 2, yB, sizeB, sizeB);
+            /* 大括号 + 虚线 + 标注 */
+            drawBrace(mCtx, margin + blocks.A.x0 * scaleX, xA, groundY - sizeA * 3 - 10, yA, '#2196f3', `sA = ` + sA.toFixed(2) + `m`);
+            drawBrace(mCtx, margin + blocks.B.x0 * scaleX, xB, groundY - sizeB * 4 - 40, yB, '#4caf50', `sB = ` + sB.toFixed(2) + `m`);
+            // 回传当前真实中心（固定大小 16 px）
+            window.blockPos = {
+                A: { x: xA, y: yA + sizeA / 2 },
+                B: { x: xB, y: yB + sizeB / 2 }
+            };
+        }
+        /* 画大括号工具函数 */
+        function drawBrace(ctx, x0, x1, yBrace, yBlock, color, text) {
+            ctx.strokeStyle = color; ctx.lineWidth = 2;
+            /* 虚线 */
+            ctx.beginPath(); ctx.setLineDash([5]); ctx.moveTo(x0, yBrace); ctx.lineTo(x0, yBlock); ctx.stroke(); ctx.setLineDash([]);
+            ctx.beginPath(); ctx.moveTo(x0, yBrace); ctx.lineTo(x0, yBrace - 8); ctx.lineTo((x0 + x1) / 2 - 8, yBrace - 8);
+            ctx.moveTo((x0 + x1) / 2 + 8, yBrace - 8); ctx.lineTo(x1, yBrace - 8); ctx.lineTo(x1, yBrace); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo((x0 + x1) / 2 - 8, yBrace - 8); ctx.lineTo((x0 + x1) / 2 + 8, yBrace - 8); ctx.stroke();
+            /* 虚线 */
+            ctx.beginPath(); ctx.setLineDash([5]); ctx.moveTo(x1, yBrace); ctx.lineTo(x1, yBlock); ctx.stroke(); ctx.setLineDash([]);
+            /* 文字 */
+            ctx.fillStyle = color; ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(text, (x0 + x1) / 2, yBrace - 12);
+        }
+        /* ================= 点击切换物块 ================= */
+        mCvs.addEventListener('click', function (e) {
+            if (t !== 0) return;                        // 运动时不切换
+            const rect = mCvs.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            const half = 16 / 2;                     // 固定方块大小
+            const pos = window.blockPos;             // 直接读最新坐标
+            if (!pos) return;
+
+            const hitA = Math.abs(clickX - pos.A.x) < half && Math.abs(clickY - pos.A.y) < half;
+            const hitB = Math.abs(clickX - pos.B.x) < half && Math.abs(clickY - pos.B.y) < half;
+
+            if (hitA) loadToPanel('A');
+            if (hitB) loadToPanel('B');
+        });
+        /* ================= 动画帧 ================= */
+        function frame() {
+            t += dt;
+            drawAll();
+            aniId = requestAnimationFrame(frame);
+        }
+        /* ================= 初始化 ================= */
+        reset();   // 先画一帧静止状态
+    </script>
+</body>
+
+</html>

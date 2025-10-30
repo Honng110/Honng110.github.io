@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8"/>
+    <title>双物块·配色统一·最终版</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap');
+        :root{--bg:#f5f7fa;--card:#ffffff;--primary:#2196f3;--primary-dark:#1976d2;--text:#212121;--grid:#e8eaf0;--shadow:0 8px 32px rgba(31,38,135,.15);}
+        body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;margin:0;background:var(--bg);height:100vh;overflow:hidden;display:flex}
+        /* 左侧参数 */
+        .panel{width:280px;background:var(--card);border-radius:16px;margin:12px;box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;gap:10px}
+        .panel h3{margin:0 0 10px;font-size:18px;font-weight:600;color:var(--text)}
+        .row{display:flex;align-items:center;font-size:14px}
+        .row label{width:150px;padding-right:8px;color:var(--text)}
+        .row input{width:70px;padding:6px 8px;border:1.5px solid #ccd1d9;border-radius:8px;transition:border .2s}
+        .row input:focus{border-color:var(--primary);outline:none}
+        .row span{margin-left:6px;font-size:12px;color:#6b7280}
+        /* 右侧画布 */
+        .right{flex:1;display:flex;flex-direction:column;gap:12px;margin:12px}
+        .top{display:flex;gap:12px;height:45%}
+        .top canvas{flex:1;background:var(--card);border-radius:16px;box-shadow:var(--shadow)}
+        .bottom{flex:1;background:var(--card);border-radius:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+        .bottom canvas{border-radius:12px}
+        /* 按钮 */
+        .ctrl{display:flex;gap:12px}
+        button{padding:10px 24px;font-size:14px;font-weight:600;border:none;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(33,150,243,.3)}
+        button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(33,150,243,.4)}
+        button:active{transform:translateY(0)}
+        /* 滚动条 */
+        ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#c1c8d6;border-radius:3px}::-webkit-scrollbar-thumb:hover{background:#a7b0c2}
+    </style>
+</head>
+<body>
+<div class="panel">
+    <h3>运动参数</h3>
+    <div class="row"><label>初速度大小</label><input id="v0Mag" type="number" value="0" step="0.1"><span>m/s</span></div>
+    <div class="row"><label>初速度方向(0=向右)</label><input id="v0Dir" type="number" value="0" step="1"><span>°</span></div>
+    <div class="row"><label>受力大小</label><input id="fMag" type="number" value="0" step="0.1"><span>N</span></div>
+    <div class="row"><label>受力方向(0=向右)</label><input id="fDir" type="number" value="0" step="1"><span>°</span></div>
+    <div class="row"><label>上表面摩擦因数</label><input id="muUp" type="number" value="0" step="0.01" min="0"></div>
+    <div class="row"><label>下表面摩擦因数</label><input id="muDown" type="number" value="0" step="0.01" min="0"></div>
+    <div class="row"><label>质量</label><input id="mass" type="number" value="1" step="0.1" min="0.1"><span>kg</span></div>
+    <div class="row"><label>重力加速度</label><input id="g" type="number" value="10" step="0.1"><span>m/s²</span></div>
+    <div class="row"><label>加速度</label><input id ="jia" type ="number" value="0" step="0.1"><span>m/s²</span></div>
+    <div class="row"><label>加速度方向(0=向右)</label><input id="a0Dir" type="number" value="0" step="1"><span>°</span></div>
+    <div class="row"><label>初始位置</label><input type="text" id="coord" value="0,0" pattern="\d+(\.\d+)?,\d+(\.\d+)?"><span>m</span></div>
+    <div class="row"><label>运动帧数</label><input id="frames" type="number" value="60" readonly><span>帧</span></div>
+
+</div>
+
+<div class="right">
+    <div class="top">
+        <canvas id="vtCvs"></canvas>
+        <canvas id="xtCvs"></canvas>
+    </div>
+    <div class="bottom">
+        <canvas id="mCvs"></canvas>
+        <div class="ctrl">
+            <button id="ctrlBtn" onclick="toggleCtrl()">开始</button>
+            <button onclick="reset()">重置</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ========== 画布尺寸 ========== */
+const vtCvs = document.getElementById('vtCvs'), xtCvs = document.getElementById('xtCvs'), mCvs = document.getElementById('mCvs');
+const vCtx = vtCvs.getContext('2d'), xCtx = xtCvs.getContext('2d'), mCtx = mCvs.getContext('2d');
+function resizeCvs() {
+    const topH = document.querySelector('.top').clientHeight;
+    const bottomH = document.querySelector('.bottom').clientHeight;
+    const topW = document.querySelector('.top').clientWidth / 2 - 100;
+
+    vtCvs.width = topW; vtCvs.height = topH - 12;
+    xtCvs.width = topW; xtCvs.height = topH - 12;
+    mCvs.width = document.querySelector('.bottom').clientWidth - 12;
+    mCvs.height = bottomH - 70;
+}
+resizeCvs(); window.addEventListener('resize', resizeCvs);
+
+/* ========== 工具：niceStep ========== */
+function niceStep(raw) {
+    const pow10 = Math.pow(10, Math.floor(Math.log10(raw)));
+    if (raw / pow10 > 5) return pow10 * 10;
+    if (raw / pow10 > 2) return pow10 * 5;
+    if (raw / pow10 > 1) return pow10 * 2;
+    return pow10;
+}
+
+/* ========== 物块数据结构 ========== */
+const blocks = {
+    A: {
+        v0Mag: 0, v0Dir: 0, fMag: 0, fDir: 0, muUp: 0, muDown: 0, mass: 0, g: 10, accel: 0, aDir: 0,
+        color: '#2196f3', shadow: '#0d47a1', braceColor: '#2196f3'
+    },
+    B: {
+        v0Mag: 0, v0Dir: 0, fMag: 0, fDir: 0, muUp: 0, muDown: 0, mass: 0, g: 10, accel: 0, aDir: 0,
+        color: '#4caf50', shadow: '#2e7d32', braceColor: '#4caf50'
+    }
+};
+let currentBlock = 'A'; // 默认选中A
+
+
+/* ========== 右侧动画参数（固定演示） ========== */
+
+// document.getElementById('v0Mag').value
+
+// const v0A = Math.floor(document.getElementById('v0Mag').value)
+
+
+
+// const aA = 0.5, 
+// aB = 1.0;   // A、B加速度
+let t = 0, dt = 0.04, aniId = null;
+
+/* ========== 按钮合一 ========== */
+function toggleCtrl() {
+    aniId ? pause() : start();
+}
+function start() {
+    if (!aniId) { aniId = requestAnimationFrame(frame); document.getElementById('ctrlBtn').textContent = '暂停'; }
+}
+function pause() {
+    if (aniId) { cancelAnimationFrame(aniId); aniId = null; document.getElementById('ctrlBtn').textContent = '继续'; }
+}
+function reset() {
+    if (aniId) { cancelAnimationFrame(aniId); aniId = null; document.getElementById('ctrlBtn').textContent = '开始'; }
+    t = 0; drawAll();
+}
+
+
+/* ========== 参数读写 ========== */
+function loadToPanel(block) {
+    const b = blocks[block];
+    document.getElementById('title').textContent = `物块${block} 属性`;
+    document.getElementById('v0Mag').value = b.v0Mag;
+    document.getElementById('v0Dir').value = b.v0Dir;
+    document.getElementById('fMag').value = b.fMag;
+    document.getElementById('fDir').value = b.fDir;
+    document.getElementById('muUp').value = b.muUp;
+    document.getElementById('muDown').value = b.muDown;
+    document.getElementById('mass').value = b.mass;
+    document.getElementById('g').value = b.g;
+    document.getElementById('jia').value = b.jia;
+    document.getElementById('aDir').value = b.aDir;
+    currentBlock = block;
+}
+function saveFromPanel() {
+    const b = blocks[currentBlock];
+    b.v0Mag = parseFloat(document.getElementById('v0Mag').value) || 0;
+    b.v0Dir = parseFloat(document.getElementById('v0Dir').value) || 0;
+    b.fMag = parseFloat(document.getElementById('fMag').value) || 0;
+    b.fDir = parseFloat(document.getElementById('fDir').value) || 0;
+    b.muUp = parseFloat(document.getElementById('muUp').value) || 0;
+    b.muDown = parseFloat(document.getElementById('muDown').value) || 0;
+    b.mass = parseFloat(document.getElementById('mass').value) || 1;
+    b.g = parseFloat(document.getElementById('g').value) || 10;
+    b.jia = parseFloat(document.getElementById('jia').value) || 0;
+    b.aDir = parseFloat(document.getElementById('aDir').value) || 0;
+}
+/* 实时保存 */
+document.querySelectorAll('input').forEach(inp => inp.addEventListener('input', saveFromPanel));
+
+
+
+
+
+
+
+/* ========== 绘图 ========== */
+function drawAll() {
+    const bA = blocks.A, bB = blocks.B;
+    // 方向→弧度
+    const toRad = d => d * Math.PI / 180;
+    // 一维水平运动，只取 cos 分量；若做二维再扩展
+    const v0xA = bA.v0Mag * Math.cos(toRad(bA.v0Dir));//A的初速度
+    const v0xB = bB.v0Mag * Math.cos(toRad(bB.v0Dir));//B的初速度
+    const axA  = bA.accel * Math.cos(toRad(bA.aDir));//A的加速度
+    const axB  = bB.accel * Math.cos(toRad(bB.aDir));//B的加速度
+
+    const vA = v0xA + axA * t;//A的末速度
+    const vB = v0xB + axB * t;//B的末速度
+    const sA = v0xA * t + 0.5 * axA * t * t;//A的位移
+    const sB = v0xB * t + 0.5 * axB * t * t;//B的位移
+
+    drawVT(vA, vB);
+    drawXT(sA, sB);
+    drawMotion(sA, sB);
+
+}
+
+/* ---- v-t：双曲线+箭头+图例 ---- */
+function drawVT(vA, vB) {
+    vCtx.clearRect(0, 0, vtCvs.width, vtCvs.height);
+    vCtx.strokeStyle = '#e0e0e0'; vCtx.lineWidth = 1;//背景网格
+    for (let x = 0; x < vtCvs.width; x += 20) { vCtx.beginPath(); vCtx.moveTo(x, 0); vCtx.lineTo(x, vtCvs.height); vCtx.stroke(); }
+    for (let y = 0; y < vtCvs.height; y += 20) { vCtx.beginPath(); vCtx.moveTo(0, y); vCtx.lineTo(vtCvs.width, y); vCtx.stroke(); }
+    const margin = 30, tVis = Math.max(10, t * 1.2), vVis = Math.max(4, Math.max(vA, vB) * 1.2);
+    const scaleT = (vtCvs.width - 2 * margin) / tVis, scaleV = (vtCvs.height - 2 * margin) / vVis;
+    vCtx.strokeStyle = '#333'; vCtx.lineWidth = 2;//坐标轴
+    vCtx.beginPath(); vCtx.moveTo(margin, vtCvs.height - margin); vCtx.lineTo(vtCvs.width - margin, vtCvs.height - margin); vCtx.moveTo(margin, vtCvs.height - margin); vCtx.lineTo(margin, margin); vCtx.stroke();
+    vCtx.fillStyle = '#333'; vCtx.beginPath(); vCtx.moveTo(vtCvs.width - margin, vtCvs.height - margin); vCtx.lineTo(vtCvs.width - margin - 8, vtCvs.height - margin - 4); vCtx.lineTo(vtCvs.width - margin - 8, vtCvs.height - margin + 4); vCtx.closePath(); vCtx.fill();
+    vCtx.beginPath(); vCtx.moveTo(margin, margin); vCtx.lineTo(margin - 4, margin + 8); vCtx.lineTo(margin + 4, margin + 8); vCtx.closePath(); vCtx.fill();
+    vCtx.font = '14px sans-serif'; vCtx.fillStyle = '#333'; vCtx.textAlign = 'center'; vCtx.fillText('t (s)', vtCvs.width - margin + 15, vtCvs.height - margin -8);
+    vCtx.save(); vCtx.translate(margin+30, margin - 10);  vCtx.fillText('v (m/s)', 0, 0); vCtx.restore();
+    const tInt = niceStep(tVis / 10), vInt = niceStep(vVis / 10);
+    vCtx.font = '12px sans-serif'; vCtx.fillStyle = '#333';
+    for (let i = 0; i <= Math.ceil(tVis / tInt) * tInt; i += tInt) {
+        const x = margin + i * scaleT;
+        vCtx.beginPath(); vCtx.moveTo(x, vtCvs.height - margin); vCtx.lineTo(x, vtCvs.height - margin + 6); vCtx.stroke();
+        vCtx.textAlign = 'center'; vCtx.fillText(i.toFixed(0), x, vtCvs.height - margin + 18);
+    }
+    for (let i = 0; i <= Math.ceil(vVis / vInt) * vInt; i += vInt) {
+        const y = vtCvs.height - margin - i * scaleV;
+        vCtx.beginPath(); vCtx.moveTo(margin - 6, y); vCtx.lineTo(margin, y); vCtx.stroke();
+        vCtx.textAlign = 'right'; vCtx.fillText(i.toFixed(0), margin - 8, y + 4);
+    }
+    /* A曲线 */
+    vCtx.strokeStyle = '#2196f3'; vCtx.lineWidth = 2; vCtx.beginPath();
+    for (let tt = 0; tt <= t; tt += dt) {
+        const vv = aA * tt;
+        const x = margin + tt * scaleT, y = vtCvs.height - margin - vv * scaleV;
+        tt === 0 ? vCtx.moveTo(x, y) : vCtx.lineTo(x, y);
+    }
+    vCtx.stroke();
+    /* B曲线 */
+    vCtx.strokeStyle = '#4caf50'; vCtx.lineWidth = 2; vCtx.beginPath();
+    for (let tt = 0; tt <= t; tt += dt) {
+        const vv = aB * tt;
+        const x = margin + tt * scaleT, y = vtCvs.height - margin - vv * scaleV;
+        tt === 0 ? vCtx.moveTo(x, y) : vCtx.lineTo(x, y);
+    }
+    vCtx.stroke();
+    /* 当前点 */
+    vCtx.fillStyle = '#ff9800'; vCtx.beginPath(); vCtx.arc(margin + t * scaleT, vtCvs.height - margin - vA * scaleV, 5, 0, Math.PI * 2); vCtx.fill();
+    vCtx.beginPath(); vCtx.arc(margin + t * scaleT, vtCvs.height - margin - vB * scaleV, 5, 0, Math.PI * 2); vCtx.fill();
+
+}
+
+/* ---- x-t：双曲线+箭头+图例 ---- */
+function drawXT(sA, sB) {
+    xCtx.clearRect(0, 0, xtCvs.width, xtCvs.height);
+    xCtx.strokeStyle = '#e0e0e0'; xCtx.lineWidth = 1;
+    for (let x = 0; x < xtCvs.width; x += 20) { xCtx.beginPath(); xCtx.moveTo(x, 0); xCtx.lineTo(x, xtCvs.height); xCtx.stroke(); }
+    for (let y = 0; y < xtCvs.height; y += 20) { xCtx.beginPath(); xCtx.moveTo(0, y); xCtx.lineTo(xtCvs.width, y); xCtx.stroke(); }
+    const margin = 30, tVis = Math.max(10, t * 1.2), sVis = Math.max(8, Math.max(sA, sB) * 1.2);
+    const scaleT = (xtCvs.width - 2 * margin) / tVis, scaleS = (xtCvs.height - 2 * margin) / sVis;
+    xCtx.strokeStyle = '#333'; xCtx.lineWidth = 2;
+    xCtx.beginPath(); xCtx.moveTo(margin, xtCvs.height - margin); xCtx.lineTo(xtCvs.width - margin, xtCvs.height - margin); xCtx.moveTo(margin, xtCvs.height - margin); xCtx.lineTo(margin, margin); xCtx.stroke();
+    xCtx.fillStyle = '#333'; xCtx.beginPath(); xCtx.moveTo(xtCvs.width - margin, xtCvs.height - margin); xCtx.lineTo(xtCvs.width - margin - 8, xtCvs.height - margin - 4); xCtx.lineTo(xtCvs.width - margin - 8, xtCvs.height - margin + 4); xCtx.closePath(); xCtx.fill();
+    xCtx.beginPath(); xCtx.moveTo(margin, margin); xCtx.lineTo(margin - 4, margin + 8); xCtx.lineTo(margin + 4, margin + 8); xCtx.closePath(); xCtx.fill();
+    xCtx.font = '14px sans-serif'; xCtx.fillStyle = '#333'; xCtx.textAlign = 'center'; xCtx.fillText('t (s)', xtCvs.width - margin + 15, xtCvs.height - margin + 18);
+    xCtx.save(); xCtx.translate(margin - 20, margin - 10); xCtx.rotate(-Math.PI / 2); xCtx.fillText('x (m)', 0, 0); xCtx.restore();
+    const tInt = niceStep(tVis / 10), sInt = niceStep(sVis / 10);
+    xCtx.font = '12px sans-serif'; xCtx.fillStyle = '#333';
+    for (let i = 0; i <= Math.ceil(tVis / tInt) * tInt; i += tInt) {
+        const x = margin + i * scaleT;
+        xCtx.beginPath(); xCtx.moveTo(x, xtCvs.height - margin); xCtx.lineTo(x, xtCvs.height - margin + 6); xCtx.stroke();
+        xCtx.textAlign = 'center'; xCtx.fillText(i.toFixed(0), x, xtCvs.height - margin + 18);
+    }
+    for (let i = 0; i <= Math.ceil(sVis / sInt) * sInt; i += sInt) {
+        const y = xtCvs.height - margin - i * scaleS;
+        xCtx.beginPath(); xCtx.moveTo(margin - 6, y); xCtx.lineTo(margin, y); xCtx.stroke();
+        xCtx.textAlign = 'right'; xCtx.fillText(i.toFixed(0), margin - 8, y + 4);
+    }
+    /* A曲线 */
+    xCtx.strokeStyle = '#2196f3'; xCtx.lineWidth = 2; xCtx.beginPath();
+    for (let tt = 0; tt <= t; tt += dt) {
+        const ss = 0.5 * aA * tt * tt;
+        const x = margin + tt * scaleT, y = xtCvs.height - margin - ss * scaleS;
+        tt === 0 ? xCtx.moveTo(x, y) : xCtx.lineTo(x, y);
+    }
+    xCtx.stroke();
+    /* B曲线 */
+    xCtx.strokeStyle = '#4caf50'; xCtx.lineWidth = 2; xCtx.beginPath();
+    for (let tt = 0; tt <= t; tt += dt) {
+        const ss = 0.5 * aB * tt * tt;
+        const x = margin + tt * scaleT, y = xtCvs.height - margin - ss * scaleS;
+        tt === 0 ? xCtx.moveTo(x, y) : xCtx.lineTo(x, y);
+    }
+    xCtx.stroke();
+    /* 当前点 */
+    xCtx.fillStyle = '#ff9800'; xCtx.beginPath(); xCtx.arc(margin + t * scaleT, xtCvs.height - margin - sA * scaleS, 5, 0, Math.PI * 2); xCtx.fill();
+    xCtx.beginPath(); xCtx.arc(margin + t * scaleT, xtCvs.height - margin - sB * scaleS, 5, 0, Math.PI * 2); xCtx.fill();
+}
+
+/* ---- 运动示意图：A、B小方块+不同高度大括号+颜色对应 ---- */
+function drawMotion(sA, sB) {
+    mCtx.clearRect(0, 0, mCvs.width, mCvs.height);
+    mCtx.strokeStyle = '#e0e0e0'; mCtx.lineWidth = 1;
+    for (let x = 0; x < mCvs.width; x += 20) { mCtx.beginPath(); mCtx.moveTo(x, 0); mCtx.lineTo(x, mCvs.height); mCtx.stroke(); }
+    for (let y = 0; y < mCvs.height; y += 20) { mCtx.beginPath(); mCtx.moveTo(0, y); mCtx.lineTo(mCvs.width, y); mCtx.stroke(); }
+    const margin = 40, groundY = mCvs.height - 50;
+    const sVis = Math.max(10, Math.max(sA, sB) * 1.4);
+    const scaleX = (mCvs.width - 2 * margin) / sVis;
+    const blockSize = 4; // 运动时质点大小：2×2 → 4×4
+    const blockLarge = 16; // 静止时4倍大小
+    const isMoving = t > 0; // 运动状态
+    const sizeA = isMoving ? blockSize : blockLarge;
+    const sizeB = isMoving ? blockSize : blockLarge;
+
+
+    mCtx.strokeStyle = '#5d4037'; mCtx.lineWidth = 2;
+    mCtx.beginPath(); mCtx.moveTo(0, groundY); mCtx.lineTo(mCvs.width, groundY); mCtx.stroke();
+    const tickInt = niceStep(sVis / 10);
+    const lastTick = Math.ceil(sVis / tickInt) * tickInt;
+    mCtx.font = '13px sans-serif'; mCtx.fillStyle = '#333'; mCtx.textAlign = 'center';
+    for (let i = 0; i <= lastTick; i += tickInt) {
+        const x = margin + i * scaleX;
+        mCtx.strokeStyle = '#5d4037'; mCtx.lineWidth = 2;
+        mCtx.beginPath(); mCtx.moveTo(x, groundY); mCtx.lineTo(x, groundY + 10); mCtx.stroke();
+        mCtx.fillText(i.toFixed(0), x, groundY + 25);
+    }
+    /* A小方块 */
+    const xA = margin + sA * scaleX;
+    const yA = groundY - sizeA;
+    mCtx.fillStyle = '#2196f3'; mCtx.fillRect(xA - sizeA / 2, yA, sizeA, sizeA);   
+    
+    /* B小方块 */
+    const xB = margin + sB * scaleX;
+    const yB = groundY
+    mCtx.fillStyle = '#4caf50'; mCtx.fillRect(xB - sizeB / 2, yB, sizeB, sizeB);
+
+    
+    /* A大括号：较低 */
+    const xMaxA = sA;
+    const x0A = margin, x1A = margin + xMaxA * scaleX;
+    const braceYA = groundY - sizeA * 3 - 10;
+    mCtx.strokeStyle = '#2196f3'; mCtx.lineWidth = 2;
+    mCtx.beginPath(); mCtx.moveTo(x0A, braceYA); mCtx.lineTo(x0A, braceYA - 8); mCtx.lineTo((x0A + x1A) / 2 - 8, braceYA - 8);
+    mCtx.moveTo((x0A + x1A) / 2 + 8, braceYA - 8); mCtx.lineTo(x1A, braceYA - 8); mCtx.lineTo(x1A, braceYA);
+    mCtx.stroke();
+    mCtx.beginPath(); mCtx.moveTo((x0A + x1A) / 2 - 8, braceYA - 8); mCtx.lineTo((x0A + x1A) / 2 + 8, braceYA - 8); mCtx.stroke();
+    //补充虚线
+    mCtx.beginPath();mCtx.setLineDash([5]);mCtx.moveTo(x1A,braceYA); mCtx.lineTo(x1A, yA);mCtx.stroke();mCtx.setLineDash([]);//恢复实线
+    mCtx.fillStyle = '#2196f3'; mCtx.font = '14px sans-serif'; mCtx.textAlign = 'center';
+    mCtx.fillText(`sA = ${sA.toFixed(2)} m`, (x0A + x1A) / 2, braceYA - 12);
+    /* B大括号：较高 */
+    const xMaxB = sB;
+    const x0B = margin, x1B = margin + xMaxB * scaleX;
+    const braceYB = groundY - sizeB * 4 - 40;
+    mCtx.strokeStyle = '#4caf50'; mCtx.lineWidth = 2;
+    mCtx.beginPath(); mCtx.moveTo(x0B, braceYB); mCtx.lineTo(x0B, braceYB - 8); mCtx.lineTo((x0B + x1B) / 2 - 8, braceYB - 8);
+    mCtx.moveTo((x0B + x1B) / 2 + 8, braceYB - 8); mCtx.lineTo(x1B, braceYB - 8);mCtx.lineTo(x1B, braceYB);
+    mCtx.stroke();
+    mCtx.beginPath(); mCtx.moveTo((x0B + x1B) / 2 - 8, braceYB - 8); mCtx.lineTo((x0B + x1B) / 2 + 8, braceYB - 8); mCtx.stroke();
+    //补充虚线
+    mCtx.beginPath();mCtx.setLineDash([5]);mCtx.moveTo(x1B,braceYB); mCtx.lineTo(x1B, yB);mCtx.stroke();mCtx.setLineDash([]);//恢复实线
+    mCtx.fillStyle = '#4caf50'; mCtx.font = '14px sans-serif'; mCtx.textAlign = 'center';
+    mCtx.fillText(`sB = ${sB.toFixed(2)} m`, (x0B + x1B) / 2, braceYB - 12);
+}
+
+/* ========== 点击选中物块 ========== */
+// mCvs.addEventListener('click', function (e) {
+//     if (t !== 0) return; // 只在静止时生效
+
+//     const rect = mCvs.getBoundingClientRect();
+//     console.log(rect)
+//     const x = e.clientX - rect.left;
+//     const margin = 40;
+//     // 静止时s=0，直接判断初始位置（margin）
+//     const scaleX = (mCvs.width - 2 * margin) / Math.max(10, 1.4); // 任意非零刻度
+//     const xA = margin + 0 * scaleX;
+//     const xB = margin + 0 * scaleX; // 初始并排，可微调错位
+//     const blockSize = 16; // 静止时4倍大小
+//     const hitA = Math.abs(x - xA) < blockSize / 2;
+//     const hitB = Math.abs(x - xB + 20) < blockSize / 2; // 右侧B错开20px
+//     if (hitA) loadToPanel('A');
+//     if (hitB) loadToPanel('B');
+// });
+
+reset(); 
+drawAll();
+</script>
+</body>
+</html>
