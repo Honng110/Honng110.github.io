@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>通电直导线磁场模拟</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        #info {
+            position: absolute; top: 15px; left: 15px;
+            color: white; background: rgba(0, 0, 50, 0.7);
+            padding: 12px 18px; border-radius: 10px; font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 100;
+            border-left: 4px solid #FF9800;
+            max-width: 320px;
+            backdrop-filter: blur(5px);
+        }
+        #controls {
+            position: absolute; bottom: 25px; width: 100%;
+            text-align: center; z-index: 100;
+        }
+        #view-controls {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(0, 0, 50, 0.7);
+            padding: 10px; border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            backdrop-filter: blur(5px);
+        }
+        .control-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 18px; font-size: 14px;
+            cursor: pointer; border: none; border-radius: 6px;
+            font-weight: 600; transition: all 0.2s;
+            min-width: 120px;
+        }
+        .primary-btn {
+            background: linear-gradient(135deg, #00FFAA, #00CC88); color: white;
+        }
+        .secondary-btn {
+            background: linear-gradient(135deg, #FF9800, #F57C00); color: white;
+        }
+        .danger-btn {
+            background: linear-gradient(135deg, #f44336, #d32f2f); color: white;
+        }
+        .view-btn {
+            background: linear-gradient(135deg, #9C27B0, #7B1FA2); color: white;
+            min-width: 100px;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        #statusLight {
+            display: inline-block; width: 10px; height: 10px;
+            border-radius: 50%; margin-left: 8px;
+            background: #ccc; vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <div><strong>右手螺旋定则演示</strong></div>
+        <div><strong>电流方向：</strong>拇指指向</div>
+        <div><strong>磁场方向：</strong>四指环绕方向</div>
+        <div>状态: <span id="currentStatus">磁场未开启</span> <span id="statusLight"></span></div>
+        <div>操作: 鼠标左键旋转 | 滚轮缩放 | 右键平移</div>
+    </div>
+    
+    <div id="view-controls">
+        <button id="topView" class="view-btn">俯视图</button>
+        <button id="sideView" class="view-btn">侧视图(X轴)</button>
+        <button id="resetView" class="view-btn">复位视图</button>
+    </div>
+
+    <div id="controls">
+        <div class="control-group">
+            <button id="on" class="primary-btn">开启磁场</button>
+            <button id="reverse" class="secondary-btn">反转电流</button>
+            <button id="off" class="danger-btn">关闭磁场</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // === 1. 初始化场景 ===
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0A1A3A);
+            
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(18, 12, 18);
+            
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.body.appendChild(renderer.domElement);
+            
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // === 2. 光线设置 ===
+            scene.add(new THREE.AmbientLight(0xFFFFFF, 0.6));
+            
+            const mainLight = new THREE.DirectionalLight(0xFFFFFF, 1.0);
+            mainLight.position.set(15, 25, 15);
+            mainLight.castShadow = true;
+            scene.add(mainLight);
+            
+            // === 3. 创建YOZ平面（青色透明矩形）===
+            // YOZ平面在x=0处，覆盖磁场区域
+            const planeWidth = 14;  // Z方向宽度（磁场最大半径6.5×2=13，留有余量）
+            const planeHeight = 12; // Y方向高度（导线长10，留有余量）
+            
+            const yozPlaneGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
+            const yozPlaneMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x00FFFF,  // 青色
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.DoubleSide,
+                specular: 0x00FFFF,
+                shininess: 30
+            });
+            
+            const yozPlane = new THREE.Mesh(yozPlaneGeometry, yozPlaneMaterial);
+            // 将平面旋转到YOZ平面（默认是XOY平面，需要绕Y轴旋转90度）
+            yozPlane.rotation.y = Math.PI / 2;
+            yozPlane.position.x = 0; // 位于x=0处
+            yozPlane.position.y = 0; // 中心在y=0处
+            yozPlane.visible = false; // 初始不显示
+            scene.add(yozPlane);
+            
+            // 添加平面边框以增强可视性
+            const planeBorderGeometry = new THREE.EdgesGeometry(yozPlaneGeometry);
+            const planeBorderMaterial = new THREE.LineBasicMaterial({ 
+                color: 0x00FFFF,
+                linewidth: 1,
+                transparent: true,
+                opacity: 0.4
+            });
+            const planeBorder = new THREE.LineSegments(planeBorderGeometry, planeBorderMaterial);
+            planeBorder.rotation.y = Math.PI / 2;
+            planeBorder.visible = false; // 初始不显示
+            scene.add(planeBorder);
+            
+            // === 4. 创建橘红色半透明导线 ===
+            const wireGeometry = new THREE.CylinderGeometry(0.3, 0.3, 10, 32);
+            const wireMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xFF9800,
+                transparent: true,
+                opacity: 0.35,
+                specular: 0xFFCC80,
+                shininess: 80
+            });
+            const wire = new THREE.Mesh(wireGeometry, wireMaterial);
+            wire.castShadow = true;
+            scene.add(wire);
+            
+            // === 5. 显示网格平台 ===
+            const gridSize = 25;
+            const gridDivisions = 25;
+            const gridHelper = new THREE.GridHelper(gridSize, gridDivisions, 0x2A4A7A, 0x1A3A6A);
+            gridHelper.position.y = -5.1;
+            scene.add(gridHelper);
+            
+            const floorPlaneGeometry = new THREE.PlaneGeometry(gridSize, gridSize);
+            const floorPlaneMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x1A3A6A,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.DoubleSide
+            });
+            const floorPlane = new THREE.Mesh(floorPlaneGeometry, floorPlaneMaterial);
+            floorPlane.rotation.x = -Math.PI / 2;
+            floorPlane.position.y = -5;
+            floorPlane.receiveShadow = true;
+            scene.add(floorPlane);
+            
+            // === 6. 导线内部的电流方向箭头 ===
+            const currentArrowGroup = new THREE.Group();
+            scene.add(currentArrowGroup);
+            
+            function createCurrentArrow(direction = 1) {
+                currentArrowGroup.clear();
+                
+                // 创建单个电流箭头
+                const arrow = new THREE.ArrowHelper(
+                    new THREE.Vector3(0, direction, 0),
+                    new THREE.Vector3(0, 0, 0),
+                    3.5,
+                    0xFF3366,
+                    0.5,
+                    0.25
+                );
+                currentArrowGroup.add(arrow);
+                currentArrowGroup.visible = false;
+            }
+            createCurrentArrow(1);
+            
+            // === 7. 创建磁感线（淡蓝色虚线）和磁场方向（亮绿色箭头）===
+            const fieldLinesGroup = new THREE.Group();
+            scene.add(fieldLinesGroup);
+            
+            // 创建虚线材质
+            function createDashedLineMaterial(color) {
+                return new THREE.LineDashedMaterial({
+                    color: color,
+                    linewidth: 1.5,
+                    dashSize: 0.5,
+                    gapSize: 0.3,
+                    transparent: true,
+                    opacity: 0.7
+                });
+            }
+            
+            function createFieldLines(direction = 1) {
+                fieldLinesGroup.clear();
+                
+                const radii = [2.0, 3.5, 5.0, 6.5];
+                
+                radii.forEach((radius, idx) => {
+                    // 创建虚线磁感线
+                    const points = [];
+                    const segments = 64;
+                    
+                    for (let i = 0; i <= segments; i++) {
+                        const theta = (i / segments) * Math.PI * 2;
+                        const x = Math.cos(theta) * radius;
+                        const z = Math.sin(theta) * radius;
+                        points.push(new THREE.Vector3(x, 0, z));
+                    }
+                    
+                    const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const circle = new THREE.Line(lineGeometry, createDashedLineMaterial(0x88CCFF));
+                    circle.computeLineDistances();
+                    fieldLinesGroup.add(circle);
+                    
+                    // 每圈均匀分布4个亮绿色磁场方向箭头
+                    const arrowCount = 4;
+                    for (let j = 0; j < arrowCount; j++) {
+                        const phi = (j / arrowCount) * Math.PI * 2;
+                        const posX = Math.cos(phi) * radius;
+                        const posZ = Math.sin(phi) * radius;
+                        
+                        // 右手螺旋定则：电流向上（⊙），磁场顺时针
+                        // 电流向下（⨂），磁场逆时针
+                        let tangent;
+                        if (direction > 0) {
+                            // 电流向上：磁场顺时针
+                            tangent = new THREE.Vector3(Math.sin(phi), 0, -Math.cos(phi));
+                        } else {
+                            // 电流向下：磁场逆时针
+                            tangent = new THREE.Vector3(-Math.sin(phi), 0, Math.cos(phi));
+                        }
+                        
+                        const arrow = new THREE.ArrowHelper(
+                            tangent.normalize(),
+                            new THREE.Vector3(posX, 0, posZ),
+                            radius * 0.25,
+                            0x00FFAA,
+                            0.15,
+                            0.075
+                        );
+                        fieldLinesGroup.add(arrow);
+                    }
+                });
+                fieldLinesGroup.visible = false;
+            }
+            createFieldLines(1);
+            
+            // === 8. 视图控制功能 ===
+            let isTopView = false;
+            const viewPositions = {
+                top: { position: new THREE.Vector3(0, 25, 0.1), target: new THREE.Vector3(0, 0, 0) },
+                side: { position: new THREE.Vector3(25, 0, 0), target: new THREE.Vector3(0, 0, 0) },
+                reset: { position: new THREE.Vector3(18, 12, 18), target: new THREE.Vector3(0, 0, 0) }
+            };
+            
+            function animateCameraTo(position, target, viewType) {
+                const duration = 800;
+                const startPos = camera.position.clone();
+                const startTarget = controls.target.clone();
+                const startTime = Date.now();
+                
+                isTopView = (viewType === 'top');
+                
+                // 控制YOZ平面的显示
+                if (viewType === 'side') {
+                    yozPlane.visible = true;
+                    planeBorder.visible = true;
+                } else {
+                    yozPlane.visible = false;
+                    planeBorder.visible = false;
+                }
+                
+                function animate() {
+                    const elapsed = Date.now() - startTime;
+                    const t = Math.min(elapsed / duration, 1);
+                    const easeT = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+                    
+                    camera.position.lerpVectors(startPos, position, easeT);
+                    controls.target.lerpVectors(startTarget, target, easeT);
+                    controls.update();
+                    
+                    if (t < 1) {
+                        requestAnimationFrame(animate);
+                    }
+                }
+                animate();
+            }
+            
+            document.getElementById('topView').addEventListener('click', () => {
+                animateCameraTo(viewPositions.top.position, viewPositions.top.target, 'top');
+            });
+            
+            document.getElementById('sideView').addEventListener('click', () => {
+                animateCameraTo(viewPositions.side.position, viewPositions.side.target, 'side');
+                // 移除旋转限制，允许自由旋转
+                controls.minPolarAngle = 0;
+                controls.maxPolarAngle = Math.PI;
+            });
+            
+            document.getElementById('resetView').addEventListener('click', () => {
+                animateCameraTo(viewPositions.reset.position, viewPositions.reset.target, 'reset');
+                controls.minPolarAngle = 0;
+                controls.maxPolarAngle = Math.PI;
+            });
+            
+            // === 9. 物理状态控制 ===
+            let isFieldActive = false;
+            let fieldDirection = 1;
+            
+            function updateMagneticField() {
+                fieldLinesGroup.visible = isFieldActive;
+                currentArrowGroup.visible = isFieldActive;
+                
+                if (isFieldActive) {
+                    fieldLinesGroup.rotation.y += 0.0005 * fieldDirection;
+                }
+                
+                // 更新UI状态
+                const statusEl = document.getElementById('currentStatus');
+                const lightEl = document.getElementById('statusLight');
+                
+                if (isFieldActive) {
+                    if (fieldDirection > 0) {
+                        statusEl.textContent = '电流向上 磁场：顺时针';
+                        statusEl.style.color = '#00FFAA';
+                        lightEl.style.background = '#00FFAA';
+                        lightEl.style.boxShadow = '0 0 10px #00FFAA';
+                    } else {
+                        statusEl.textContent = '电流向下 磁场：逆时针';
+                        statusEl.style.color = '#FF9800';
+                        lightEl.style.background = '#FF9800';
+                        lightEl.style.boxShadow = '0 0 10px #FF9800';
+                    }
+                } else {
+                    statusEl.textContent = '磁场未开启';
+                    statusEl.style.color = '#AAA';
+                    lightEl.style.background = '#666';
+                    lightEl.style.boxShadow = 'none';
+                }
+            }
+            
+            // === 10. 事件绑定 ===
+            document.getElementById('on').addEventListener('click', () => {
+                isFieldActive = true;
+                fieldDirection = 1;
+                createCurrentArrow(1);
+                createFieldLines(1);
+                updateMagneticField();
+            });
+            
+            document.getElementById('reverse').addEventListener('click', () => {
+                if (!isFieldActive) return;
+                fieldDirection *= -1;
+                createCurrentArrow(fieldDirection);
+                createFieldLines(fieldDirection);
+                updateMagneticField();
+            });
+            
+            document.getElementById('off').addEventListener('click', () => {
+                isFieldActive = false;
+                updateMagneticField();
+            });
+            
+            // === 11. 动画循环 ===
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            animate();
+            
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+            
+            // 初始状态
+            updateMagneticField();
+        });
+    </script>
+</body>
+</html>
