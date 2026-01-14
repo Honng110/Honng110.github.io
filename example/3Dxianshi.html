@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>带电粒子在匀强磁场中运动演示</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        #info {
+            position: absolute; top: 15px; left: 15px;
+            color: white; background: rgba(0, 0, 50, 0.7);
+            padding: 12px 18px; border-radius: 10px; font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 100;
+            border-left: 4px solid #FF9800;
+            max-width: 320px;
+            backdrop-filter: blur(5px);
+        }
+        #controls {
+            position: absolute; bottom: 25px; width: 100%;
+            text-align: center; z-index: 100;
+        }
+        #view-controls {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(0, 0, 50, 0.7);
+            padding: 10px; border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            backdrop-filter: blur(5px);
+        }
+        #shape-controls {
+            position: absolute; top: 15px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 50, 0.7);
+            padding: 10px; border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: flex;
+            gap: 8px;
+            backdrop-filter: blur(5px);
+        }
+        #control-panel {
+            position: absolute; bottom: 25px; right: 15px;
+            color: white; background: rgba(0, 0, 50, 0.85);
+            padding: 12px; border-radius: 10px;
+            font-size: 12px; z-index: 100;
+            width: 150px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+            border-left: 4px solid #00FFAA;
+        }
+        #emitter-position-panel {
+            position: absolute; top: 200px; left: 15px;
+            color: white; background: rgba(0, 0, 50, 0.85);
+            padding: 12px; border-radius: 10px;
+            font-size: 12px; z-index: 100;
+            width: 120px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+            border-left: 4px solid #FFD700;
+        }
+        .input-group {
+            margin-bottom: 8px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 3px;
+            font-weight: bold;
+            color: #00FFAA;
+            font-size: 11px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid #00FFAA;
+            background: rgba(0, 0, 30, 0.7);
+            color: white;
+            font-size: 11px;
+            box-sizing: border-box;
+        }
+        .direction-group {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        .direction-item {
+            flex: 1;
+        }
+        .direction-item label {
+            display: block;
+            margin-bottom: 3px;
+            font-weight: bold;
+            color: #FF9800;
+            font-size: 11px;
+            text-align: center;
+        }
+        .direction-item input {
+            width: 100%;
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid #FF9800;
+            background: rgba(0, 0, 30, 0.7);
+            color: white;
+            font-size: 11px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .button-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 8px;
+        }
+        button {
+            padding: 6px 10px; font-size: 12px;
+            cursor: pointer; border: none; border-radius: 4px;
+            font-weight: 600; transition: all 0.2s;
+            min-width: 80px;
+        }
+        .primary-btn {
+            background: linear-gradient(135deg, #00FFAA, #00CC88); color: white;
+        }
+        .secondary-btn {
+            background: linear-gradient(135deg, #FF9800, #F57C00); color: white;
+        }
+        .danger-btn {
+            background: linear-gradient(135deg, #f44336, #d32f2f); color: white;
+        }
+        .view-btn {
+            background: linear-gradient(135deg, #9C27B0, #7B1FA2); color: white;
+            min-width: 80px;
+            padding: 6px 8px;
+            font-size: 11px;
+        }
+        .shape-btn {
+            background: linear-gradient(135deg, #607D8B, #455A64); color: white;
+            min-width: 70px;
+            padding: 6px 8px;
+            font-size: 11px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        button.active {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            box-shadow: 0 0 10px #FF9800;
+        }
+        #statusLight {
+            display: inline-block; width: 10px; height: 10px;
+            border-radius: 50%; margin-left: 8px;
+            background: #ccc; vertical-align: middle;
+        }
+        .particle-counter {
+            position: absolute;
+            bottom: 25px;
+            left: 25px;
+            background: rgba(0, 0, 50, 0.7);
+            padding: 8px 12px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+        .color-legend {
+            position: absolute;
+            bottom: 200px;
+            left: 25px;
+            background: rgba(0, 0, 30, 0.7);
+            padding: 12px;
+            border-radius: 10px;
+            color: white;
+            font-size: 11px;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .legend-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .section-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #FFD700;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 4px;
+        }
+        .instruction {
+            position: absolute;
+            bottom: 80px;
+            left: 25px;
+            background: rgba(0, 0, 30, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+            font-size: 11px;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            max-width: 200px;
+        }
+        /* 三维方向输入样式 */
+        .direction-3d-group {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        .direction-3d-item {
+            flex: 1;
+            min-width: 0;
+        }
+        .direction-3d-item label {
+            display: block;
+            margin-bottom: 3px;
+            font-weight: bold;
+            color: #FF9800;
+            font-size: 11px;
+            text-align: center;
+        }
+        .direction-3d-item input {
+            width: 100%;
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid #FF9800;
+            background: rgba(0, 0, 30, 0.7);
+            color: white;
+            font-size: 11px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .compact-input {
+            width: 45px !important;
+            min-width: 45px !important;
+        }
+        .direction-display {
+            font-size: 10px;
+            text-align: center;
+            color: #FF9800;
+            margin-top: 2px;
+            background: rgba(0, 0, 30, 0.5);
+            padding: 4px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <div><strong>带电粒子在匀强磁场中运动</strong></div>
+        <div><strong>物理原理：</strong></div>
+        <div>• 洛伦兹力：F = q(v × B)</div>
+        <div>• 平行分量：匀速直线运动</div>
+        <div>• 垂直分量：匀速圆周运动</div>
+        <div>• 合运动：空间螺旋运动</div>
+        <div>状态: <span id="currentStatus">准备发射</span> <span id="statusLight"></span></div>
+        <div>操作: 鼠标左键旋转 | 滚轮缩放 | 右键平移</div>
+    </div>
+    
+    <div id="shape-controls">
+        <button id="cubeBtn" class="shape-btn active">正方体</button>
+        <button id="cylinderBtn" class="shape-btn">圆柱体</button>
+        <button id="prismBtn" class="shape-btn">三棱柱</button>
+        <button id="sphereBtn" class="shape-btn">球体</button>
+    </div>
+    
+    <div id="control-panel">
+        <div class="section-title">发射参数</div>
+        
+        <div class="input-group">
+            <label for="velocity">速度 (m/s)</label>
+            <input type="number" id="velocity" value="5" min="0.5" max="20" step="0.5" class="compact-input">
+        </div>
+        
+        <div class="input-group">
+            <label for="velocityDirection">速度方向</label>
+            <div class="direction-3d-group">
+                <div class="direction-3d-item">
+                    <label for="azimuthAngle">方位角φ°</label>
+                    <input type="number" id="azimuthAngle" value="0" min="0" max="360" step="1" class="compact-input" title="在XY平面内与+X轴夹角">
+                </div>
+                <div class="direction-3d-item">
+                    <label for="polarAngle">极角θ°</label>
+                    <input type="number" id="polarAngle" value="90" min="0" max="180" step="1" class="compact-input" title="与+Z轴夹角">
+                </div>
+            </div>
+            <div class="direction-display">
+                与轴夹角: X=<span id="angleX">90.0</span>° Y=<span id="angleY">90.0</span>° Z=<span id="angleZ">0.0</span>°
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="magneticStrength">磁场强度 (T)</label>
+            <input type="number" id="magneticStrength" value="0.5" min="0.1" max="2" step="0.1">
+        </div>
+        
+        <div class="input-group">
+            <label for="emissionInterval">发射间隔 (ms)</label>
+            <input type="number" id="emissionInterval" value="500" min="50" max="2000" step="50">
+        </div>
+        
+        <div class="input-group">
+            <label for="charge">电荷量 (q)</label>
+            <input type="number" id="charge" value="1" min="-5" max="5" step="0.5">
+        </div>
+        
+        <div class="input-group">
+            <label for="mass">粒子质量 (m)</label>
+            <input type="number" id="mass" value="1" min="0.1" max="5" step="0.1">
+        </div>
+    </div>
+    
+    <div id="emitter-position-panel">
+        <div class="section-title">发射器位置</div>
+        
+        <div class="input-group">
+            <label for="emitterX">X 坐标</label>
+            <input type="number" id="emitterX" value="-10" min="-20" max="20" step="1">
+        </div>
+        
+        <div class="input-group">
+            <label for="emitterY">Y 坐标</label>
+            <input type="number" id="emitterY" value="0" min="-10" max="10" step="1">
+        </div>
+        
+        <div class="input-group">
+            <label for="emitterZ">Z 坐标</label>
+            <input type="number" id="emitterZ" value="0" min="-10" max="10" step="1">
+        </div>
+    </div>
+    
+    <div class="particle-counter">
+        活动粒子: <span id="particleCount">0</span>
+    </div>
+    
+    <div class="color-legend">
+        <div><strong>颜色图例</strong></div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #FF3366;"></div>
+            <div>正电荷粒子</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #33AAFF;"></div>
+            <div>负电荷粒子</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #00FFAA;"></div>
+            <div>匀强磁场区域</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #FFD700;"></div>
+            <div>粒子发射器</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #FFFF00;"></div>
+            <div>磁场内轨迹</div>
+        </div>
+    </div>
+    
+    <div class="instruction">
+        <strong>操作指南：</strong><br>
+        1. 点击发射器可拖动改变位置<br>
+        2. 粒子进入磁场区域后显示黄色轨迹<br>
+        3. 粒子离开磁场区域后继续运动<br>
+        4. 使用方位角φ和极角θ控制发射方向<br>
+        5. φ: XY平面内与+X轴夹角<br>
+        6. θ: 与+Z轴夹角
+    </div>
+    
+    <div id="view-controls">
+        <button id="topView" class="view-btn">俯视图</button>
+        <button id="sideView" class="view-btn">侧视图</button>
+        <button id="frontView" class="view-btn">正视图</button>
+        <button id="resetView" class="view-btn">复位视图</button>
+    </div>
+
+    <div id="controls">
+        <div class="button-group">
+            <button id="toggleEmission" class="primary-btn">发射/暂停</button>
+            <button id="resetParticles" class="danger-btn">重置</button>
+            <button id="toggleTrails" class="secondary-btn">显示轨迹</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // === 1. 初始化场景 ===
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0A1A3A);
+            
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(25, 15, 25);
+            
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.body.appendChild(renderer.domElement);
+            
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // === 2. 光线设置 ===
+            scene.add(new THREE.AmbientLight(0xFFFFFF, 0.6));
+            
+            const mainLight = new THREE.DirectionalLight(0xFFFFFF, 1.0);
+            mainLight.position.set(20, 30, 20);
+            mainLight.castShadow = true;
+            scene.add(mainLight);
+            
+            // === 3. 在平台上添加X、Y、Z轴虚线 ===
+            function createCoordinateAxes() {
+                // X轴（红色虚线）
+                const xAxisGeometry = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(0, -fieldHeight/2 - 0.5, 0),
+                    new THREE.Vector3(20, -fieldHeight/2 - 0.5, 0)
+                ]);
+                const xAxisMaterial = new THREE.LineDashedMaterial({
+                    color: 0xFF3333,
+                    dashSize: 0.5,
+                    gapSize: 0.2,
+                    linewidth: 1.5
+                });
+                const xAxis = new THREE.Line(xAxisGeometry, xAxisMaterial);
+                xAxis.computeLineDistances();
+                scene.add(xAxis);
+                
+                // Y轴（绿色虚线）
+                const yAxisGeometry = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(0, -fieldHeight/2 - 0.5, 0),
+                    new THREE.Vector3(0, 10, 0)
+                ]);
+                const yAxisMaterial = new THREE.LineDashedMaterial({
+                    color: 0x33FF33,
+                    dashSize: 0.5,
+                    gapSize: 0.2,
+                    linewidth: 1.5
+                });
+                const yAxis = new THREE.Line(yAxisGeometry, yAxisMaterial);
+                yAxis.computeLineDistances();
+                scene.add(yAxis);
+                
+                // Z轴（蓝色虚线）
+                const zAxisGeometry = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(0, -fieldHeight/2 - 0.5, 0),
+                    new THREE.Vector3(0, -fieldHeight/2 - 0.5, 20)
+                ]);
+                const zAxisMaterial = new THREE.LineDashedMaterial({
+                    color: 0x3366FF,
+                    dashSize: 0.5,
+                    gapSize: 0.2,
+                    linewidth: 1.5
+                });
+                const zAxis = new THREE.Line(zAxisGeometry, zAxisMaterial);
+                zAxis.computeLineDistances();
+                scene.add(zAxis);
+                
+                // 添加坐标轴标签
+                const labelDistance = 1.2;
+                
+                // X轴标签
+                const xLabel = createTextSprite("X", 0xFF3333);
+                xLabel.position.set(21, -fieldHeight/2 - 0.5, 0);
+                xLabel.scale.set(1, 1, 1);
+                scene.add(xLabel);
+                
+                // Y轴标签
+                const yLabel = createTextSprite("Y", 0x33FF33);
+                yLabel.position.set(0, 11, 0);
+                yLabel.scale.set(1, 1, 1);
+                scene.add(yLabel);
+                
+                // Z轴标签
+                const zLabel = createTextSprite("Z", 0x3366FF);
+                zLabel.position.set(0, -fieldHeight/2 - 0.5, 21);
+                zLabel.scale.set(1, 1, 1);
+                scene.add(zLabel);
+            }
+            
+            // 创建文本标签的函数
+            function createTextSprite(text, color) {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = 64;
+                canvas.height = 32;
+                
+                // 背景
+                context.fillStyle = 'rgba(0, 0, 30, 0.7)';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // 文本
+                context.font = 'bold 20px Arial';
+                context.fillStyle = `rgb(${color >> 16 & 255}, ${color >> 8 & 255}, ${color & 255})`;
+                context.textAlign = 'center';
+                context.textBaseline = 'middle';
+                context.fillText(text, canvas.width/2, canvas.height/2);
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+                const sprite = new THREE.Sprite(spriteMaterial);
+                sprite.scale.set(4, 2, 1);
+                
+                return sprite;
+            }
+            
+            // === 4. 磁场区域管理 ===
+            let currentFieldShape = 'cube';
+            let magneticFieldGroup = new THREE.Group();
+            scene.add(magneticFieldGroup);
+            
+            // 磁场区域尺寸
+            const fieldWidth = 15;
+            const fieldHeight = 15;
+            const fieldDepth = 15;
+            const fieldRadius = 7.5;
+            
+            // 磁场区域边界函数
+            let isInsideFieldFunc;
+            const magneticDirection = new THREE.Vector3(0, 0, 1); // 磁场方向 (沿Z轴)
+            
+            // 创建磁场方向箭头
+            const arrowLength = 2.5;
+            const arrowRadius = 0.08;
+            const arrowHeadLength = 0.4;
+            const arrowHeadRadius = 0.2;
+            
+            // 更新磁场区域
+            function updateMagneticField(shape) {
+                currentFieldShape = shape;
+                
+                // 移除旧的磁场区域
+                scene.remove(magneticFieldGroup);
+                magneticFieldGroup = new THREE.Group();
+                scene.add(magneticFieldGroup);
+                
+                // 根据形状创建磁场区域
+                switch(shape) {
+                    case 'cube':
+                        createCubeField();
+                        break;
+                    case 'cylinder':
+                        createCylinderField();
+                        break;
+                    case 'prism':
+                        createPrismField();
+                        break;
+                    case 'sphere':
+                        createSphereField();
+                        break;
+                }
+                
+                // 创建磁场方向箭头
+                createFieldArrows(shape);
+                
+                // 更新按钮状态
+                updateShapeButtons(shape);
+            }
+            
+            // 创建正方体磁场区域
+            function createCubeField() {
+                // 创建正方体边框
+                const boxGeometry = new THREE.BoxGeometry(fieldWidth, fieldHeight, fieldDepth);
+                const edgesGeometry = new THREE.EdgesGeometry(boxGeometry);
+                const edgesMaterial = new THREE.LineBasicMaterial({
+                    color: 0x00FFAA,
+                    linewidth: 1.5,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const fieldEdges = new THREE.LineSegments(edgesGeometry, edgesMaterial);
+                magneticFieldGroup.add(fieldEdges);
+                
+                // 设置正方体边界检测函数
+                isInsideFieldFunc = function(point) {
+                    return Math.abs(point.x) <= fieldWidth/2 && 
+                           Math.abs(point.y) <= fieldHeight/2 && 
+                           Math.abs(point.z) <= fieldDepth/2;
+                };
+            }
+            
+            // 创建圆柱体磁场区域
+            function createCylinderField() {
+                // 创建圆柱体边框
+                const cylinderGeometry = new THREE.CylinderGeometry(
+                    fieldRadius, fieldRadius, fieldHeight, 32
+                );
+                const edgesGeometry = new THREE.EdgesGeometry(cylinderGeometry);
+                const edgesMaterial = new THREE.LineBasicMaterial({
+                    color: 0x00FFAA,
+                    linewidth: 1.5,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const fieldEdges = new THREE.LineSegments(edgesGeometry, edgesMaterial);
+                fieldEdges.rotation.x = Math.PI / 2; // 圆柱体绕X轴旋转90度，使高度沿Y轴
+                magneticFieldGroup.add(fieldEdges);
+                
+                // 设置圆柱体边界检测函数
+                isInsideFieldFunc = function(point) {
+                    const radius = Math.sqrt(point.x * point.x + point.z * point.z);
+                    return radius <= fieldRadius && 
+                           Math.abs(point.y) <= fieldHeight/2;
+                };
+            }
+            
+            // 创建三棱柱磁场区域
+            function createPrismField() {
+                // 三棱柱参数：底面三角形在XY平面，高度沿Z轴
+                const triangleHeight = fieldHeight * Math.sqrt(3) / 2;
+                
+                // 底面三角形顶点（XY平面，Z = -fieldDepth/2）
+                const bottomVertices = [
+                    new THREE.Vector3(-fieldWidth/2, -triangleHeight/3, -fieldDepth/2),
+                    new THREE.Vector3(fieldWidth/2, -triangleHeight/3, -fieldDepth/2),
+                    new THREE.Vector3(0, 2*triangleHeight/3, -fieldDepth/2)
+                ];
+                
+                // 顶面三角形顶点（XY平面，Z = fieldDepth/2）
+                const topVertices = [
+                    new THREE.Vector3(-fieldWidth/2, -triangleHeight/3, fieldDepth/2),
+                    new THREE.Vector3(fieldWidth/2, -triangleHeight/3, fieldDepth/2),
+                    new THREE.Vector3(0, 2*triangleHeight/3, fieldDepth/2)
+                ];
+                
+                // 创建三棱柱的棱边
+                const edges = [
+                    [0, 1], [1, 2], [2, 0],
+                    [3, 4], [4, 5], [5, 3],
+                    [0, 3], [1, 4], [2, 5]
+                ];
+                
+                // 创建几何体
+                const geometry = new THREE.BufferGeometry();
+                const positions = [];
+                
+                edges.forEach(edge => {
+                    const v1 = edge[0] < 3 ? bottomVertices[edge[0]] : topVertices[edge[0]-3];
+                    const v2 = edge[1] < 3 ? bottomVertices[edge[1]] : topVertices[edge[1]-3];
+                    
+                    positions.push(v1.x, v1.y, v1.z);
+                    positions.push(v2.x, v2.y, v2.z);
+                });
+                
+                geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+                
+                const material = new THREE.LineBasicMaterial({
+                    color: 0x00FFAA,
+                    linewidth: 1.5,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const prism = new THREE.LineSegments(geometry, material);
+                magneticFieldGroup.add(prism);
+                
+                // 设置三棱柱边界检测函数
+                isInsideFieldFunc = function(point) {
+                    if (point.z < -fieldDepth/2 || point.z > fieldDepth/2) return false;
+                    
+                    const triangle = [
+                        {x: -fieldWidth/2, y: -triangleHeight/3},
+                        {x: fieldWidth/2, y: -triangleHeight/3},
+                        {x: 0, y: 2*triangleHeight/3}
+                    ];
+                    
+                    const p = {x: point.x, y: point.y};
+                    
+                    const v0 = {x: triangle[2].x - triangle[0].x, y: triangle[2].y - triangle[0].y};
+                    const v1 = {x: triangle[1].x - triangle[0].x, y: triangle[1].y - triangle[0].y};
+                    const v2 = {x: p.x - triangle[0].x, y: p.y - triangle[0].y};
+                    
+                    const dot00 = v0.x * v0.x + v0.y * v0.y;
+                    const dot01 = v0.x * v1.x + v0.y * v1.y;
+                    const dot02 = v0.x * v2.x + v0.y * v2.y;
+                    const dot11 = v1.x * v1.x + v1.y * v1.y;
+                    const dot12 = v1.x * v2.x + v1.y * v2.y;
+                    
+                    const invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+                    const u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+                    const v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+                    
+                    return (u >= 0) && (v >= 0) && (u + v < 1);
+                };
+            }
+            
+            // 创建球体磁场区域
+            function createSphereField() {
+                // 创建球体边框
+                const sphereGeometry = new THREE.SphereGeometry(fieldRadius, 16, 16);
+                const edgesGeometry = new THREE.EdgesGeometry(sphereGeometry);
+                const edgesMaterial = new THREE.LineBasicMaterial({
+                    color: 0x00FFAA,
+                    linewidth: 1.5,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const fieldEdges = new THREE.LineSegments(edgesGeometry, edgesMaterial);
+                magneticFieldGroup.add(fieldEdges);
+                
+                // 设置球体边界检测函数
+                isInsideFieldFunc = function(point) {
+                    const radius = Math.sqrt(point.x * point.x + point.y * point.y + point.z * point.z);
+                    return radius <= fieldRadius;
+                };
+            }
+            
+            // 创建磁场方向箭头
+            function createFieldArrows(shape) {
+                const arrowCount = 5;
+                let positions = [];
+                let direction = magneticDirection.clone();
+                
+                switch(shape) {
+                    case 'cube':
+                        for (let i = 0; i < arrowCount; i++) {
+                            for (let j = 0; j < arrowCount; j++) {
+                                const x = -fieldWidth/2 + (j + 1) * fieldWidth/(arrowCount + 1);
+                                const y = -fieldHeight/2 + (i + 1) * fieldHeight/(arrowCount + 1);
+                                positions.push(new THREE.Vector3(x, y, -fieldDepth/2));
+                            }
+                        }
+                        break;
+                    case 'cylinder':
+                        for (let i = 0; i < arrowCount; i++) {
+                            const angle = (i / arrowCount) * Math.PI * 2;
+                            const radius = fieldRadius * 0.6;
+                            const x = Math.cos(angle) * radius;
+                            const y = -fieldHeight/4 + (i % 2) * fieldHeight/2;
+                            positions.push(new THREE.Vector3(x, y, -fieldDepth/2));
+                        }
+                        break;
+                    case 'prism':
+                        const triangleHeight = fieldHeight * Math.sqrt(3) / 2;
+                        positions = [
+                            new THREE.Vector3(-fieldWidth/4, -triangleHeight/6, 0),
+                            new THREE.Vector3(fieldWidth/4, -triangleHeight/6, 0),
+                            new THREE.Vector3(0, triangleHeight/3, 0)
+                        ];
+                        break;
+                    case 'sphere':
+                        const layers = 3;
+                        for (let layer = 1; layer <= layers; layer++) {
+                            const radius = fieldRadius * (layer / (layers + 1));
+                            const count = layer * 2;
+                            for (let i = 0; i < count; i++) {
+                                const angle = (i / count) * Math.PI * 2;
+                                const x = Math.cos(angle) * radius;
+                                const y = Math.sin(angle) * radius * 0.5;
+                                positions.push(new THREE.Vector3(x, y, -fieldDepth/2));
+                            }
+                        }
+                        break;
+                }
+                
+                positions.forEach(position => {
+                    const arrowHelper = new THREE.ArrowHelper(
+                        direction,
+                        position,
+                        arrowLength,
+                        0x3366FF,
+                        arrowHeadLength,
+                        arrowHeadRadius
+                    );
+                    magneticFieldGroup.add(arrowHelper);
+                });
+            }
+            
+            // 更新形状按钮状态
+            function updateShapeButtons(activeShape) {
+                document.querySelectorAll('.shape-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                switch(activeShape) {
+                    case 'cube':
+                        document.getElementById('cubeBtn').classList.add('active');
+                        break;
+                    case 'cylinder':
+                        document.getElementById('cylinderBtn').classList.add('active');
+                        break;
+                    case 'prism':
+                        document.getElementById('prismBtn').classList.add('active');
+                        break;
+                    case 'sphere':
+                        document.getElementById('sphereBtn').classList.add('active');
+                        break;
+                }
+            }
+            
+            // === 5. 创建网格平台 ===
+            const gridSize = 30;
+            const gridDivisions = 30;
+            const gridHelper = new THREE.GridHelper(gridSize, gridDivisions, 0x2A4A7A, 0x1A3A6A);
+            gridHelper.position.y = -fieldHeight/2 - 0.5;
+            scene.add(gridHelper);
+            
+            // 添加半透明平台
+            const platformGeometry = new THREE.PlaneGeometry(gridSize, gridSize);
+            const platformMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x1A3A6A,
+                transparent: true,
+                opacity: 0.1,
+                side: THREE.DoubleSide
+            });
+            const platform = new THREE.Mesh(platformGeometry, platformMaterial);
+            platform.rotation.x = -Math.PI / 2;
+            platform.position.y = -fieldHeight/2 - 0.51;
+            platform.receiveShadow = true;
+            scene.add(platform);
+            
+            // === 6. 创建可移动的粒子发射器 ===
+            const emitterGroup = new THREE.Group();
+            scene.add(emitterGroup);
+            
+            // 发射器初始位置
+            let emitterPosition = new THREE.Vector3(-10, 0, 0);
+            
+            // 发射器可视化（金色球体）
+            const emitterGeometry = new THREE.SphereGeometry(0.15, 12, 12);
+            const emitterMaterial = new THREE.MeshPhongMaterial({
+                color: 0xFFD700,
+                emissive: 0x333300,
+                shininess: 30
+            });
+            const emitter = new THREE.Mesh(emitterGeometry, emitterMaterial);
+            emitter.position.copy(emitterPosition);
+            emitterGroup.add(emitter);
+            
+            // 发射器方向指示箭头
+            let currentDirection = new THREE.Vector3(1, 0, 0); // 初始方向沿X轴
+            
+            const emitterArrow = new THREE.ArrowHelper(
+                currentDirection,
+                emitterPosition,
+                1.2,
+                0xFFD700,
+                0.15,
+                0.08
+            );
+            emitterGroup.add(emitterArrow);
+            
+            // === 7. 正确的方向计算函数 ===
+            
+            // 根据球坐标计算方向向量
+            function calculateDirectionFromSpherical(azimuthDeg, polarDeg) {
+                // 转换为弧度
+                const azimuth = azimuthDeg * Math.PI / 180;  // φ：方位角，在XY平面内与+X轴夹角
+                const polar = polarDeg * Math.PI / 180;      // θ：极角，与+Z轴夹角
+                
+                // 球坐标转直角坐标
+                // x = r * sin(θ) * cos(φ)
+                // y = r * sin(θ) * sin(φ)
+                // z = r * cos(θ)
+                const sinTheta = Math.sin(polar);
+                const x = sinTheta * Math.cos(azimuth);
+                const y = sinTheta * Math.sin(azimuth);
+                const z = Math.cos(polar);
+                
+                return new THREE.Vector3(x, y, z).normalize();
+            }
+            
+            // 计算方向向量与各坐标轴的夹角
+            function calculateAnglesFromDirection(direction) {
+                const dir = direction.clone().normalize();
+                
+                // 计算与各坐标轴的夹角（0-180度）
+                // 使用点积公式：cos(angle) = (a·b) / (|a||b|)
+                // 因为坐标轴单位向量分别为(1,0,0)、(0,1,0)、(0,0,1)
+                const angleX = Math.acos(Math.abs(dir.dot(new THREE.Vector3(1, 0, 0)))) * 180 / Math.PI;
+                const angleY = Math.acos(Math.abs(dir.dot(new THREE.Vector3(0, 1, 0)))) * 180 / Math.PI;
+                const angleZ = Math.acos(Math.abs(dir.dot(new THREE.Vector3(0, 0, 1)))) * 180 / Math.PI;
+                
+                // 考虑方向正负，调整到0-180度范围
+                const finalAngleX = dir.x >= 0 ? angleX : 180 - angleX;
+                const finalAngleY = dir.y >= 0 ? angleY : 180 - angleY;
+                const finalAngleZ = dir.z >= 0 ? angleZ : 180 - angleZ;
+                
+                return {
+                    angleX: finalAngleX,
+                    angleY: finalAngleY,
+                    angleZ: finalAngleZ
+                };
+            }
+            
+            // 更新发射器箭头方向和显示
+            function updateEmitterArrow() {
+                // 获取用户输入的球坐标角度
+                const azimuth = parseFloat(document.getElementById('azimuthAngle').value);
+                const polar = parseFloat(document.getElementById('polarAngle').value);
+                
+                // 计算方向向量
+                currentDirection = calculateDirectionFromSpherical(azimuth, polar);
+                
+                // 更新发射器箭头方向
+                emitterArrow.setDirection(currentDirection);
+                emitterArrow.setLength(1.2, 0.15, 0.08);
+                
+                // 计算并显示与各坐标轴的夹角
+                const angles = calculateAnglesFromDirection(currentDirection);
+                document.getElementById('angleX').textContent = angles.angleX.toFixed(1);
+                document.getElementById('angleY').textContent = angles.angleY.toFixed(1);
+                document.getElementById('angleZ').textContent = angles.angleZ.toFixed(1);
+            }
+            
+            // === 8. 粒子系统 ===
+            const particles = [];
+            const magneticTrails = [];
+            const maxParticles = 200;
+            let isEmitting = false;
+            let isPaused = false;
+            let emissionTimer = null;
+            let showTrails = true;
+            
+            // 粒子类
+            class ChargedParticle {
+                constructor(position, velocity, charge = 1, mass = 1.0, color = 0xFF3366) {
+                    this.position = position.clone();
+                    this.velocity = velocity.clone();
+                    this.charge = charge;
+                    this.mass = mass;
+                    this.age = 0;
+                    this.maxAge = 30;
+                    this.color = color;
+                    this.isInsideField = false;
+                    this.fieldTrailPoints = [];
+                    this.outsideFieldTrailPoints = [];
+                    this.hasLeftField = false;
+                    
+                    // 磁场内运动参数
+                    this.fieldEntryTime = 0;
+                    this.fieldEntryPos = null;
+                    this.fieldEntryVel = null;
+                    this.fieldCenter = null;
+                    this.fieldRadius = 0;
+                    this.fieldOmega = 0;
+                    this.fieldParallelVel = 0;
+                    this.fieldPerpVel = new THREE.Vector3();
+                    this.fieldInitialPhase = 0;
+                    
+                    // 创建粒子可视化
+                    this.geometry = new THREE.SphereGeometry(0.08, 6, 6);
+                    this.material = new THREE.MeshPhongMaterial({
+                        color: color,
+                        emissive: color,
+                        emissiveIntensity: 0.4,
+                        shininess: 30
+                    });
+                    this.mesh = new THREE.Mesh(this.geometry, this.material);
+                    this.mesh.position.copy(this.position);
+                    scene.add(this.mesh);
+                    
+                    particles.push(this);
+                }
+                
+                // 检查点是否在磁场区域内
+                isInsideMagneticField(point) {
+                    return isInsideFieldFunc(point);
+                }
+                
+                // 检查点是否离开场景
+                isOutsideScene(point) {
+                    const distance = Math.sqrt(point.x*point.x + point.y*point.y + point.z*point.z);
+                    return distance > 50;
+                }
+                
+                // 计算磁场中的螺旋运动
+                updateInMagneticField(deltaTime) {
+                    if (!this.fieldEntryPos) {
+                        this.fieldEntryTime = this.age;
+                        this.fieldEntryPos = this.position.clone();
+                        this.fieldEntryVel = this.velocity.clone();
+                        
+                        this.fieldParallelVel = this.velocity.dot(magneticDirection);
+                        const parallelComponent = magneticDirection.clone().multiplyScalar(this.fieldParallelVel);
+                        this.fieldPerpVel = new THREE.Vector3().subVectors(this.velocity, parallelComponent);
+                        
+                        const vPerp = this.fieldPerpVel.length();
+                        const q = this.charge;
+                        const m = this.mass;
+                        const B = magneticStrength;
+                        
+                        if (vPerp > 0 && B > 0) {
+                            this.fieldRadius = Math.abs(m * vPerp / (Math.abs(q) * B));
+                            this.fieldOmega = q * B / m;
+                            
+                            const radiusVector = new THREE.Vector3()
+                                .crossVectors(this.fieldPerpVel, magneticDirection)
+                                .normalize()
+                                .multiplyScalar(this.fieldRadius);
+                            
+                            if (q > 0) {
+                                this.fieldCenter = new THREE.Vector3().addVectors(
+                                    this.fieldEntryPos, 
+                                    radiusVector
+                                );
+                            } else {
+                                this.fieldCenter = new THREE.Vector3().subVectors(
+                                    this.fieldEntryPos, 
+                                    radiusVector
+                                );
+                            }
+                            
+                            const toParticle = new THREE.Vector3().subVectors(
+                                this.fieldEntryPos, 
+                                this.fieldCenter
+                            );
+                            this.fieldInitialPhase = Math.atan2(toParticle.y, toParticle.x);
+                        }
+                    }
+                    
+                    const timeInField = this.age - this.fieldEntryTime;
+                    
+                    if (this.fieldRadius > 0 && this.fieldOmega !== 0) {
+                        const parallelMovement = magneticDirection.clone()
+                            .multiplyScalar(this.fieldParallelVel * timeInField);
+                        
+                        const phase = this.fieldInitialPhase + this.fieldOmega * timeInField;
+                        const perpendicularMovement = new THREE.Vector3(
+                            this.fieldRadius * Math.cos(phase),
+                            this.fieldRadius * Math.sin(phase),
+                            0
+                        );
+                        
+                        this.position = new THREE.Vector3()
+                            .addVectors(this.fieldCenter, perpendicularMovement)
+                            .add(parallelMovement);
+                        
+                        const vPerpX = -this.fieldRadius * this.fieldOmega * Math.sin(phase);
+                        const vPerpY = this.fieldRadius * this.fieldOmega * Math.cos(phase);
+                        this.velocity = new THREE.Vector3(
+                            vPerpX,
+                            vPerpY,
+                            this.fieldParallelVel
+                        );
+                    } else {
+                        this.position.add(this.velocity.clone().multiplyScalar(deltaTime));
+                    }
+                }
+                
+                // 更新粒子状态
+                update(deltaTime) {
+                    if (isPaused) return true;
+                    
+                    const wasInsideField = this.isInsideField;
+                    this.isInsideField = this.isInsideMagneticField(this.position);
+                    
+                    if (this.isInsideField && !wasInsideField) {
+                        this.fieldTrailPoints = [this.position.clone()];
+                        if (this.outsideFieldTrailPoints.length > 1) {
+                            this.createOutsideFieldTrail();
+                        }
+                    } else if (!this.isInsideField && wasInsideField) {
+                        this.outsideFieldTrailPoints = [this.position.clone()];
+                        if (this.fieldTrailPoints.length > 1) {
+                            this.createMagneticTrail();
+                        }
+                    }
+                    
+                    if (this.isInsideField && this.fieldTrailPoints.length < 200) {
+                        this.fieldTrailPoints.push(this.position.clone());
+                    } else if (!this.isInsideField && this.outsideFieldTrailPoints.length < 200) {
+                        this.outsideFieldTrailPoints.push(this.position.clone());
+                    }
+                    
+                    if (!this.isInsideField && wasInsideField) {
+                        this.hasLeftField = true;
+                        this.fieldEntryPos = null;
+                    }
+                    
+                    if (this.isInsideField && !this.hasLeftField) {
+                        this.updateInMagneticField(deltaTime);
+                    } else {
+                        this.position.add(this.velocity.clone().multiplyScalar(deltaTime));
+                    }
+                    
+                    this.mesh.position.copy(this.position);
+                    this.age += deltaTime;
+                    
+                    const isOutside = this.isOutsideScene(this.position);
+                    return this.age < this.maxAge && !isOutside;
+                }
+                
+                // 创建磁场内轨迹（黄色细虚线）
+                createMagneticTrail() {
+                    if (this.fieldTrailPoints.length < 2) return;
+                    
+                    const trailMaterial = new THREE.LineDashedMaterial({
+                        color: 0xFFFF00,
+                        linewidth: 1,
+                        dashSize: 0.15,
+                        gapSize: 0.1,
+                        transparent: true,
+                        opacity: 0.7
+                    });
+                    
+                    const trailGeometry = new THREE.BufferGeometry().setFromPoints(this.fieldTrailPoints);
+                    const trail = new THREE.Line(trailGeometry, trailMaterial);
+                    trail.computeLineDistances();
+                    trail.visible = showTrails;
+                    
+                    scene.add(trail);
+                    magneticTrails.push(trail);
+                }
+                
+                // 创建磁场外轨迹（白色实线）
+                createOutsideFieldTrail() {
+                    if (this.outsideFieldTrailPoints.length < 2) return;
+                    
+                    const trailMaterial = new THREE.LineBasicMaterial({
+                        color: 0xFFFFFF,
+                        linewidth: 1,
+                        transparent: true,
+                        opacity: 0.5
+                    });
+                    
+                    const trailGeometry = new THREE.BufferGeometry().setFromPoints(this.outsideFieldTrailPoints);
+                    const trail = new THREE.Line(trailGeometry, trailMaterial);
+                    trail.visible = showTrails;
+                    
+                    scene.add(trail);
+                    magneticTrails.push(trail);
+                }
+                
+                // 移除粒子
+                dispose() {
+                    scene.remove(this.mesh);
+                    this.geometry.dispose();
+                    this.material.dispose();
+                }
+            }
+            
+            // === 9. 物理参数 ===
+            let magneticStrength = 0.5;
+            
+            // === 10. 粒子发射控制函数 ===
+            function emitParticle() {
+                if (particles.length >= maxParticles) return;
+                
+                // 获取用户输入
+                const speed = parseFloat(document.getElementById('velocity').value);
+                const charge = parseFloat(document.getElementById('charge').value);
+                const mass = parseFloat(document.getElementById('mass').value);
+                
+                // 使用currentDirection作为方向
+                const velocity = currentDirection.clone().multiplyScalar(speed);
+                
+                // 根据电荷决定颜色
+                const color = charge > 0 ? 0xFF3366 : (charge < 0 ? 0x33AAFF : 0xFFFFFF);
+                
+                // 创建新粒子
+                new ChargedParticle(emitterPosition.clone(), velocity, charge, mass, color);
+                
+                // 更新粒子计数器
+                document.getElementById('particleCount').textContent = particles.length;
+            }
+            
+            // 启动/停止发射
+            function toggleEmission() {
+                if (isEmitting) {
+                    clearInterval(emissionTimer);
+                    isEmitting = false;
+                    isPaused = false;
+                    document.getElementById('toggleEmission').textContent = "发射";
+                    document.getElementById('currentStatus').textContent = "发射已停止";
+                    document.getElementById('statusLight').style.background = '#FF9800';
+                    document.getElementById('statusLight').style.boxShadow = '0 0 10px #FF9800';
+                } else {
+                    const emissionInterval = parseInt(document.getElementById('emissionInterval').value);
+                    emissionTimer = setInterval(emitParticle, emissionInterval);
+                    isEmitting = true;
+                    isPaused = false;
+                    document.getElementById('toggleEmission').textContent = "暂停";
+                    document.getElementById('currentStatus').textContent = "正在发射粒子";
+                    document.getElementById('statusLight').style.background = '#00FFAA';
+                    document.getElementById('statusLight').style.boxShadow = '0 0 10px #00FFAA';
+                }
+            }
+            
+            // 暂停/继续所有粒子运动
+            function togglePause() {
+                isPaused = !isPaused;
+                
+                if (isPaused) {
+                    document.getElementById('toggleEmission').textContent = "继续";
+                    document.getElementById('currentStatus').textContent = "模拟已暂停";
+                    document.getElementById('statusLight').style.background = '#FF9800';
+                    document.getElementById('statusLight').style.boxShadow = '0 0 10px #FF9800';
+                } else {
+                    document.getElementById('toggleEmission').textContent = "暂停";
+                    document.getElementById('currentStatus').textContent = "模拟运行中";
+                    document.getElementById('statusLight').style.background = '#00FFAA';
+                    document.getElementById('statusLight').style.boxShadow = '0 0 10px #00FFAA';
+                }
+            }
+            
+            // 重置所有粒子
+            function resetParticles() {
+                if (isEmitting) {
+                    clearInterval(emissionTimer);
+                    isEmitting = false;
+                    isPaused = false;
+                }
+                
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    particles[i].dispose();
+                    particles.splice(i, 1);
+                }
+                
+                for (let i = magneticTrails.length - 1; i >= 0; i--) {
+                    scene.remove(magneticTrails[i]);
+                    magneticTrails[i].geometry.dispose();
+                    magneticTrails[i].material.dispose();
+                    magneticTrails.splice(i, 1);
+                }
+                
+                document.getElementById('particleCount').textContent = '0';
+                document.getElementById('toggleEmission').textContent = "发射";
+                document.getElementById('currentStatus').textContent = "粒子已重置";
+                document.getElementById('statusLight').style.background = '#FF3333';
+                document.getElementById('statusLight').style.boxShadow = '0 0 10px #FF3333';
+                
+                setTimeout(() => {
+                    if (!isEmitting) {
+                        document.getElementById('currentStatus').textContent = "准备发射";
+                        document.getElementById('statusLight').style.background = '#00FFAA';
+                        document.getElementById('statusLight').style.boxShadow = '0 0 10px #00FFAA';
+                    }
+                }, 3000);
+            }
+            
+            // 切换轨迹显示
+            function toggleTrails() {
+                showTrails = !showTrails;
+                magneticTrails.forEach(trail => {
+                    trail.visible = showTrails;
+                });
+                document.getElementById('toggleTrails').textContent = showTrails ? "隐藏轨迹" : "显示轨迹";
+            }
+            
+            // === 11. 视图控制功能 ===
+            const viewPositions = {
+                top: { 
+                    position: new THREE.Vector3(0, 25, 0.1), 
+                    target: new THREE.Vector3(0, 0, 0) 
+                },
+                side: { 
+                    position: new THREE.Vector3(25, 8, 0), 
+                    target: new THREE.Vector3(0, 0, 0) 
+                },
+                front: { 
+                    position: new THREE.Vector3(0, 8, 25), 
+                    target: new THREE.Vector3(0, 0, 0) 
+                },
+                reset: { 
+                    position: new THREE.Vector3(25, 15, 25), 
+                    target: new THREE.Vector3(0, 0, 0) 
+                }
+            };
+            
+            function animateCameraTo(position, target) {
+                const duration = 800;
+                const startPos = camera.position.clone();
+                const startTarget = controls.target.clone();
+                const startTime = Date.now();
+                
+                function animate() {
+                    const elapsed = Date.now() - startTime;
+                    const t = Math.min(elapsed / duration, 1);
+                    const easeT = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+                    
+                    camera.position.lerpVectors(startPos, position, easeT);
+                    controls.target.lerpVectors(startTarget, target, easeT);
+                    controls.update();
+                    
+                    if (t < 1) {
+                        requestAnimationFrame(animate);
+                    }
+                }
+                animate();
+            }
+            
+            document.getElementById('topView').addEventListener('click', () => {
+                animateCameraTo(viewPositions.top.position, viewPositions.top.target);
+            });
+            
+            document.getElementById('sideView').addEventListener('click', () => {
+                animateCameraTo(viewPositions.side.position, viewPositions.side.target);
+            });
+            
+            document.getElementById('frontView').addEventListener('click', () => {
+                animateCameraTo(viewPositions.front.position, viewPositions.front.target);
+            });
+            
+            document.getElementById('resetView').addEventListener('click', () => {
+                animateCameraTo(viewPositions.reset.position, viewPositions.reset.target);
+            });
+            
+            // === 12. 发射器位置控制 ===
+            function updateEmitterPosition() {
+                const x = parseFloat(document.getElementById('emitterX').value);
+                const y = parseFloat(document.getElementById('emitterY').value);
+                const z = parseFloat(document.getElementById('emitterZ').value);
+                
+                emitterPosition.set(x, y, z);
+                emitter.position.copy(emitterPosition);
+                emitterArrow.position.copy(emitterPosition);
+            }
+            
+            // 为发射器位置输入框添加事件监听
+            document.getElementById('emitterX').addEventListener('input', updateEmitterPosition);
+            document.getElementById('emitterY').addEventListener('input', updateEmitterPosition);
+            document.getElementById('emitterZ').addEventListener('input', updateEmitterPosition);
+            
+            // 为方向角度输入框添加事件监听
+            document.getElementById('azimuthAngle').addEventListener('input', updateEmitterArrow);
+            document.getElementById('polarAngle').addEventListener('input', updateEmitterArrow);
+            
+            // === 13. 发射器点击和拖拽功能 ===
+            let isDraggingEmitter = false;
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            
+            function onMouseDown(event) {
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObject(emitter);
+                
+                if (intersects.length > 0) {
+                    isDraggingEmitter = true;
+                    controls.enabled = false;
+                }
+            }
+            
+            function onMouseMove(event) {
+                if (!isDraggingEmitter) return;
+                
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                
+                raycaster.setFromCamera(mouse, camera);
+                const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+                const intersectionPoint = new THREE.Vector3();
+                raycaster.ray.intersectPlane(plane, intersectionPoint);
+                
+                if (intersectionPoint) {
+                    emitterPosition.copy(intersectionPoint);
+                    emitterPosition.x = Math.max(-20, Math.min(20, emitterPosition.x));
+                    emitterPosition.y = Math.max(-10, Math.min(10, emitterPosition.y));
+                    emitterPosition.z = Math.max(-10, Math.min(10, emitterPosition.z));
+                    
+                    emitter.position.copy(emitterPosition);
+                    emitterArrow.position.copy(emitterPosition);
+                    
+                    document.getElementById('emitterX').value = Math.round(emitterPosition.x * 10) / 10;
+                    document.getElementById('emitterY').value = Math.round(emitterPosition.y * 10) / 10;
+                    document.getElementById('emitterZ').value = Math.round(emitterPosition.z * 10) / 10;
+                }
+            }
+            
+            function onMouseUp() {
+                if (isDraggingEmitter) {
+                    isDraggingEmitter = false;
+                    controls.enabled = true;
+                }
+            }
+            
+            window.addEventListener('mousedown', onMouseDown);
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+            
+            // === 14. 形状控制事件绑定 ===
+            document.getElementById('cubeBtn').addEventListener('click', () => {
+                updateMagneticField('cube');
+            });
+            
+            document.getElementById('cylinderBtn').addEventListener('click', () => {
+                updateMagneticField('cylinder');
+            });
+            
+            document.getElementById('prismBtn').addEventListener('click', () => {
+                updateMagneticField('prism');
+            });
+            
+            document.getElementById('sphereBtn').addEventListener('click', () => {
+                updateMagneticField('sphere');
+            });
+            
+            // === 15. 控制面板事件绑定 ===
+            document.getElementById('toggleEmission').addEventListener('click', function() {
+                if (isEmitting && !isPaused) {
+                    togglePause();
+                } else if (isEmitting && isPaused) {
+                    togglePause();
+                } else {
+                    toggleEmission();
+                }
+            });
+            
+            document.getElementById('resetParticles').addEventListener('click', resetParticles);
+            document.getElementById('toggleTrails').addEventListener('click', toggleTrails);
+            
+            // 磁场强度更新
+            document.getElementById('magneticStrength').addEventListener('input', function() {
+                magneticStrength = parseFloat(this.value);
+            });
+            
+            // 初始化
+            updateEmitterPosition();
+            updateEmitterArrow();
+            updateMagneticField('cube');
+            createCoordinateAxes(); // 创建坐标轴虚线
+            
+            // === 16. 动画循环 ===
+            let lastTime = 0;
+            
+            function animate(currentTime) {
+                requestAnimationFrame(animate);
+                
+                const deltaTime = lastTime ? (currentTime - lastTime) / 1000 : 0;
+                lastTime = currentTime;
+                
+                if (!isDraggingEmitter) {
+                    controls.update();
+                }
+                
+                // 更新所有粒子
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const particle = particles[i];
+                    const isAlive = particle.update(deltaTime);
+                    
+                    if (!isAlive) {
+                        particle.dispose();
+                        particles.splice(i, 1);
+                        document.getElementById('particleCount').textContent = particles.length;
+                    }
+                }
+                
+                renderer.render(scene, camera);
+            }
+            
+            animate(0);
+            
+            // 窗口大小调整
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+            
+            // 初始状态
+            document.getElementById('currentStatus').textContent = "准备发射";
+            document.getElementById('statusLight').style.background = '#00FFAA';
+            document.getElementById('statusLight').style.boxShadow = '0 0 10px #00FFAA';
+            document.getElementById('particleCount').textContent = '0';
+            document.getElementById('toggleEmission').textContent = "发射";
+            document.getElementById('toggleTrails').textContent = "显示轨迹";
+            
+            // 发射几颗演示粒子
+            setTimeout(() => {
+                const demoParticles = [
+                    { azimuth: 0, polar: 90, charge: 1 },   // 沿+X轴方向
+                    { azimuth: 90, polar: 90, charge: 1 },  // 沿+Y轴方向
+                    { azimuth: 0, polar: 0, charge: -1 }    // 沿+Z轴方向
+                ];
+                
+                demoParticles.forEach((params, i) => {
+                    setTimeout(() => {
+                        // 设置方向角度
+                        document.getElementById('azimuthAngle').value = params.azimuth;
+                        document.getElementById('polarAngle').value = params.polar;
+                        updateEmitterArrow();
+                        
+                        const speed = 5;
+                        const velocity = currentDirection.clone().multiplyScalar(speed);
+                        const color = params.charge > 0 ? 0xFF3366 : 0x33AAFF;
+                        
+                        new ChargedParticle(emitterPosition.clone(), velocity, params.charge, 1, color);
+                        document.getElementById('particleCount').textContent = particles.length;
+                    }, i * 800);
+                });
+                
+                // 恢复默认角度
+                setTimeout(() => {
+                    document.getElementById('azimuthAngle').value = 0;
+                    document.getElementById('polarAngle').value = 90;
+                    updateEmitterArrow();
+                }, 3000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
