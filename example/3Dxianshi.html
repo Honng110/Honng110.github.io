@@ -970,8 +970,13 @@
                 
                 // 检查点是否离开场景
                 isOutsideScene(point) {
-                    const distance = Math.sqrt(point.x*point.x + point.y*point.y + point.z*point.z);
-                    return distance > 50;
+                    // 平台大小为30x30，在y轴方向也限制同等长度
+                    const platformSize = 30;
+                    const yLimit = platformSize / 2;
+                    
+                    return Math.abs(point.x) > platformSize / 2 || 
+                           Math.abs(point.y) > yLimit || 
+                           Math.abs(point.z) > platformSize / 2;
                 }
                 
                 // 计算磁场中的螺旋运动
@@ -1025,7 +1030,8 @@
                         const parallelMovement = magneticDirection.clone()
                             .multiplyScalar(this.fieldParallelVel * timeInField);
                         
-                        const phase = this.fieldInitialPhase + this.fieldOmega * timeInField;
+                        // 修改相位计算，反转角速度符号以匹配参数面板方向
+                        const phase = this.fieldInitialPhase - this.fieldOmega * timeInField;
                         const perpendicularMovement = new THREE.Vector3(
                             this.fieldRadius * Math.cos(phase),
                             this.fieldRadius * Math.sin(phase),
@@ -1036,8 +1042,9 @@
                             .addVectors(this.fieldCenter, perpendicularMovement)
                             .add(parallelMovement);
                         
-                        const vPerpX = -this.fieldRadius * this.fieldOmega * Math.sin(phase);
-                        const vPerpY = this.fieldRadius * this.fieldOmega * Math.cos(phase);
+                        // 修改速度计算，保持与位置计算一致
+                        const vPerpX = this.fieldRadius * this.fieldOmega * Math.sin(phase);
+                        const vPerpY = -this.fieldRadius * this.fieldOmega * Math.cos(phase);
                         this.velocity = new THREE.Vector3(
                             vPerpX,
                             vPerpY,
@@ -1060,6 +1067,8 @@
                         if (this.outsideFieldTrailPoints.length > 1) {
                             this.createOutsideFieldTrail();
                         }
+                        // 当粒子进入磁场时，重置hasLeftField为false
+                        this.hasLeftField = false;
                     } else if (!this.isInsideField && wasInsideField) {
                         this.outsideFieldTrailPoints = [this.position.clone()];
                         if (this.fieldTrailPoints.length > 1) {
@@ -1469,36 +1478,36 @@
             document.getElementById('toggleTrails').textContent = "显示轨迹";
             
             // 发射几颗演示粒子
-            setTimeout(() => {
-                const demoParticles = [
-                    { azimuth: 0, polar: 90, charge: 1 },   // 沿+X轴方向
-                    { azimuth: 90, polar: 90, charge: 1 },  // 沿+Y轴方向
-                    { azimuth: 0, polar: 0, charge: -1 }    // 沿+Z轴方向
-                ];
+            // setTimeout(() => {
+            //     const demoParticles = [
+            //         { azimuth: 0, polar: 90, charge: 1 },   // 沿+X轴方向
+            //         { azimuth: 90, polar: 90, charge: 1 },  // 沿+Y轴方向
+            //         { azimuth: 0, polar: 0, charge: -1 }    // 沿+Z轴方向
+            //     ];
                 
-                demoParticles.forEach((params, i) => {
-                    setTimeout(() => {
-                        // 设置方向角度
-                        document.getElementById('azimuthAngle').value = params.azimuth;
-                        document.getElementById('polarAngle').value = params.polar;
-                        updateEmitterArrow();
+            //     demoParticles.forEach((params, i) => {
+            //         setTimeout(() => {
+            //             // 设置方向角度
+            //             document.getElementById('azimuthAngle').value = params.azimuth;
+            //             document.getElementById('polarAngle').value = params.polar;
+            //             updateEmitterArrow();
                         
-                        const speed = 5;
-                        const velocity = currentDirection.clone().multiplyScalar(speed);
-                        const color = params.charge > 0 ? 0xFF3366 : 0x33AAFF;
+            //             const speed = 5;
+            //             const velocity = currentDirection.clone().multiplyScalar(speed);
+            //             const color = params.charge > 0 ? 0xFF3366 : 0x33AAFF;
                         
-                        new ChargedParticle(emitterPosition.clone(), velocity, params.charge, 1, color);
-                        document.getElementById('particleCount').textContent = particles.length;
-                    }, i * 800);
-                });
+            //             new ChargedParticle(emitterPosition.clone(), velocity, params.charge, 1, color);
+            //             document.getElementById('particleCount').textContent = particles.length;
+            //         }, i * 800);
+            //     });
                 
-                // 恢复默认角度
-                setTimeout(() => {
-                    document.getElementById('azimuthAngle').value = 0;
-                    document.getElementById('polarAngle').value = 90;
-                    updateEmitterArrow();
-                }, 3000);
-            }, 1000);
+            //     // 恢复默认角度
+            //     setTimeout(() => {
+            //         document.getElementById('azimuthAngle').value = 0;
+            //         document.getElementById('polarAngle').value = 90;
+            //         updateEmitterArrow();
+            //     }, 3000);
+            // }, 1000);
         });
     </script>
 </body>
