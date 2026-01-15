@@ -1,0 +1,2719 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>带电粒子在匀强磁场中运动模拟平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            padding: 15px 20px;
+            background-color: #1e1e1e;
+            border-bottom: 1px solid #333;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            color: #4a9eff;
+            font-weight: 600;
+        }
+        
+        .header p {
+            font-size: 0.9rem;
+            color: #999;
+        }
+        
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .left-panel {
+            width: 250px;
+            background-color: #1e1e1e;
+            padding: 15px;
+            overflow-y: auto;
+            border-right: 1px solid #333;
+        }
+        
+        .panel-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #4a9eff;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #333;
+            font-weight: 600;
+        }
+        
+        .element-card {
+            background-color: #252525;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #333;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .element-card:hover {
+            background-color: #2a2a2a;
+            border-color: #4a9eff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .element-card.active {
+            background-color: #2a3a5a;
+            border-color: #4a9eff;
+        }
+        
+        .element-card h3 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: #4a9eff;
+            font-weight: 600;
+        }
+        
+        .element-card p {
+            font-size: 0.85rem;
+            color: #999;
+        }
+        
+        .center-panel {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background-color: #121212;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #canvas-container {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+            background-color: #121212;
+            touch-action: none; /* 禁用浏览器默认触摸行为 */
+        }
+        
+        #simulation-canvas {
+            background-color: #121212;
+            display: block;
+            transform-origin: 0 0;
+        }
+        
+        .canvas-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(30, 30, 30, 0.9);
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            color: #e0e0e0;
+            z-index: 10;
+            border: 1px solid #333;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .right-panel {
+            width: 320px;
+            background-color: #1e1e1e;
+            padding: 15px;
+            overflow-y: auto;
+            border-left: 1px solid #333;
+        }
+        
+        .property-group {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .property-group h3 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: #4a9eff;
+            font-weight: 600;
+        }
+        
+        .property-item {
+            margin-bottom: 12px;
+        }
+        
+        .property-item label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #ccc;
+            font-weight: 500;
+        }
+        
+        .property-item input, 
+            .property-item select {
+                width: 100%;
+                padding: 12px 15px;
+                background-color: #252525;
+                border: 1px solid #444;
+                border-radius: 6px;
+                color: #e0e0e0;
+                font-size: 1rem;
+                transition: border-color 0.3s;
+                min-height: 48px;
+            }
+        
+        .property-item input:focus, 
+        .property-item select:focus {
+            outline: none;
+            border-color: #4a9eff;
+        }
+        
+        .input-with-unit {
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-with-unit input {
+            flex: 1;
+            margin-right: 5px;
+        }
+        
+        .unit {
+            min-width: 40px;
+            color: #999;
+            font-size: 0.85rem;
+        }
+        
+        .control-panel {
+            padding: 15px 20px;
+            background-color: #1e1e1e;
+            border-top: 1px solid #333;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .control-button {
+            padding: 12px 24px;
+            background-color: #252525;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            min-height: 56px;
+            touch-action: manipulation;
+        }
+        
+        .control-button:hover {
+            background-color: #2a2a2a;
+            border-color: #4a9eff;
+            transform: translateY(-2px);
+        }
+        
+        .control-button.primary {
+            background-color: #1971c2;
+            color: white;
+        }
+        
+        .control-button.primary:hover {
+            background-color: #1864ab;
+        }
+        
+        .control-button.warning {
+            background-color: #e67700;
+            color: white;
+        }
+        
+        .control-button.warning:hover {
+            background-color: #d35400;
+        }
+        
+        .no-selection {
+            text-align: center;
+            padding: 40px 20px;
+            color: #777;
+        }
+        
+        .physics-info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .physics-info-label {
+            color: #555;
+        }
+        
+        .physics-info-value {
+            color: #1971c2;
+            font-weight: 500;
+        }
+        
+        .coordinate-display {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            color: #333;
+            z-index: 10;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .selection-box {
+            position: absolute;
+            border: 2px solid #4a9eff;
+            background-color: rgba(74, 158, 255, 0.1);
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        .transform-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background-color: rgba(30, 30, 30, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            display: none;
+        }
+        
+        .transform-controls.active {
+            display: flex;
+        }
+        
+        .transform-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #252525;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        
+        .transform-btn:hover {
+            background-color: #2a2a2a;
+            border-color: #4a9eff;
+        }
+        
+        .gesture-hint {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(30, 30, 30, 0.9);
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            color: #999;
+            border: 1px solid #333;
+            display: none;
+        }
+        
+        .gesture-hint.active {
+            display: block;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <h1>带电粒子在匀强磁场中运动模拟平台</h1>
+        <p>点击左侧元素添加到画布，点击画布上的元素可编辑属性，支持移动、旋转、缩放操作</p>
+    </div>
+    
+    <div class="container">
+        <!-- 左侧元素列表 -->
+        <div class="left-panel">
+            <div class="panel-title">元素列表</div>
+            
+            <div class="element-card" data-type="particle-emitter">
+                <h3><i class="fas fa-bullseye"></i> 粒子发射器</h3>
+                <p>添加一个粒子发射器到画布上，可设置粒子类型、速度和方向</p>
+            </div>
+            
+            <div class="element-card" data-type="magnetic-field">
+                <h3><i class="fas fa-magnet"></i> 磁场</h3>
+                <p>添加一个磁场区域到画布上，可设置形状、方向和强度</p>
+            </div>
+            
+            <div class="panel-title" style="margin-top: 25px;">操作指南</div>
+            <div style="font-size: 0.85rem; color: #666; line-height: 1.5;">
+                <p><i class="fas fa-mouse-pointer"></i> <strong>选择元素</strong>: 点击画布上的元素</p>
+                <p><i class="fas fa-arrows-alt"></i> <strong>移动元素</strong>: 拖动选中元素</p>
+                <p><i class="fas fa-sync-alt"></i> <strong>旋转元素</strong>: 双击元素或使用下方控制按钮</p>
+                <p><i class="fas fa-expand-alt"></i> <strong>缩放元素</strong>: 双击元素或使用下方控制按钮</p>
+                <p><i class="fas fa-search"></i> <strong>缩放画布</strong>: 使用鼠标滚轮</p>
+                <p><i class="fas fa-hand-paper"></i> <strong>平移画布</strong>: 按住空格键拖动</p>
+                <p><i class="fas fa-mobile-alt"></i> <strong>iPad触控</strong>: 双指旋转/缩放元素</p>
+            </div>
+        </div>
+        
+        <!-- 中间画布区域 -->
+        <div class="center-panel">
+            <div id="canvas-container">
+                <canvas id="simulation-canvas"></canvas>
+                <div class="canvas-overlay">
+                    画布比例: <span id="canvas-scale">100%</span> | 
+                    粒子数量: <span id="particle-count">0</span>
+                </div>
+                <div class="coordinate-display">
+                    坐标: <span id="mouse-coords">(0, 0)</span>
+                </div>
+                <div class="selection-box" id="selection-box" style="display: none;"></div>
+                <div class="transform-controls" id="transform-controls">
+                    <button class="transform-btn" id="rotate-left-btn" title="向左旋转">
+                        <i class="fas fa-undo-alt"></i>
+                    </button>
+                    <button class="transform-btn" id="rotate-right-btn" title="向右旋转">
+                        <i class="fas fa-redo-alt"></i>
+                    </button>
+                    <button class="transform-btn" id="scale-up-btn" title="放大">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button class="transform-btn" id="scale-down-btn" title="缩小">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                </div>
+                <div class="gesture-hint" id="gesture-hint">
+                    双指操作: 旋转/缩放元素
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右侧属性面板 -->
+        <div class="right-panel">
+            <div class="panel-title">属性设置</div>
+            
+            <div id="no-selection-panel" class="no-selection">
+                <i class="fas fa-mouse-pointer" style="font-size: 2rem; margin-bottom: 10px; color: #1971c2;"></i>
+                <p>请点击画布上的元素以编辑其属性</p>
+            </div>
+            
+            <!-- 粒子发射器属性 -->
+            <div id="emitter-properties" style="display: none;">
+                <div class="property-group">
+                    <h3><i class="fas fa-bullseye"></i> 粒子发射器属性</h3>
+                    
+                    <div class="property-item">
+                        <label for="particle-type">粒子类型</label>
+                        <select id="particle-type">
+                            <option value="electron">电子 (e⁻)</option>
+                            <option value="proton">质子 (p⁺)</option>
+                            <option value="alpha">α粒子 (He²⁺)</option>
+                            <option value="deuteron">氘核 (d⁺)</option>
+                            <option value="triton">氚核 (t⁺)</option>
+                            <option value="custom">自定义粒子</option>
+                        </select>
+                    </div>
+                    
+                    <div id="custom-particle-properties" style="display: none;">
+                        <div class="property-item">
+                            <label for="custom-charge">电荷量 (相对单位)</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="custom-charge" step="1" value="-1">
+                                <span class="unit">q</span>
+                            </div>
+                        </div>
+                        
+                        <div class="property-item">
+                            <label for="custom-mass">质量 (相对单位)</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="custom-mass" step="1" value="1">
+                                <span class="unit">m</span>
+                            </div>
+                        </div>
+                        
+                        <div class="property-item">
+                            <label for="custom-color">粒子颜色</label>
+                            <input type="color" id="custom-color" value="#4dabf7">
+                        </div>
+                    </div>
+                    
+                    <div class="property-item">
+                        <label for="particle-speed">速度大小</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="particle-speed" min="1" max="100" step="1" value="3">
+                            <span class="unit">m/s</span>
+                        </div>
+                    </div>
+                    
+                    <div class="property-item">
+                        <label for="particle-angle">速度方向</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="particle-angle" min="0" max="360" step="1" value="0">
+                            <span class="unit">°</span>
+                        </div>
+                    </div>
+                    
+                    <div class="property-item">
+                        <label for="emission-rate">发射频率</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="emission-rate" min="1" max="60" step="1" value="1">
+                            <span class="unit">个/秒</span>
+                        </div>
+                    </div>
+                    
+                    <div class="property-item">
+                        <label for="emitter-size">发射器大小</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="emitter-size" min="10" max="60" step="1" value="3">
+                            <span class="unit">px</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 磁场属性 -->
+            <div id="field-properties" style="display: none;">
+                <div class="property-group">
+                    <h3><i class="fas fa-magnet"></i> 磁场属性</h3>
+                    
+                    <div class="property-item">
+                        <label for="field-shape">磁场形状</label>
+                        <select id="field-shape">
+                            <option value="rectangle">矩形</option>
+                            <option value="circle">圆形</option>
+                            <option value="triangle">三角形</option>
+                            <option value="single-boundary">单边界</option>
+                            <option value="double-boundary">双边界</option>
+                        </select>
+                    </div>
+                    
+                    <div class="property-item">
+                        <label for="field-direction">磁场方向</label>
+                        <select id="field-direction">
+                            <option value="out">垂直纸面向外 (⊗)</option>
+                            <option value="in">垂直纸面向内 (⊙)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="property-item">
+                        <label for="field-strength">磁场强度</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="field-strength" min="0.1" max="10" step="0.1" value="1.0">
+                            <span class="unit">B</span>
+                        </div>
+                    </div>
+                    
+                    <div class="property-item">
+                        <label for="field-width">宽度</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="field-width" min="50" max="400" step="10" value="150">
+                            <span class="unit">px</span>
+                        </div>
+                    </div>
+                    
+                    <div class="property-item">
+                        <label for="field-height">高度</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="field-height" min="50" max="400" step="10" value="100">
+                            <span class="unit">px</span>
+                        </div>
+                    </div>
+                    
+                    <div class="property-item">
+                        <label for="field-rotation">旋转角度</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="field-rotation" min="0" max="360" step="1" value="0">
+                            <span class="unit">°</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 物理信息显示 -->
+            <div class="property-group" id="physics-info-panel">
+                <h3><i class="fas fa-atom"></i> 物理信息</h3>
+                <div id="physics-info">
+                    <div class="physics-info-item">
+                        <span class="physics-info-label">选定粒子:</span>
+                        <span class="physics-info-value" id="selected-particle">无</span>
+                    </div>
+                    <div class="physics-info-item">
+                        <span class="physics-info-label">电荷量:</span>
+                        <span class="physics-info-value" id="particle-charge">0 q</span>
+                    </div>
+                    <div class="physics-info-item">
+                        <span class="physics-info-label">质量:</span>
+                        <span class="physics-info-value" id="particle-mass">0 m</span>
+                    </div>
+                    <div class="physics-info-item">
+                        <span class="physics-info-label">回旋半径:</span>
+                        <span class="physics-info-value" id="gyroradius">0 m</span>
+                    </div>
+                    <div class="physics-info-item">
+                        <span class="physics-info-label">回旋周期:</span>
+                        <span class="physics-info-value" id="gyroperiod">0 s</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 变换控制 -->
+            <div class="property-group" id="transform-panel" style="display: none;">
+                <h3><i class="fas fa-edit"></i> 变换控制</h3>
+                
+                <div class="property-item">
+                    <label for="element-x">X 坐标</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="element-x" step="1" value="0">
+                        <span class="unit">px</span>
+                    </div>
+                </div>
+                
+                <div class="property-item">
+                    <label for="element-y">Y 坐标</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="element-y" step="1" value="0">
+                        <span class="unit">px</span>
+                    </div>
+                </div>
+                
+                <div class="property-item">
+                    <label for="element-rotation">旋转角度</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="element-rotation" min="0" max="360" step="1" value="0">
+                        <span class="unit">°</span>
+                    </div>
+                </div>
+                
+                <div class="property-item">
+                    <label for="element-scale">缩放比例</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="element-scale" min="0.1" max="3" step="0.1" value="1.0">
+                        <span class="unit">倍</span>
+                    </div>
+                </div>
+                
+                <div class="property-item">
+                    <button id="delete-element-btn" class="control-button warning" style="width: 100%; margin-top: 10px;">
+                        <i class="fas fa-trash-alt"></i> 删除元素
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 底部控制面板 -->
+    <div class="control-panel">
+        <button id="start-btn" class="control-button primary">
+            <i class="fas fa-play"></i> 开始模拟
+        </button>
+        
+        <button id="reset-btn" class="control-button warning">
+            <i class="fas fa-redo"></i> 重置
+        </button>
+        
+        <button id="trajectory-btn" class="control-button">
+            <i class="fas fa-wave-square"></i> 显示轨迹
+        </button>
+        
+        <button id="clear-btn" class="control-button">
+            <i class="fas fa-trash"></i> 清除所有
+        </button>
+    </div>
+
+    <script>
+        // 简化物理常量 - 高中物理阶段简化
+        const PHYSICS_CONSTANTS = {
+            ELECTRON: {
+                name: '电子',
+                charge: -1, // 相对单位
+                mass: 1,    // 相对单位（实际上电子质量很小，但为简化设为1）
+                color: '#4dabf7'
+            },
+            PROTON: {
+                name: '质子',
+                charge: 1,  // 相对单位
+                mass: 1,    // 相对单位
+                color: '#ff6b6b'
+            },
+            ALPHA: {
+                name: 'α粒子',
+                charge: 2,  // 相对单位
+                mass: 4,    // 相对单位
+                color: '#51cf66'
+            },
+            DEUTERON: {
+                name: '氘核',
+                charge: 1,  // 相对单位
+                mass: 2,    // 相对单位
+                color: '#ffd43b'
+            },
+            TRITON: {
+                name: '氚核',
+                charge: 1,  // 相对单位
+                mass: 3,    // 相对单位
+                color: '#cc5de8'
+            },
+            CUSTOM: {
+                name: '自定义粒子',
+                charge: -1, // 相对单位
+                mass: 1,    // 相对单位
+                color: '#4dabf7'
+            }
+        };
+
+        // 应用状态
+        const state = {
+            simulationRunning: false,
+            showTrajectories: true,
+            canvasScale: 1.0,
+            canvasOffset: { x: 0, y: 0 },
+            isDraggingCanvas: false,
+            isDraggingElement: false,
+            dragStart: { x: 0, y: 0 },
+            selectedElement: null,
+            selectedElements: [],
+            elements: [],
+            particles: [],
+            trajectories: [],
+            lastFrameTime: 0,
+            spacePressed: false,
+            simulationStep: 0,
+            selection: {
+                active: false,
+                start: { x: 0, y: 0 },
+                end: { x: 0, y: 0 }
+            },
+            transformControlsVisible: false,
+            lastClickTime: 0,
+            lastTapTime: 0,
+            touchStart: {
+                x: 0,
+                y: 0,
+                time: 0,
+                distance: 0,
+                angle: 0
+            },
+            multiTouch: {
+                active: false,
+                initialDistance: 0,
+                initialAngle: 0,
+                initialScale: 1,
+                initialRotation: 0
+            }
+        };
+
+        // 获取DOM元素
+        const canvas = document.getElementById('simulation-canvas');
+        const ctx = canvas.getContext('2d');
+        const canvasContainer = document.getElementById('canvas-container');
+        const canvasScaleElement = document.getElementById('canvas-scale');
+        const particleCountElement = document.getElementById('particle-count');
+        const mouseCoordsElement = document.getElementById('mouse-coords');
+        const selectionBox = document.getElementById('selection-box');
+        const transformControls = document.getElementById('transform-controls');
+        const gestureHint = document.getElementById('gesture-hint');
+        
+        // 左侧面板元素
+        const elementCards = document.querySelectorAll('.element-card');
+        
+        // 右侧面板
+        const noSelectionPanel = document.getElementById('no-selection-panel');
+        const emitterProperties = document.getElementById('emitter-properties');
+        const fieldProperties = document.getElementById('field-properties');
+        const transformPanel = document.getElementById('transform-panel');
+        const physicsInfoPanel = document.getElementById('physics-info-panel');
+        const customParticleProperties = document.getElementById('custom-particle-properties');
+        
+        // 发射器属性控件
+        const particleTypeSelect = document.getElementById('particle-type');
+        const particleSpeedInput = document.getElementById('particle-speed');
+        const particleAngleInput = document.getElementById('particle-angle');
+        const emissionRateInput = document.getElementById('emission-rate');
+        const emitterSizeInput = document.getElementById('emitter-size');
+        const customChargeInput = document.getElementById('custom-charge');
+        const customMassInput = document.getElementById('custom-mass');
+        const customColorInput = document.getElementById('custom-color');
+        
+        // 磁场属性控件
+        const fieldShapeSelect = document.getElementById('field-shape');
+        const fieldDirectionSelect = document.getElementById('field-direction');
+        const fieldStrengthInput = document.getElementById('field-strength');
+        const fieldWidthInput = document.getElementById('field-width');
+        const fieldHeightInput = document.getElementById('field-height');
+        const fieldRotationInput = document.getElementById('field-rotation');
+        
+        // 变换控制控件
+        const elementXInput = document.getElementById('element-x');
+        const elementYInput = document.getElementById('element-y');
+        const elementRotationInput = document.getElementById('element-rotation');
+        const elementScaleInput = document.getElementById('element-scale');
+        
+        // 物理信息显示
+        const selectedParticleElement = document.getElementById('selected-particle');
+        const particleChargeElement = document.getElementById('particle-charge');
+        const particleMassElement = document.getElementById('particle-mass');
+        const gyroradiusElement = document.getElementById('gyroradius');
+        const gyroperiodElement = document.getElementById('gyroperiod');
+        
+        // 控制按钮
+        const startButton = document.getElementById('start-btn');
+        const resetButton = document.getElementById('reset-btn');
+        const trajectoryButton = document.getElementById('trajectory-btn');
+        const clearButton = document.getElementById('clear-btn');
+        const deleteElementButton = document.getElementById('delete-element-btn');
+        
+        // 变换按钮
+        const rotateLeftBtn = document.getElementById('rotate-left-btn');
+        const rotateRightBtn = document.getElementById('rotate-right-btn');
+        const scaleUpBtn = document.getElementById('scale-up-btn');
+        const scaleDownBtn = document.getElementById('scale-down-btn');
+
+        // 初始化画布
+        function initCanvas() {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // 画布缩放事件
+            canvasContainer.addEventListener('wheel', handleCanvasZoom);
+            
+            // 画布拖拽事件
+            canvasContainer.addEventListener('mousedown', handleCanvasMouseDown);
+            canvasContainer.addEventListener('mousemove', handleCanvasMouseMove);
+            canvasContainer.addEventListener('mouseup', handleCanvasMouseUp);
+            canvasContainer.addEventListener('mouseleave', handleCanvasMouseLeave);
+            
+            // 双击事件
+            canvasContainer.addEventListener('dblclick', handleDoubleClick);
+            
+            // 触摸事件支持（iPad适配）
+            canvasContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+            canvasContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+            canvasContainer.addEventListener('touchend', handleTouchEnd);
+            canvasContainer.addEventListener('touchcancel', handleTouchEnd);
+            
+            // 键盘事件
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+            
+            // 初始绘制
+            draw();
+        }
+
+        // 处理键盘按下
+        function handleKeyDown(e) {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                state.spacePressed = true;
+                canvasContainer.style.cursor = 'grab';
+            }
+        }
+
+        // 处理键盘释放
+        function handleKeyUp(e) {
+            if (e.code === 'Space') {
+                state.spacePressed = false;
+                canvasContainer.style.cursor = 'default';
+            }
+        }
+
+        // 调整画布大小
+        function resizeCanvas() {
+            const containerRect = canvasContainer.getBoundingClientRect();
+            canvas.width = containerRect.width;
+            canvas.height = containerRect.height;
+            
+            // 初始偏移，使内容居中
+            if (state.elements.length === 0) {
+                state.canvasOffset.x = canvas.width / 2 - 200;
+                state.canvasOffset.y = canvas.height / 2 - 150;
+            }
+            
+            draw();
+        }
+
+        // 处理画布缩放
+        function handleCanvasZoom(e) {
+            e.preventDefault();
+            
+            const zoomIntensity = 0.1;
+            const mouseX = e.clientX - canvasContainer.getBoundingClientRect().left;
+            const mouseY = e.clientY - canvasContainer.getBoundingClientRect().top;
+            
+            // 计算鼠标在画布空间中的位置
+            const worldX = (mouseX - state.canvasOffset.x) / state.canvasScale;
+            const worldY = (mouseY - state.canvasOffset.y) / state.canvasScale;
+            
+            // 更新缩放比例
+            if (e.deltaY < 0) {
+                state.canvasScale *= (1 + zoomIntensity);
+            } else {
+                state.canvasScale *= (1 - zoomIntensity);
+            }
+            
+            // 限制缩放范围
+            state.canvasScale = Math.max(0.1, Math.min(5, state.canvasScale));
+            
+            // 调整偏移量以保持鼠标位置不变
+            state.canvasOffset.x = mouseX - worldX * state.canvasScale;
+            state.canvasOffset.y = mouseY - worldY * state.canvasScale;
+            
+            canvasScaleElement.textContent = `${Math.round(state.canvasScale * 100)}%`;
+            draw();
+        }
+
+        // 处理鼠标按下事件
+        function handleCanvasMouseDown(e) {
+            const rect = canvasContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // 计算画布空间中的坐标
+            const worldX = (x - state.canvasOffset.x) / state.canvasScale;
+            const worldY = (y - state.canvasOffset.y) / state.canvasScale;
+            
+            // 检查是否点击了元素
+            let clickedElement = null;
+            
+            for (const element of state.elements) {
+                if (isPointInElement(worldX, worldY, element)) {
+                    clickedElement = element;
+                    break;
+                }
+            }
+            
+            if (clickedElement) {
+                // 如果按住Ctrl键，可以多选
+                if (e.ctrlKey) {
+                    // 切换元素的选择状态
+                    const index = state.selectedElements.indexOf(clickedElement);
+                    if (index === -1) {
+                        state.selectedElements.push(clickedElement);
+                        state.selectedElement = clickedElement;
+                    } else {
+                        state.selectedElements.splice(index, 1);
+                        state.selectedElement = state.selectedElements.length > 0 ? state.selectedElements[state.selectedElements.length - 1] : null;
+                    }
+                } else {
+                    // 如果已经选中了元素，并且按住Shift键，添加到选区
+                    if (e.shiftKey && state.selectedElement && !state.selectedElements.includes(clickedElement)) {
+                        state.selectedElements.push(clickedElement);
+                    } else if (!e.shiftKey && !state.selectedElements.includes(clickedElement)) {
+                        // 单选
+                        state.selectedElements = [clickedElement];
+                        state.selectedElement = clickedElement;
+                    }
+                }
+                
+                // 开始拖拽元素
+                state.isDraggingElement = true;
+                state.dragStart.x = e.clientX;
+                state.dragStart.y = e.clientY;
+                state.dragStart.elementX = clickedElement.x;
+                state.dragStart.elementY = clickedElement.y;
+                
+                canvasContainer.style.cursor = 'grabbing';
+                
+                // 更新属性面板
+                updatePropertiesPanel();
+                
+                // 隐藏变换控制按钮（将在鼠标释放后显示）
+                transformControls.classList.remove('active');
+            } else if (state.spacePressed) {
+                // 按住空格键拖拽画布
+                state.isDraggingCanvas = true;
+                state.dragStart.x = e.clientX - state.canvasOffset.x;
+                state.dragStart.y = e.clientY - state.canvasOffset.y;
+                canvasContainer.style.cursor = 'grabbing';
+            } else {
+                // 点击空白处，开始框选
+                state.selection.active = true;
+                state.selection.start = {
+                    x: e.clientX,
+                    y: e.clientY
+                };
+                state.selection.end = {
+                    x: e.clientX,
+                    y: e.clientY
+                };
+                
+                // 显示选择框
+                selectionBox.style.display = 'block';
+                updateSelectionBox();
+                
+                // 取消之前的选择
+                if (!e.ctrlKey && !e.shiftKey) {
+                    state.selectedElements = [];
+                    state.selectedElement = null;
+                }
+                
+                // 隐藏变换控制按钮
+                transformControls.classList.remove('active');
+                gestureHint.classList.remove('active');
+                
+                // 更新属性面板
+                updatePropertiesPanel();
+            }
+            
+            draw();
+        }
+
+        // 处理鼠标移动事件
+        function handleCanvasMouseMove(e) {
+            const rect = canvasContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // 计算画布空间中的坐标
+            const worldX = (x - state.canvasOffset.x) / state.canvasScale;
+            const worldY = (y - state.canvasOffset.y) / state.canvasScale;
+            
+            // 更新鼠标坐标显示
+            mouseCoordsElement.textContent = `(${Math.round(worldX)}, ${Math.round(worldY)})`;
+            
+            if (state.isDraggingElement && state.selectedElements.length > 0) {
+                // 拖拽所有选中的元素
+                const dx = (e.clientX - state.dragStart.x) / state.canvasScale;
+                const dy = (e.clientY - state.dragStart.y) / state.canvasScale;
+                
+                // 移动所有选中元素
+                state.selectedElements.forEach(element => {
+                    // 如果是第一次移动这个元素，记录其初始位置
+                    if (!element.initialDragX) {
+                        element.initialDragX = element.x;
+                        element.initialDragY = element.y;
+                    }
+                    
+                    element.x = element.initialDragX + dx;
+                    element.y = element.initialDragY + dy;
+                });
+                
+                // 更新变换控制面板
+                if (state.selectedElement) {
+                    updateTransformControls();
+                }
+                
+                draw();
+            } else if (state.isDraggingCanvas) {
+                // 拖拽画布
+                state.canvasOffset.x = e.clientX - state.dragStart.x;
+                state.canvasOffset.y = e.clientY - state.dragStart.y;
+                draw();
+            } else if (state.selection.active) {
+                // 更新框选区域
+                state.selection.end = {
+                    x: e.clientX,
+                    y: e.clientY
+                };
+                updateSelectionBox();
+            } else {
+                // 检查鼠标是否在元素上，改变光标样式
+                let overElement = false;
+                for (const element of state.elements) {
+                    if (isPointInElement(worldX, worldY, element)) {
+                        overElement = true;
+                        break;
+                    }
+                }
+                
+                canvasContainer.style.cursor = overElement ? 'move' : 'default';
+            }
+        }
+
+        // 处理鼠标释放事件
+        function handleCanvasMouseUp() {
+            // 结束拖拽元素时清除初始位置记录
+            if (state.isDraggingElement) {
+                state.selectedElements.forEach(element => {
+                    delete element.initialDragX;
+                    delete element.initialDragY;
+                });
+            }
+            
+            state.isDraggingElement = false;
+            state.isDraggingCanvas = false;
+            
+            // 完成框选
+            if (state.selection.active) {
+                const rect = canvasContainer.getBoundingClientRect();
+                
+                // 计算框选区域在屏幕空间中的坐标
+                const selectionRect = {
+                    left: Math.min(state.selection.start.x, state.selection.end.x) - rect.left,
+                    top: Math.min(state.selection.start.y, state.selection.end.y) - rect.top,
+                    right: Math.max(state.selection.start.x, state.selection.end.x) - rect.left,
+                    bottom: Math.max(state.selection.start.y, state.selection.end.y) - rect.top
+                };
+                
+                // 将选择区域转换到画布空间
+                const worldRect = {
+                    left: (selectionRect.left - state.canvasOffset.x) / state.canvasScale,
+                    top: (selectionRect.top - state.canvasOffset.y) / state.canvasScale,
+                    right: (selectionRect.right - state.canvasOffset.x) / state.canvasScale,
+                    bottom: (selectionRect.bottom - state.canvasOffset.y) / state.canvasScale
+                };
+                
+                // 选择框内的元素
+                const selected = [];
+                
+                for (const element of state.elements) {
+                    if (isElementInSelection(element, worldRect)) {
+                        selected.push(element);
+                    }
+                }
+                
+                // 更新选择状态
+                if (selected.length > 0) {
+                    state.selectedElements = selected;
+                    state.selectedElement = selected[selected.length - 1];
+                    
+                    // 显示变换控制按钮
+                    transformControls.classList.add('active');
+                    gestureHint.classList.add('active');
+                } else {
+                    // 隐藏变换控制按钮
+                    transformControls.classList.remove('active');
+                    gestureHint.classList.remove('active');
+                }
+                
+                // 结束框选
+                state.selection.active = false;
+                selectionBox.style.display = 'none';
+                
+                // 更新属性面板
+                updatePropertiesPanel();
+                draw();
+            } else if (state.selectedElements.length > 0) {
+                // 如果已经选择了元素，显示变换控制按钮
+                transformControls.classList.add('active');
+                gestureHint.classList.add('active');
+            }
+            
+            canvasContainer.style.cursor = 'default';
+        }
+
+        // 处理鼠标离开事件
+        function handleCanvasMouseLeave() {
+            state.isDraggingElement = false;
+            state.isDraggingCanvas = false;
+            
+            // 结束框选
+            if (state.selection.active) {
+                state.selection.active = false;
+                selectionBox.style.display = 'none';
+            }
+            
+            canvasContainer.style.cursor = 'default';
+        }
+        
+        // 处理双击事件
+        function handleDoubleClick(e) {
+            const rect = canvasContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // 计算画布空间中的坐标
+            const worldX = (x - state.canvasOffset.x) / state.canvasScale;
+            const worldY = (y - state.canvasOffset.y) / state.canvasScale;
+            
+            // 检查是否双击了元素
+            let clickedElement = null;
+            
+            for (const element of state.elements) {
+                if (isPointInElement(worldX, worldY, element)) {
+                    clickedElement = element;
+                    break;
+                }
+            }
+            
+            if (clickedElement) {
+                // 切换元素的旋转角度（每次双击旋转90度）
+                clickedElement.rotation = (clickedElement.rotation + 90) % 360;
+                
+                // 如果元素被选中，更新控制面板
+                if (state.selectedElements.includes(clickedElement)) {
+                    updateTransformControls();
+                }
+                
+                draw();
+            }
+        }
+        
+        // 触摸事件处理（iPad适配）
+        function handleTouchStart(e) {
+            e.preventDefault();
+            
+            const touches = e.touches;
+            const rect = canvasContainer.getBoundingClientRect();
+            
+            if (touches.length === 1) {
+                // 单指触摸
+                const touch = touches[0];
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                
+                // 计算画布空间中的坐标
+                const worldX = (x - state.canvasOffset.x) / state.canvasScale;
+                const worldY = (y - state.canvasOffset.y) / state.canvasScale;
+                
+                // 检查是否触摸了元素
+                let touchedElement = null;
+                
+                for (const element of state.elements) {
+                    if (isPointInElement(worldX, worldY, element)) {
+                        touchedElement = element;
+                        break;
+                    }
+                }
+                
+                if (touchedElement) {
+                    // 选择元素
+                    if (!state.selectedElements.includes(touchedElement)) {
+                        state.selectedElements = [touchedElement];
+                        state.selectedElement = touchedElement;
+                    }
+                    
+                    // 开始拖拽元素
+                    state.isDraggingElement = true;
+                    state.dragStart.x = touch.clientX;
+                    state.dragStart.y = touch.clientY;
+                    state.dragStart.elementX = touchedElement.x;
+                    state.dragStart.elementY = touchedElement.y;
+                    
+                    // 更新属性面板
+                    updatePropertiesPanel();
+                    
+                    // 显示变换控制按钮
+                    transformControls.classList.add('active');
+                    gestureHint.classList.add('active');
+                } else {
+                    // 触摸空白处，开始框选
+                    state.selection.active = true;
+                    state.selection.start = {
+                        x: touch.clientX,
+                        y: touch.clientY
+                    };
+                    state.selection.end = {
+                        x: touch.clientX,
+                        y: touch.clientY
+                    };
+                    
+                    // 显示选择框
+                    selectionBox.style.display = 'block';
+                    updateSelectionBox();
+                    
+                    // 取消之前的选择
+                    state.selectedElements = [];
+                    state.selectedElement = null;
+                    
+                    // 隐藏变换控制按钮
+                    transformControls.classList.remove('active');
+                    gestureHint.classList.remove('active');
+                    
+                    // 更新属性面板
+                    updatePropertiesPanel();
+                }
+                
+                // 记录触摸开始信息（用于检测双击）
+                const currentTime = Date.now();
+                if (currentTime - state.lastTapTime < 300) {
+                    // 双击事件
+                    handleDoubleClick({
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    });
+                }
+                state.lastTapTime = currentTime;
+                
+            } else if (touches.length === 2 && state.selectedElements.length > 0) {
+                // 双指触摸且有选中元素，开始旋转/缩放
+                const touch1 = touches[0];
+                const touch2 = touches[1];
+                
+                // 计算两点距离和角度
+                const dx = touch2.clientX - touch1.clientX;
+                const dy = touch2.clientY - touch1.clientY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                state.multiTouch.active = true;
+                state.multiTouch.initialDistance = distance;
+                state.multiTouch.initialAngle = angle;
+                state.multiTouch.initialScale = state.selectedElement ? state.selectedElement.scale : 1;
+                state.multiTouch.initialRotation = state.selectedElement ? state.selectedElement.rotation : 0;
+                
+                // 隐藏变换控制按钮
+                transformControls.classList.remove('active');
+                gestureHint.classList.add('active');
+            }
+            
+            draw();
+        }
+        
+        function handleTouchMove(e) {
+            e.preventDefault();
+            
+            const touches = e.touches;
+            const rect = canvasContainer.getBoundingClientRect();
+            
+            if (touches.length === 1 && state.isDraggingElement) {
+                // 单指拖拽元素
+                const touch = touches[0];
+                const dx = (touch.clientX - state.dragStart.x) / state.canvasScale;
+                const dy = (touch.clientY - state.dragStart.y) / state.canvasScale;
+                
+                // 移动所有选中元素
+                state.selectedElements.forEach(element => {
+                    if (!element.initialDragX) {
+                        element.initialDragX = element.x;
+                        element.initialDragY = element.y;
+                    }
+                    
+                    element.x = element.initialDragX + dx;
+                    element.y = element.initialDragY + dy;
+                });
+                
+                // 更新变换控制面板
+                if (state.selectedElement) {
+                    updateTransformControls();
+                }
+                
+                draw();
+            } else if (touches.length === 1 && state.selection.active) {
+                // 单指框选
+                const touch = touches[0];
+                state.selection.end = {
+                    x: touch.clientX,
+                    y: touch.clientY
+                };
+                updateSelectionBox();
+            } else if (touches.length === 2 && state.multiTouch.active && state.selectedElements.length > 0) {
+                // 双指旋转/缩放
+                const touch1 = touches[0];
+                const touch2 = touches[1];
+                
+                // 计算当前两点距离和角度
+                const dx = touch2.clientX - touch1.clientX;
+                const dy = touch2.clientY - touch1.clientY;
+                const currentDistance = Math.sqrt(dx * dx + dy * dy);
+                const currentAngle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                // 计算缩放比例
+                const scaleChange = currentDistance / state.multiTouch.initialDistance;
+                
+                // 计算旋转角度变化
+                const angleChange = currentAngle - state.multiTouch.initialAngle;
+                
+                // 应用变换到所有选中元素
+                state.selectedElements.forEach(element => {
+                    // 缩放
+                    element.scale = Math.max(0.1, Math.min(3, state.multiTouch.initialScale * scaleChange));
+                    
+                    // 旋转
+                    element.rotation = (state.multiTouch.initialRotation + angleChange) % 360;
+                    if (element.rotation < 0) element.rotation += 360;
+                });
+                
+                // 更新变换控制面板
+                updateTransformControls();
+                
+                draw();
+            }
+            
+            // 更新坐标显示
+            if (touches.length > 0) {
+                const touch = touches[0];
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                const worldX = (x - state.canvasOffset.x) / state.canvasScale;
+                const worldY = (y - state.canvasOffset.y) / state.canvasScale;
+                mouseCoordsElement.textContent = `(${Math.round(worldX)}, ${Math.round(worldY)})`;
+            }
+        }
+        
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            
+            // 结束拖拽元素时清除初始位置记录
+            if (state.isDraggingElement) {
+                state.selectedElements.forEach(element => {
+                    delete element.initialDragX;
+                    delete element.initialDragY;
+                });
+            }
+            
+            state.isDraggingElement = false;
+            state.multiTouch.active = false;
+            
+            // 完成框选
+            if (state.selection.active) {
+                const rect = canvasContainer.getBoundingClientRect();
+                
+                // 计算框选区域在屏幕空间中的坐标
+                const selectionRect = {
+                    left: Math.min(state.selection.start.x, state.selection.end.x) - rect.left,
+                    top: Math.min(state.selection.start.y, state.selection.end.y) - rect.top,
+                    right: Math.max(state.selection.start.x, state.selection.end.x) - rect.left,
+                    bottom: Math.max(state.selection.start.y, state.selection.end.y) - rect.top
+                };
+                
+                // 将选择区域转换到画布空间
+                const worldRect = {
+                    left: (selectionRect.left - state.canvasOffset.x) / state.canvasScale,
+                    top: (selectionRect.top - state.canvasOffset.y) / state.canvasScale,
+                    right: (selectionRect.right - state.canvasOffset.x) / state.canvasScale,
+                    bottom: (selectionRect.bottom - state.canvasOffset.y) / state.canvasScale
+                };
+                
+                // 选择框内的元素
+                const selected = [];
+                
+                for (const element of state.elements) {
+                    if (isElementInSelection(element, worldRect)) {
+                        selected.push(element);
+                    }
+                }
+                
+                // 更新选择状态
+                if (selected.length > 0) {
+                    state.selectedElements = selected;
+                    state.selectedElement = selected[selected.length - 1];
+                    
+                    // 显示变换控制按钮
+                    transformControls.classList.add('active');
+                    gestureHint.classList.add('active');
+                } else {
+                    // 隐藏变换控制按钮
+                    transformControls.classList.remove('active');
+                    gestureHint.classList.remove('active');
+                }
+                
+                // 结束框选
+                state.selection.active = false;
+                selectionBox.style.display = 'none';
+                
+                // 更新属性面板
+                updatePropertiesPanel();
+                draw();
+            } else if (state.selectedElements.length > 0) {
+                // 如果已经选择了元素，显示变换控制按钮
+                transformControls.classList.add('active');
+                gestureHint.classList.add('active');
+            }
+        }
+
+        // 检查点是否在元素内
+        function isPointInElement(x, y, element) {
+            // 将点转换到元素局部坐标系
+            const dx = x - element.x;
+            const dy = y - element.y;
+            
+            // 考虑旋转
+            const angle = element.rotation * Math.PI / 180;
+            const cosAngle = Math.cos(angle);
+            const sinAngle = Math.sin(angle);
+            const rotatedX = dx * cosAngle + dy * sinAngle;
+            const rotatedY = -dx * sinAngle + dy * cosAngle;
+            
+            // 考虑缩放
+            const scaledX = rotatedX / element.scale;
+            const scaledY = rotatedY / element.scale;
+            
+            if (element.type === 'particle-emitter') {
+                // 圆形发射器
+                const distance = Math.sqrt(scaledX**2 + scaledY**2);
+                return distance <= element.radius;
+            } else if (element.type === 'magnetic-field') {
+                // 根据形状判断
+                if (element.shape === 'rectangle') {
+                    return Math.abs(scaledX) <= element.width/2 && Math.abs(scaledY) <= element.height/2;
+                } else if (element.shape === 'circle') {
+                    const distance = Math.sqrt(scaledX**2 + scaledY**2);
+                    return distance <= element.width/2;
+                } else if (element.shape === 'triangle') {
+                    // 简单三角形检测（等边三角形，顶点在上，底边在下）
+                    const top = -element.height/2;
+                    const bottom = element.height/2;
+                    const left = -element.width/2;
+                    const right = element.width/2;
+                    
+                    // 检查点是否在三角形内
+                    const area = element.width * element.height / 2;
+                    
+                    // 计算子三角形面积
+                    const area1 = Math.abs(scaledX * (bottom - top) + left * (top - scaledY) + right * (scaledY - bottom)) / 2;
+                    const area2 = Math.abs(left * (top - scaledY) + right * (scaledY - bottom) + 0 * (bottom - top)) / 2;
+                    const area3 = Math.abs(scaledX * (bottom - scaledY) + right * (scaledY - bottom) + 0 * (bottom - scaledX)) / 2;
+                    
+                    return (area1 + area2 + area3) <= area + 0.1;
+                } else if (element.shape === 'single-boundary') {
+                    // 单边界：只检查y坐标
+                    return Math.abs(scaledY) <= element.height/2;
+                } else if (element.shape === 'double-boundary') {
+                    // 双边界：检查y坐标在两个边界之间
+                    return Math.abs(scaledY) <= element.height/2;
+                }
+            }
+            
+            return false;
+        }
+
+        // 检查元素是否在选择框内
+        function isElementInSelection(element, worldRect) {
+            // 计算元素的边界框
+            let elementBounds;
+            
+            if (element.type === 'particle-emitter') {
+                const radius = element.radius * element.scale;
+                elementBounds = {
+                    left: element.x - radius,
+                    right: element.x + radius,
+                    top: element.y - radius,
+                    bottom: element.y + radius
+                };
+            } else if (element.type === 'magnetic-field') {
+                // 考虑旋转和缩放
+                const halfWidth = element.width * element.scale / 2;
+                const halfHeight = element.height * element.scale / 2;
+                
+                // 计算旋转后的边界框
+                const angle = element.rotation * Math.PI / 180;
+                const cosAngle = Math.cos(angle);
+                const sinAngle = Math.sin(angle);
+                
+                const points = [
+                    { x: -halfWidth, y: -halfHeight },
+                    { x: halfWidth, y: -halfHeight },
+                    { x: halfWidth, y: halfHeight },
+                    { x: -halfWidth, y: halfHeight }
+                ];
+                
+                // 旋转点并找到边界
+                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                points.forEach(point => {
+                    const rotatedX = point.x * cosAngle - point.y * sinAngle + element.x;
+                    const rotatedY = point.x * sinAngle + point.y * cosAngle + element.y;
+                    
+                    minX = Math.min(minX, rotatedX);
+                    maxX = Math.max(maxX, rotatedX);
+                    minY = Math.min(minY, rotatedY);
+                    maxY = Math.max(maxY, rotatedY);
+                });
+                
+                elementBounds = {
+                    left: minX,
+                    right: maxX,
+                    top: minY,
+                    bottom: maxY
+                };
+            }
+            
+            // 检查边界框是否在选择框内
+            return (
+                elementBounds.left >= worldRect.left &&
+                elementBounds.right <= worldRect.right &&
+                elementBounds.top >= worldRect.top &&
+                elementBounds.bottom <= worldRect.bottom
+            );
+        }
+
+        // 更新选择框显示
+        function updateSelectionBox() {
+            const rect = canvasContainer.getBoundingClientRect();
+            const left = Math.min(state.selection.start.x, state.selection.end.x) - rect.left;
+            const top = Math.min(state.selection.start.y, state.selection.end.y) - rect.top;
+            const width = Math.abs(state.selection.end.x - state.selection.start.x);
+            const height = Math.abs(state.selection.end.y - state.selection.start.y);
+            
+            selectionBox.style.left = `${left}px`;
+            selectionBox.style.top = `${top}px`;
+            selectionBox.style.width = `${width}px`;
+            selectionBox.style.height = `${height}px`;
+        }
+
+        // 绘制函数
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 保存当前画布状态
+            ctx.save();
+            
+            // 应用缩放和平移
+            ctx.translate(state.canvasOffset.x, state.canvasOffset.y);
+            ctx.scale(state.canvasScale, state.canvasScale);
+            
+            // 绘制网格背景
+            drawGrid();
+            
+            // 绘制所有元素
+            state.elements.forEach(element => {
+                drawElement(element);
+            });
+            
+            // 绘制所有轨迹
+            if (state.showTrajectories) {
+                state.trajectories.forEach(trajectory => {
+                    drawTrajectory(trajectory);
+                });
+            }
+            
+            // 绘制所有粒子
+            state.particles.forEach(particle => {
+                drawParticle(particle);
+            });
+            
+            // 绘制选中元素的边界框
+            if (state.selectedElements.length > 0) {
+                // 计算所有选中元素的边界框
+                let minX = Infinity, minY = Infinity;
+                let maxX = -Infinity, maxY = -Infinity;
+                
+                state.selectedElements.forEach(element => {
+                    if (element.type === 'particle-emitter') {
+                        const radius = element.radius * element.scale;
+                        minX = Math.min(minX, element.x - radius);
+                        maxX = Math.max(maxX, element.x + radius);
+                        minY = Math.min(minY, element.y - radius);
+                        maxY = Math.max(maxY, element.y + radius);
+                    } else if (element.type === 'magnetic-field') {
+                        const halfWidth = (element.width * element.scale) / 2;
+                        const halfHeight = (element.height * element.scale) / 2;
+                        minX = Math.min(minX, element.x - halfWidth);
+                        maxX = Math.max(maxX, element.x + halfWidth);
+                        minY = Math.min(minY, element.y - halfHeight);
+                        maxY = Math.max(maxY, element.y + halfHeight);
+                    }
+                });
+                
+                // 绘制边界框
+                ctx.strokeStyle = '#1971c2';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                
+                const width = maxX - minX;
+                const height = maxY - minY;
+                
+                ctx.strokeRect(minX - 5, minY - 5, width + 10, height + 10);
+                ctx.setLineDash([]);
+            }
+            
+            ctx.restore();
+        }
+
+        // 绘制网格背景
+        function drawGrid() {
+            const gridSize = 50;
+            const gridColor = '#121212';
+            const gridLineColor = '#333';
+            
+            // 计算可见区域
+            const visibleLeft = -state.canvasOffset.x / state.canvasScale;
+            const visibleTop = -state.canvasOffset.y / state.canvasScale;
+            const visibleRight = (canvas.width - state.canvasOffset.x) / state.canvasScale;
+            const visibleBottom = (canvas.height - state.canvasOffset.y) / state.canvasScale;
+            
+            // 绘制网格背景
+            ctx.fillStyle = gridColor;
+            ctx.fillRect(visibleLeft, visibleTop, visibleRight - visibleLeft, visibleBottom - visibleTop);
+            
+            // 绘制网格线
+            ctx.strokeStyle = gridLineColor;
+            ctx.lineWidth = 1;
+            
+            // 垂直线
+            const startX = Math.floor(visibleLeft / gridSize) * gridSize;
+            const endX = Math.ceil(visibleRight / gridSize) * gridSize;
+            
+            for (let x = startX; x <= endX; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, visibleTop);
+                ctx.lineTo(x, visibleBottom);
+                ctx.stroke();
+            }
+            
+            // 水平线
+            const startY = Math.floor(visibleTop / gridSize) * gridSize;
+            const endY = Math.ceil(visibleBottom / gridSize) * gridSize;
+            
+            for (let y = startY; y <= endY; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(visibleLeft, y);
+                ctx.lineTo(visibleRight, y);
+                ctx.stroke();
+            }
+            
+            // 绘制坐标轴
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 2;
+            
+            // X轴
+            ctx.beginPath();
+            ctx.moveTo(visibleLeft, 0);
+            ctx.lineTo(visibleRight, 0);
+            ctx.stroke();
+            
+            // Y轴
+            ctx.beginPath();
+            ctx.moveTo(0, visibleTop);
+            ctx.lineTo(0, visibleBottom);
+            ctx.stroke();
+            
+            // 绘制坐标轴箭头和标签
+            ctx.fillStyle = '#999';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            
+            // X轴箭头和标签
+            ctx.beginPath();
+            ctx.moveTo(visibleRight - 10, -5);
+            ctx.lineTo(visibleRight, 0);
+            ctx.lineTo(visibleRight - 10, 5);
+            ctx.fill();
+            ctx.fillText('X', visibleRight - 15, 10);
+            
+            // Y轴箭头和标签
+            ctx.beginPath();
+            ctx.moveTo(-5, visibleTop + 10);
+            ctx.lineTo(0, visibleTop);
+            ctx.lineTo(5, visibleTop + 10);
+            ctx.fill();
+            ctx.fillText('Y', 15, visibleTop + 5);
+        }
+
+        // 绘制元素
+        function drawElement(element) {
+            ctx.save();
+            ctx.translate(element.x, element.y);
+            ctx.rotate(element.rotation * Math.PI / 180);
+            ctx.scale(element.scale, element.scale);
+            
+            if (element.type === 'particle-emitter') {
+                // 绘制粒子发射器（黄色区域）
+                ctx.fillStyle = 'rgba(255, 193, 7, 0.3)';
+                ctx.strokeStyle = '#ffc107';
+                ctx.lineWidth = 1;
+                
+                ctx.beginPath();
+                ctx.arc(0, 0, element.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                
+                // 绘制方向箭头（黄色）
+                ctx.strokeStyle = '#ffc107';
+                ctx.fillStyle = '#ffc107';
+                ctx.lineWidth = 1;
+                
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                const angleRad = element.angle * Math.PI / 180;
+                const arrowLength = element.radius * 3;
+                ctx.lineTo(
+                    Math.cos(angleRad) * arrowLength,
+                    -Math.sin(angleRad) * arrowLength
+                );
+                ctx.stroke();
+                
+                // 绘制箭头头部
+                ctx.beginPath();
+                const arrowX = Math.cos(angleRad) * arrowLength;
+                const arrowY = -Math.sin(angleRad) * arrowLength;
+                ctx.translate(arrowX, arrowY);
+                ctx.rotate(-angleRad);
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-8, -3);
+                ctx.lineTo(-8, 3);
+                ctx.closePath();
+                ctx.fill();
+                
+            } else if (element.type === 'magnetic-field') {
+                // 绘制磁场边界
+                ctx.strokeStyle = element.direction === 'out' ? '#e67700' : '#2b8a3e';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                
+                if (element.shape === 'rectangle') {
+                    ctx.strokeRect(-element.width/2, -element.height/2, element.width, element.height);
+                } else if (element.shape === 'circle') {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, element.width/2, 0, Math.PI * 2);
+                    ctx.stroke();
+                } else if (element.shape === 'triangle') {
+                    ctx.beginPath();
+                    ctx.moveTo(0, -element.height/2);
+                    ctx.lineTo(-element.width/2, element.height/2);
+                    ctx.lineTo(element.width/2, element.height/2);
+                    ctx.closePath();
+                    ctx.stroke();
+                } else if (element.shape === 'single-boundary') {
+                    ctx.beginPath();
+                    ctx.moveTo(-element.width/2, -element.height/2);
+                    ctx.lineTo(element.width/2, -element.height/2);
+                    ctx.stroke();
+                } else if (element.shape === 'double-boundary') {
+                    ctx.beginPath();
+                    ctx.moveTo(-element.width/2, -element.height/2);
+                    ctx.lineTo(element.width/2, -element.height/2);
+                    ctx.moveTo(-element.width/2, element.height/2);
+                    ctx.lineTo(element.width/2, element.height/2);
+                    ctx.stroke();
+                }
+                
+                ctx.setLineDash([]);
+                
+                // 绘制磁场方向标记
+                drawMagneticFieldMarkers(element);
+            }
+            
+            // 如果元素被选中，绘制选中框
+            if (state.selectedElements.includes(element)) {
+                ctx.strokeStyle = '#1971c2';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                
+                if (element.type === 'particle-emitter') {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, element.radius + 5, 0, Math.PI * 2);
+                    ctx.stroke();
+                } else if (element.type === 'magnetic-field') {
+                    let boundsWidth, boundsHeight;
+                    
+                    if (element.shape === 'circle') {
+                        boundsWidth = element.width + 10;
+                        boundsHeight = element.width + 10;
+                    } else if (element.shape === 'triangle') {
+                        boundsWidth = element.width + 10;
+                        boundsHeight = element.height + 10;
+                    } else {
+                        boundsWidth = element.width + 10;
+                        boundsHeight = element.height + 10;
+                    }
+                    
+                    ctx.strokeRect(-boundsWidth/2, -boundsHeight/2, boundsWidth, boundsHeight);
+                }
+                
+                ctx.setLineDash([]);
+            }
+            
+            ctx.restore();
+        }
+
+        // 绘制磁场方向标记
+        function drawMagneticFieldMarkers(field) {
+            const markerSpacing = 20;
+            const markerSize = 8;
+            
+            // 计算标记数量
+            let markers = [];
+            
+            if (field.shape === 'rectangle') {
+                const cols = Math.floor(field.width / markerSpacing);
+                const rows = Math.floor(field.height / markerSpacing);
+                
+                for (let i = 0; i <= cols; i++) {
+                    for (let j = 0; j <= rows; j++) {
+                        const x = -field.width/2 + i * markerSpacing;
+                        const y = -field.height/2 + j * markerSpacing;
+                        markers.push({x, y});
+                    }
+                }
+            } else if (field.shape === 'circle') {
+                const radius = field.width/2;
+                const circles = Math.floor(radius / markerSpacing);
+                
+                for (let r = 1; r <= circles; r++) {
+                    const currentRadius = r * markerSpacing;
+                    const circumference = 2 * Math.PI * currentRadius;
+                    const markersOnCircle = Math.floor(circumference / markerSpacing);
+                    
+                    for (let i = 0; i < markersOnCircle; i++) {
+                        const angle = (i / markersOnCircle) * 2 * Math.PI;
+                        const x = currentRadius * Math.cos(angle);
+                        const y = currentRadius * Math.sin(angle);
+                        
+                        if (Math.sqrt(x*x + y*y) <= radius) {
+                            markers.push({x, y});
+                        }
+                    }
+                }
+                
+                // 添加中心点
+                markers.push({x: 0, y: 0});
+            } else if (field.shape === 'triangle') {
+                // 三角形内的标记
+                const rows = Math.floor(field.height / markerSpacing);
+                
+                for (let row = 1; row < rows; row++) {
+                    const y = -field.height/2 + row * markerSpacing;
+                    const widthAtY = field.width * (1 - (y + field.height/2) / field.height);
+                    const markersInRow = Math.floor(widthAtY / markerSpacing);
+                    
+                    for (let i = 0; i <= markersInRow; i++) {
+                        const x = -widthAtY/2 + i * (widthAtY / markersInRow);
+                        markers.push({x, y});
+                    }
+                }
+            }
+            
+            // 绘制标记
+            ctx.fillStyle = field.direction === 'out' ? 'rgba(230, 119, 0, 0.7)' : 'rgba(43, 138, 62, 0.7)';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            markers.forEach(marker => {
+                if (field.direction === 'out') {
+                    // 垂直纸面向外，绘制"×"
+                    ctx.fillText('×', marker.x, marker.y);
+                } else {
+                    // 垂直纸面向内，绘制"·"
+                    ctx.fillText('•', marker.x, marker.y);
+                }
+            });
+        }
+
+        // 绘制粒子
+        function drawParticle(particle) {
+            ctx.save();
+            ctx.translate(particle.x, particle.y);
+            
+            ctx.fillStyle = particle.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, particle.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        // 绘制轨迹
+        function drawTrajectory(trajectory) {
+            if (trajectory.points.length < 2) return;
+            
+            ctx.save();
+            ctx.strokeStyle = trajectory.color;
+            ctx.lineWidth = 1;
+            ctx.setLineDash([2, 3]);
+            
+            ctx.beginPath();
+            ctx.moveTo(trajectory.points[0].x, trajectory.points[0].y);
+            
+            for (let i = 1; i < trajectory.points.length; i++) {
+                ctx.lineTo(trajectory.points[i].x, trajectory.points[i].y);
+            }
+            
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+
+        // 添加元素到画布
+        function addElement(type) {
+            let element;
+            const centerX = (-state.canvasOffset.x + canvas.width/2) / state.canvasScale;
+            const centerY = (-state.canvasOffset.y + canvas.height/2) / state.canvasScale;
+            
+            if (type === 'particle-emitter') {
+                element = {
+                    id: 'emitter_' + Date.now(),
+                    type: 'particle-emitter',
+                    x: centerX,
+                    y: centerY,
+                    radius: 10,
+                    rotation: 0,
+                    scale: 1.0,
+                    particleType: 'electron',
+                    speed: 30,
+                    angle: 0,
+                    emissionRate: 1,
+                    lastEmissionTime: 0
+                };
+            } else if (type === 'magnetic-field') {
+                element = {
+                    id: 'field_' + Date.now(),
+                    type: 'magnetic-field',
+                    x: centerX,
+                    y: centerY,
+                    width: 150,
+                    height: 100,
+                    rotation: 0,
+                    scale: 1.0,
+                    shape: 'rectangle',
+                    direction: 'out',
+                    strength: 1.0
+                };
+            }
+            
+            state.elements.push(element);
+            state.selectedElements = [element];
+            state.selectedElement = element;
+            
+            // 显示变换控制按钮
+            transformControls.classList.add('active');
+            gestureHint.classList.add('active');
+            
+            updatePropertiesPanel();
+            draw();
+        }
+
+        // 更新属性面板
+        function updatePropertiesPanel() {
+            if (state.selectedElements.length === 0) {
+                noSelectionPanel.style.display = 'block';
+                emitterProperties.style.display = 'none';
+                fieldProperties.style.display = 'none';
+                transformPanel.style.display = 'none';
+                physicsInfoPanel.style.display = 'block';
+                return;
+            }
+            
+            noSelectionPanel.style.display = 'none';
+            physicsInfoPanel.style.display = 'block';
+            transformPanel.style.display = 'block';
+            
+            // 如果有多个选中元素，只显示变换控制面板
+            if (state.selectedElements.length > 1) {
+                emitterProperties.style.display = 'none';
+                fieldProperties.style.display = 'none';
+                updateTransformControls();
+                return;
+            }
+            
+            // 单个元素选中
+            if (state.selectedElement.type === 'particle-emitter') {
+                emitterProperties.style.display = 'block';
+                fieldProperties.style.display = 'none';
+                
+                // 更新控件值
+                particleTypeSelect.value = state.selectedElement.particleType;
+                particleSpeedInput.value = state.selectedElement.speed;
+                particleAngleInput.value = state.selectedElement.angle;
+                emissionRateInput.value = state.selectedElement.emissionRate;
+                emitterSizeInput.value = state.selectedElement.radius;
+                
+                // 显示/隐藏自定义粒子属性
+                if (state.selectedElement.particleType === 'custom') {
+                    customParticleProperties.style.display = 'block';
+                    customChargeInput.value = state.selectedElement.customCharge || -1;
+                    customMassInput.value = state.selectedElement.customMass || 1;
+                    customColorInput.value = state.selectedElement.customColor || '#4dabf7';
+                } else {
+                    customParticleProperties.style.display = 'none';
+                }
+                
+                // 更新物理信息
+                updatePhysicsInfo(state.selectedElement);
+            } else if (state.selectedElement.type === 'magnetic-field') {
+                emitterProperties.style.display = 'none';
+                fieldProperties.style.display = 'block';
+                
+                // 更新控件值
+                fieldShapeSelect.value = state.selectedElement.shape;
+                fieldDirectionSelect.value = state.selectedElement.direction;
+                fieldStrengthInput.value = state.selectedElement.strength;
+                fieldWidthInput.value = state.selectedElement.width;
+                fieldHeightInput.value = state.selectedElement.height;
+                fieldRotationInput.value = state.selectedElement.rotation;
+            }
+            
+            // 更新变换控制面板
+            updateTransformControls();
+        }
+
+        // 更新变换控制面板
+        function updateTransformControls() {
+            if (state.selectedElements.length === 0) return;
+            
+            // 如果有多个选中元素，显示第一个元素的位置
+            const element = state.selectedElements[0];
+            elementXInput.value = Math.round(element.x);
+            elementYInput.value = Math.round(element.y);
+            elementRotationInput.value = element.rotation;
+            elementScaleInput.value = element.scale.toFixed(1);
+        }
+
+        // 更新物理信息显示
+        function updatePhysicsInfo(emitter) {
+            let particleData;
+            
+            if (emitter.particleType === 'custom') {
+                particleData = {
+                    name: '自定义粒子',
+                    charge: emitter.customCharge || -1,
+                    mass: emitter.customMass || 1,
+                    color: emitter.customColor || '#4dabf7'
+                };
+            } else {
+                particleData = PHYSICS_CONSTANTS[emitter.particleType.toUpperCase()];
+            }
+            
+            if (!particleData) return;
+            
+            selectedParticleElement.textContent = particleData.name;
+            particleChargeElement.textContent = `${particleData.charge} q`;
+            particleMassElement.textContent = `${particleData.mass} m`;
+            
+            // 计算回旋半径和周期（高中物理简化公式）
+            const magneticField = state.elements.find(el => el.type === 'magnetic-field');
+            
+            if (magneticField) {
+                const charge = Math.abs(particleData.charge);
+                const mass = particleData.mass;
+                const speed = emitter.speed;
+                const b = magneticField.strength;
+                
+                if (b > 0 && mass > 0 && speed > 0 && charge > 0) {
+                    // 回旋半径 r = mv/(qB)
+                    const gyroradius = (mass * speed) / (charge * b);
+                    
+                    // 回旋周期 T = 2πm/(qB)
+                    const gyroperiod = (2 * Math.PI * mass) / (charge * b);
+                    
+                    gyroradiusElement.textContent = `${gyroradius.toFixed(2)} m`;
+                    gyroperiodElement.textContent = `${gyroperiod.toFixed(2)} s`;
+                } else {
+                    gyroradiusElement.textContent = '0 m';
+                    gyroperiodElement.textContent = '0 s';
+                }
+            } else {
+                gyroradiusElement.textContent = '0 m';
+                gyroperiodElement.textContent = '0 s';
+            }
+        }
+
+        // 粒子发射函数
+        function emitParticles(currentTime) {
+            const emitters = state.elements.filter(el => el.type === 'particle-emitter');
+            
+            emitters.forEach(emitter => {
+                const timeSinceLastEmission = currentTime - emitter.lastEmissionTime;
+                const emissionInterval = 1000 / emitter.emissionRate;
+                
+                if (timeSinceLastEmission >= emissionInterval) {
+                    // 发射新粒子
+                    let particleData;
+                    
+                    if (emitter.particleType === 'custom') {
+                        particleData = {
+                            name: '自定义粒子',
+                            charge: emitter.customCharge || -1,
+                            mass: emitter.customMass || 1,
+                            color: emitter.customColor || '#4dabf7'
+                        };
+                    } else {
+                        particleData = PHYSICS_CONSTANTS[emitter.particleType.toUpperCase()];
+                    }
+                    
+                    if (!particleData) return;
+                    
+                    // 计算粒子初始位置（考虑发射器旋转和缩放）
+                    const angleRad = emitter.angle * Math.PI / 180;
+                    const offsetX = Math.cos(angleRad) * emitter.radius * emitter.scale;
+                    const offsetY = -Math.sin(angleRad) * emitter.radius * emitter.scale;
+                    
+                    const particle = {
+                        id: 'particle_' + Date.now() + Math.random(),
+                        x: emitter.x + offsetX,
+                        y: emitter.y + offsetY,
+                        radius: 3,
+                        color: particleData.color,
+                        vx: Math.cos(angleRad) * emitter.speed,
+                        vy: -Math.sin(angleRad) * emitter.speed,
+                        speed: emitter.speed,
+                        charge: particleData.charge,
+                        mass: particleData.mass,
+                        lifetime: 0,
+                        maxLifetime: 15000, // 粒子存在时间(ms)
+                        inMagneticField: false,
+                        // 圆周运动相关参数
+                        circleCenter: null,
+                        circleRadius: 0,
+                        angularSpeed: 0,
+                        circleAngle: 0,
+                        lastUpdateTime: currentTime
+                    };
+                    
+                    state.particles.push(particle);
+                    emitter.lastEmissionTime = currentTime;
+                    
+                    // 创建新轨迹
+                    if (state.showTrajectories) {
+                        state.trajectories.push({
+                            particleId: particle.id,
+                            points: [{x: particle.x, y: particle.y}],
+                            color: particleData.color + '99' // 添加透明度
+                        });
+                    }
+                }
+            });
+        }
+
+        // 更新粒子运动（修正版，符合高中物理要求）
+        function updateParticles(deltaTime) {
+            // 获取所有磁场
+            const magneticFields = state.elements.filter(el => el.type === 'magnetic-field');
+            
+            // 更新每个粒子的位置
+            state.particles.forEach((particle, index) => {
+                // 增加粒子寿命
+                particle.lifetime += deltaTime;
+                
+                // 如果粒子超过寿命，移除它
+                if (particle.lifetime > particle.maxLifetime) {
+                    state.particles.splice(index, 1);
+                    // 同时移除对应的轨迹
+                    if (state.showTrajectories) {
+                        const trajectoryIndex = state.trajectories.findIndex(t => t.particleId === particle.id);
+                        if (trajectoryIndex !== -1) {
+                            state.trajectories.splice(trajectoryIndex, 1);
+                        }
+                    }
+                    return;
+                }
+                
+                // 检查粒子是否在磁场中
+                let inMagneticField = false;
+                let magneticField = null;
+                
+                for (const field of magneticFields) {
+                    if (isPointInMagneticField(particle.x, particle.y, field)) {
+                        inMagneticField = true;
+                        magneticField = field;
+                        break;
+                    }
+                }
+                
+                // 如果磁场状态发生变化
+                if (inMagneticField !== particle.inMagneticField) {
+                    particle.inMagneticField = inMagneticField;
+                    
+                    if (inMagneticField && magneticField) {
+                        // 进入磁场，开始圆周运动
+                        const bDirection = magneticField.direction === 'out' ? 1 : -1;
+                        const bStrength = magneticField.strength;
+                        
+                        // 计算圆周运动参数
+                        const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
+                        const charge = Math.abs(particle.charge);
+                        
+                        if (speed > 0 && charge > 0 && bStrength > 0) {
+                            // 回旋半径 r = mv/(qB)
+                            particle.circleRadius = (particle.mass * speed) / (charge * bStrength);
+                            
+                            // 角速度 ω = v/r = qB/m
+                            particle.angularSpeed = (charge * bStrength) / particle.mass;
+                            
+                            // 确定旋转方向（考虑电荷正负和磁场方向）
+                            const rotationDir = (particle.charge > 0 ? 1 : -1) * bDirection;
+                            particle.angularSpeed *= rotationDir;
+                            
+                            // 计算圆心位置
+                            // 圆心在速度垂直方向上，距离粒子为r
+                            const speedDirX = particle.vx / speed;
+                            const speedDirY = particle.vy / speed;
+                            
+                            // 垂直方向（顺时针旋转90度）
+                            const perpendicularX = -speedDirY * rotationDir;
+                            const perpendicularY = speedDirX * rotationDir;
+                            
+                            particle.circleCenter = {
+                                x: particle.x + perpendicularX * particle.circleRadius,
+                                y: particle.y + perpendicularY * particle.circleRadius
+                            };
+                            
+                            // 计算初始角度
+                            const dx = particle.x - particle.circleCenter.x;
+                            const dy = particle.y - particle.circleCenter.y;
+                            particle.circleAngle = Math.atan2(dy, dx);
+                        }
+                    } else {
+                        // 离开磁场，恢复直线运动
+                        particle.circleCenter = null;
+                        particle.circleRadius = 0;
+                        particle.angularSpeed = 0;
+                    }
+                }
+                
+                // 更新粒子位置
+                const dt = deltaTime / 1000; // 转换为秒
+                
+                if (particle.inMagneticField && particle.circleCenter) {
+                    // 在磁场中做匀速圆周运动
+                    particle.circleAngle += particle.angularSpeed * dt;
+                    
+                    particle.x = particle.circleCenter.x + particle.circleRadius * Math.cos(particle.circleAngle);
+                    particle.y = particle.circleCenter.y + particle.circleRadius * Math.sin(particle.circleAngle);
+                    
+                    // 更新速度方向（切线方向）
+                    const tangentX = -particle.circleRadius * Math.sin(particle.circleAngle) * particle.angularSpeed;
+                    const tangentY = particle.circleRadius * Math.cos(particle.circleAngle) * particle.angularSpeed;
+                    
+                    particle.vx = tangentX;
+                    particle.vy = tangentY;
+                } else {
+                    // 在磁场外做匀速直线运动
+                    particle.x += particle.vx * dt;
+                    particle.y += particle.vy * dt;
+                }
+                
+                // 更新轨迹
+                if (state.showTrajectories) {
+                    const trajectory = state.trajectories.find(t => t.particleId === particle.id);
+                    if (trajectory) {
+                        trajectory.points.push({x: particle.x, y: particle.y});
+                        
+                        // 限制轨迹点数
+                        if (trajectory.points.length > 1000) {
+                            trajectory.points.shift();
+                        }
+                    }
+                }
+            });
+            
+            // 更新粒子计数显示
+            particleCountElement.textContent = state.particles.length;
+            state.simulationStep++;
+        }
+
+        // 检查点是否在磁场中
+        function isPointInMagneticField(x, y, field) {
+            // 将点转换到磁场局部坐标系
+            const dx = x - field.x;
+            const dy = y - field.y;
+            
+            // 考虑旋转
+            const angle = -field.rotation * Math.PI / 180;
+            const rotatedX = dx * Math.cos(angle) - dy * Math.sin(angle);
+            const rotatedY = dx * Math.sin(angle) + dy * Math.cos(angle);
+            
+            // 考虑缩放
+            const scaledX = rotatedX / field.scale;
+            const scaledY = rotatedY / field.scale;
+            
+            if (field.shape === 'rectangle') {
+                return Math.abs(scaledX) <= field.width/2 && Math.abs(scaledY) <= field.height/2;
+            } else if (field.shape === 'circle') {
+                const distance = Math.sqrt(scaledX**2 + scaledY**2);
+                return distance <= field.width/2;
+            } else if (field.shape === 'triangle') {
+                // 简单三角形检测（等边三角形，顶点在上，底边在下）
+                const top = -field.height/2;
+                const bottom = field.height/2;
+                const left = -field.width/2;
+                const right = field.width/2;
+                
+                // 检查点是否在三角形内
+                const area = field.width * field.height / 2;
+                
+                // 计算子三角形面积
+                const area1 = Math.abs(scaledX * (bottom - top) + left * (top - scaledY) + right * (scaledY - bottom)) / 2;
+                const area2 = Math.abs(left * (top - scaledY) + right * (scaledY - bottom) + 0 * (bottom - top)) / 2;
+                const area3 = Math.abs(scaledX * (bottom - scaledY) + right * (scaledY - bottom) + 0 * (bottom - scaledX)) / 2;
+                
+                return (area1 + area2 + area3) <= area + 0.1;
+            } else if (field.shape === 'single-boundary') {
+                // 单边界：只检查y坐标
+                return Math.abs(scaledY) <= field.height/2;
+            } else if (field.shape === 'double-boundary') {
+                // 双边界：检查y坐标在两个边界之间
+                return Math.abs(scaledY) <= field.height/2;
+            }
+            
+            return false;
+        }
+
+        // 动画循环
+        function animationLoop(currentTime) {
+            if (!state.lastFrameTime) state.lastFrameTime = currentTime;
+            
+            const deltaTime = currentTime - state.lastFrameTime;
+            
+            if (state.simulationRunning) {
+                // 发射新粒子
+                emitParticles(currentTime);
+                
+                // 更新粒子位置
+                updateParticles(deltaTime);
+                
+                // 重绘画布
+                draw();
+            }
+            
+            state.lastFrameTime = currentTime;
+            requestAnimationFrame(animationLoop);
+        }
+
+        // 初始化事件监听器
+        function initEventListeners() {
+            // 左侧元素卡片点击事件
+            elementCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    // 移除所有卡片的active类
+                    elementCards.forEach(c => c.classList.remove('active'));
+                    // 添加当前卡片的active类
+                    card.classList.add('active');
+                    
+                    // 添加对应元素到画布
+                    const elementType = card.getAttribute('data-type');
+                    addElement(elementType);
+                });
+            });
+            
+            // 粒子类型选择变化
+            particleTypeSelect.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'particle-emitter') {
+                    state.selectedElement.particleType = this.value;
+                    
+                    // 显示/隐藏自定义粒子属性
+                    if (this.value === 'custom') {
+                        customParticleProperties.style.display = 'block';
+                        // 初始化自定义属性
+                        if (!state.selectedElement.customCharge) {
+                            state.selectedElement.customCharge = -1;
+                            state.selectedElement.customMass = 1;
+                            state.selectedElement.customColor = '#4dabf7';
+                        }
+                        customChargeInput.value = state.selectedElement.customCharge;
+                        customMassInput.value = state.selectedElement.customMass;
+                        customColorInput.value = state.selectedElement.customColor;
+                    } else {
+                        customParticleProperties.style.display = 'none';
+                    }
+                    
+                    updatePhysicsInfo(state.selectedElement);
+                    draw();
+                }
+            });
+            
+            // 自定义粒子属性变化
+            customChargeInput.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'particle-emitter') {
+                    state.selectedElement.customCharge = parseFloat(this.value);
+                    updatePhysicsInfo(state.selectedElement);
+                }
+            });
+            
+            customMassInput.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'particle-emitter') {
+                    state.selectedElement.customMass = parseFloat(this.value);
+                    updatePhysicsInfo(state.selectedElement);
+                }
+            });
+            
+            customColorInput.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'particle-emitter') {
+                    state.selectedElement.customColor = this.value;
+                }
+            });
+            
+            // 发射器属性变化事件
+            particleSpeedInput.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'particle-emitter') {
+                    state.selectedElement.speed = parseInt(this.value) || 30;
+                    updatePhysicsInfo(state.selectedElement);
+                }
+            });
+            
+            particleAngleInput.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'particle-emitter') {
+                    state.selectedElement.angle = parseInt(this.value) || 90;
+                    draw();
+                }
+            });
+            
+            emissionRateInput.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'particle-emitter') {
+                    state.selectedElement.emissionRate = parseInt(this.value) || 10;
+                }
+            });
+            
+            emitterSizeInput.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'particle-emitter') {
+                    state.selectedElement.radius = parseInt(this.value) || 20;
+                    draw();
+                }
+            });
+            
+            // 磁场属性变化事件
+            fieldShapeSelect.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'magnetic-field') {
+                    state.selectedElement.shape = this.value;
+                    draw();
+                }
+            });
+            
+            fieldDirectionSelect.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'magnetic-field') {
+                    state.selectedElement.direction = this.value;
+                    draw();
+                }
+            });
+            
+            fieldStrengthInput.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'magnetic-field') {
+                    state.selectedElement.strength = parseFloat(this.value) || 1.0;
+                    
+                    // 如果有选中的发射器，更新物理信息
+                    const emitter = state.elements.find(el => el.type === 'particle-emitter');
+                    if (emitter) updatePhysicsInfo(emitter);
+                }
+            });
+            
+            fieldWidthInput.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'magnetic-field') {
+                    state.selectedElement.width = parseInt(this.value) || 150;
+                    draw();
+                }
+            });
+            
+            fieldHeightInput.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'magnetic-field') {
+                    state.selectedElement.height = parseInt(this.value) || 100;
+                    draw();
+                }
+            });
+            
+            fieldRotationInput.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'magnetic-field') {
+                    state.selectedElement.rotation = parseInt(this.value) || 0;
+                    draw();
+                }
+            });
+            
+            // 变换控制事件
+            elementXInput.addEventListener('change', function() {
+                if (state.selectedElements.length > 0) {
+                    const deltaX = parseInt(this.value) - state.selectedElements[0].x;
+                    state.selectedElements.forEach(element => {
+                        element.x += deltaX;
+                    });
+                    draw();
+                }
+            });
+            
+            elementYInput.addEventListener('change', function() {
+                if (state.selectedElements.length > 0) {
+                    const deltaY = parseInt(this.value) - state.selectedElements[0].y;
+                    state.selectedElements.forEach(element => {
+                        element.y += deltaY;
+                    });
+                    draw();
+                }
+            });
+            
+            elementRotationInput.addEventListener('change', function() {
+                if (state.selectedElements.length > 0) {
+                    state.selectedElements.forEach(element => {
+                        element.rotation = parseInt(this.value) || 0;
+                    });
+                    draw();
+                }
+            });
+            
+            elementScaleInput.addEventListener('change', function() {
+                if (state.selectedElements.length > 0) {
+                    const newScale = parseFloat(this.value) || 1.0;
+                    const deltaScale = newScale / state.selectedElements[0].scale;
+                    
+                    state.selectedElements.forEach(element => {
+                        element.scale *= deltaScale;
+                    });
+                    draw();
+                }
+            });
+            
+            // 变换按钮事件
+            rotateLeftBtn.addEventListener('click', function() {
+                if (state.selectedElements.length > 0) {
+                    state.selectedElements.forEach(element => {
+                        element.rotation = (element.rotation - 15) % 360;
+                        if (element.rotation < 0) element.rotation += 360;
+                    });
+                    updateTransformControls();
+                    draw();
+                }
+            });
+            
+            rotateRightBtn.addEventListener('click', function() {
+                if (state.selectedElements.length > 0) {
+                    state.selectedElements.forEach(element => {
+                        element.rotation = (element.rotation + 15) % 360;
+                    });
+                    updateTransformControls();
+                    draw();
+                }
+            });
+            
+            scaleUpBtn.addEventListener('click', function() {
+                if (state.selectedElements.length > 0) {
+                    state.selectedElements.forEach(element => {
+                        element.scale = Math.min(3, element.scale * 1.1);
+                    });
+                    updateTransformControls();
+                    draw();
+                }
+            });
+            
+            scaleDownBtn.addEventListener('click', function() {
+                if (state.selectedElements.length > 0) {
+                    state.selectedElements.forEach(element => {
+                        element.scale = Math.max(0.1, element.scale * 0.9);
+                    });
+                    updateTransformControls();
+                    draw();
+                }
+            });
+            
+            // 控制按钮事件
+            startButton.addEventListener('click', function() {
+                state.simulationRunning = !state.simulationRunning;
+                
+                if (state.simulationRunning) {
+                    this.innerHTML = '<i class="fas fa-pause"></i> 暂停模拟';
+                    this.classList.add('warning');
+                } else {
+                    this.innerHTML = '<i class="fas fa-play"></i> 开始模拟';
+                    this.classList.remove('warning');
+                }
+                
+                // 如果之前没有运行，确保有最后帧时间
+                if (!state.lastFrameTime) {
+                    state.lastFrameTime = performance.now();
+                }
+            });
+            
+            resetButton.addEventListener('click', function() {
+                // 清除所有粒子和轨迹
+                state.particles = [];
+                state.trajectories = [];
+                particleCountElement.textContent = '0';
+                
+                // 停止模拟
+                state.simulationRunning = false;
+                startButton.innerHTML = '<i class="fas fa-play"></i> 开始模拟';
+                startButton.classList.remove('warning');
+                
+                draw();
+            });
+            
+            trajectoryButton.addEventListener('click', function() {
+                state.showTrajectories = !state.showTrajectories;
+                
+                if (state.showTrajectories) {
+                    this.innerHTML = '<i class="fas fa-eye-slash"></i> 隐藏轨迹';
+                    this.classList.add('primary');
+                    
+                    // 为现有粒子创建轨迹
+                    state.particles.forEach(particle => {
+                        const existingTrajectory = state.trajectories.find(t => t.particleId === particle.id);
+                        if (!existingTrajectory) {
+                            state.trajectories.push({
+                                particleId: particle.id,
+                                points: [{x: particle.x, y: particle.y}],
+                                color: particle.color + '99'
+                            });
+                        }
+                    });
+                } else {
+                    this.innerHTML = '<i class="fas fa-wave-square"></i> 显示轨迹';
+                    this.classList.remove('primary');
+                }
+                
+                draw();
+            });
+            
+            clearButton.addEventListener('click', function() {
+                // 清除所有元素、粒子和轨迹
+                state.elements = [];
+                state.particles = [];
+                state.trajectories = [];
+                state.selectedElements = [];
+                state.selectedElement = null;
+                
+                // 停止模拟
+                state.simulationRunning = false;
+                startButton.innerHTML = '<i class="fas fa-play"></i> 开始模拟';
+                startButton.classList.remove('warning');
+                
+                // 隐藏变换控制按钮
+                transformControls.classList.remove('active');
+                gestureHint.classList.remove('active');
+                
+                // 重置属性面板
+                updatePropertiesPanel();
+                
+                particleCountElement.textContent = '0';
+                draw();
+            });
+            
+            // 删除元素按钮事件
+            deleteElementButton.addEventListener('click', function() {
+                if (state.selectedElements.length > 0) {
+                    // 删除所有选中的元素
+                    state.selectedElements.forEach(element => {
+                        const index = state.elements.indexOf(element);
+                        if (index !== -1) {
+                            state.elements.splice(index, 1);
+                        }
+                    });
+                    
+                    state.selectedElements = [];
+                    state.selectedElement = null;
+                    
+                    // 隐藏变换控制按钮
+                    transformControls.classList.remove('active');
+                    gestureHint.classList.remove('active');
+                    
+                    updatePropertiesPanel();
+                    draw();
+                }
+            });
+            
+        }
+
+        // 初始化应用
+        function initApp() {
+            initCanvas();
+            initEventListeners();
+            requestAnimationFrame(animationLoop);
+        }
+
+        // 页面加载完成后初始化应用
+        window.addEventListener('load', initApp);
+    </script>
+</body>
+</html>
