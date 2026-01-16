@@ -144,6 +144,73 @@
             border-left: 1px solid #333;
         }
         
+        /* 响应式设计：针对iPad等平板设备 */
+        @media (max-width: 1200px) {
+            .left-panel {
+                width: 200px; /* 减小左侧面板宽度 */
+            }
+            
+            .right-panel {
+                width: 250px; /* 减小右侧面板宽度 */
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .left-panel {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+                border-right: none;
+                border-bottom: 1px solid #333;
+                display: flex;
+                flex-wrap: wrap;
+                overflow-y: auto;
+            }
+            
+            .element-card {
+                width: calc(50% - 10px);
+                margin-right: 10px;
+                margin-bottom: 10px;
+            }
+            
+            .panel-title {
+                width: 100%;
+            }
+            
+            .right-panel {
+                width: 100%;
+                height: auto;
+                max-height: 250px;
+                border-left: none;
+                border-top: 1px solid #333;
+            }
+            
+            .center-panel {
+                flex: 1;
+                min-height: 400px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.4rem;
+            }
+            
+            .control-button {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+            
+            .element-card {
+                width: 100%;
+                margin-right: 0;
+            }
+        }
+        
         .property-group {
             margin-bottom: 20px;
             padding-bottom: 15px;
@@ -384,8 +451,8 @@
             <div style="font-size: 0.85rem; color: #666; line-height: 1.5;">
                 <p><i class="fas fa-mouse-pointer"></i> <strong>选择元素</strong>: 点击画布上的元素</p>
                 <p><i class="fas fa-arrows-alt"></i> <strong>移动元素</strong>: 拖动选中元素</p>
-                <p><i class="fas fa-sync-alt"></i> <strong>旋转元素</strong>: 双击元素或使用下方控制按钮</p>
-                <p><i class="fas fa-expand-alt"></i> <strong>缩放元素</strong>: 双击元素或使用下方控制按钮</p>
+                <p><i class="fas fa-sync-alt"></i> <strong>旋转元素</strong>: 使用下方控制按钮</p>
+                <p><i class="fas fa-expand-alt"></i> <strong>缩放元素</strong>: 使用下方控制按钮</p>
                 <p><i class="fas fa-search"></i> <strong>缩放画布</strong>: 使用鼠标滚轮</p>
                 <p><i class="fas fa-hand-paper"></i> <strong>平移画布</strong>: 按住空格键拖动</p>
                 <p><i class="fas fa-mobile-alt"></i> <strong>iPad触控</strong>: 双指旋转/缩放元素</p>
@@ -562,6 +629,25 @@
                             <span class="unit">°</span>
                         </div>
                     </div>
+                    
+                    <!-- 单边界磁场特殊属性 -->
+                    <div id="single-boundary-properties" style="display: none;">
+                        <div class="property-item">
+                            <label for="boundary-orientation">边界方向</label>
+                            <select id="boundary-orientation">
+                                <option value="vertical">竖直</option>
+                                <option value="horizontal">水平</option>
+                            </select>
+                        </div>
+                        
+                        <div class="property-item">
+                            <label for="boundary-range">范围</label>
+                            <select id="boundary-range">
+                                <option value="left">左/上</option>
+                                <option value="right">右/下</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -720,8 +806,7 @@
                 end: { x: 0, y: 0 }
             },
             transformControlsVisible: false,
-            lastClickTime: 0,
-            lastTapTime: 0,
+            
             touchStart: {
                 x: 0,
                 y: 0,
@@ -778,6 +863,11 @@
         const fieldHeightInput = document.getElementById('field-height');
         const fieldRotationInput = document.getElementById('field-rotation');
         
+        // 单边界磁场特殊属性控件
+        const singleBoundaryProperties = document.getElementById('single-boundary-properties');
+        const boundaryOrientationSelect = document.getElementById('boundary-orientation');
+        const boundaryRangeSelect = document.getElementById('boundary-range');
+        
         // 变换控制控件
         const elementXInput = document.getElementById('element-x');
         const elementYInput = document.getElementById('element-y');
@@ -823,8 +913,7 @@
                 e.preventDefault();
             });
             
-            // 双击事件
-            canvasContainer.addEventListener('dblclick', handleDoubleClick);
+            // 双击事件已移除
             
             // 触摸事件支持（iPad适配）
             canvasContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -1157,45 +1246,10 @@
             canvasContainer.style.cursor = 'default';
         }
         
-        // 处理双击事件
-        function handleDoubleClick(e) {
-            const rect = canvasContainer.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            // 计算画布空间中的坐标
-            const worldX = (x - state.canvasOffset.x) / state.canvasScale;
-            const worldY = (y - state.canvasOffset.y) / state.canvasScale;
-            
-            // 检查是否双击了元素
-            let clickedElement = null;
-            
-            for (const element of state.elements) {
-                if (isPointInElement(worldX, worldY, element)) {
-                    clickedElement = element;
-                    break;
-                }
-            }
-            
-            if (clickedElement) {
-                if (clickedElement.type === 'particle-emitter') {
-                    // 对于粒子发射器，修改箭头方向和粒子发射角度
-                    clickedElement.angle = (clickedElement.angle + 90) % 360;
-                    clickedElement.rotation = clickedElement.angle; // 保持旋转角度与方向一致
-                } else {
-                    // 对于其他元素，只修改旋转角度
-                    clickedElement.rotation = (clickedElement.rotation + 90) % 360;
-                }
-                
-                // 如果元素被选中，更新控制面板
-                if (state.selectedElements.includes(clickedElement)) {
-                    updateTransformControls();
-                    updatePropertiesPanel(); // 更新属性面板以反映角度变化
-                }
-                
-                draw();
-            }
-        }
+        // 双击事件处理函数已移除
+        // function handleDoubleClick(e) {
+        //     // 双击事件逻辑已移除
+        // }
         
         // 触摸事件处理（iPad适配）
         function handleTouchStart(e) {
@@ -1272,16 +1326,7 @@
                     updatePropertiesPanel();
                 }
                 
-                // 记录触摸开始信息（用于检测双击）
-                const currentTime = Date.now();
-                if (currentTime - state.lastTapTime < 300) {
-                    // 双击事件
-                    handleDoubleClick({
-                        clientX: touch.clientX,
-                        clientY: touch.clientY
-                    });
-                }
-                state.lastTapTime = currentTime;
+                // 双击事件检测已移除
                 
             } else if (touches.length === 2 && state.selectedElements.length > 0) {
                 // 双指触摸且有选中元素，开始旋转/缩放
@@ -1489,27 +1534,54 @@
                     const distance = Math.sqrt(scaledX**2 + scaledY**2);
                     return distance <= element.width/2;
                 } else if (element.shape === 'triangle') {
-                    // 简单三角形检测（等边三角形，顶点在上，底边在下）
-                    const top = -element.height/2;
-                    const bottom = element.height/2;
-                    const left = -element.width/2;
-                    const right = element.width/2;
+                    // 三角形检测（顶点在上，底边在下）
+                    const halfHeight = element.height/2;
+                    const halfWidth = element.width/2;
                     
-                    // 检查点是否在三角形内
+                    // 三角形的三个顶点（局部坐标系）
+                    const vertex1 = { x: 0, y: -halfHeight }; // 顶部顶点
+                    const vertex2 = { x: -halfWidth, y: halfHeight }; // 左下顶点
+                    const vertex3 = { x: halfWidth, y: halfHeight }; // 右下顶点
+                    
+                    // 使用Barycentric坐标法判断点是否在三角形内
                     const area = element.width * element.height / 2;
                     
-                    // 计算子三角形面积
-                    const area1 = Math.abs(scaledX * (bottom - top) + left * (top - scaledY) + right * (scaledY - bottom)) / 2;
-                    const area2 = Math.abs(left * (top - scaledY) + right * (scaledY - bottom) + 0 * (bottom - top)) / 2;
-                    const area3 = Math.abs(scaledX * (bottom - scaledY) + right * (scaledY - bottom) + 0 * (bottom - scaledX)) / 2;
+                    // 计算三个子三角形的面积
+                    const area1 = Math.abs((vertex1.x*(vertex2.y - vertex3.y) + vertex2.x*(vertex3.y - vertex1.y) + vertex3.x*(vertex1.y - vertex2.y)) / 2);
+                    const area2 = Math.abs((scaledX*(vertex2.y - vertex3.y) + vertex2.x*(vertex3.y - scaledY) + vertex3.x*(scaledY - vertex2.y)) / 2);
+                    const area3 = Math.abs((vertex1.x*(scaledY - vertex3.y) + scaledX*(vertex3.y - vertex1.y) + vertex3.x*(vertex1.y - scaledY)) / 2);
+                    const area4 = Math.abs((vertex1.x*(vertex2.y - scaledY) + vertex2.x*(scaledY - vertex1.y) + scaledX*(vertex1.y - vertex2.y)) / 2);
                     
-                    return (area1 + area2 + area3) <= area + 0.1;
+                    // 如果三个子三角形面积之和等于原三角形面积，则点在三角形内
+                    return Math.abs(area2 + area3 + area4 - area1) < 0.1;
                 } else if (element.shape === 'single-boundary') {
-                    // 单边界：只检查y坐标
-                    return Math.abs(scaledY) <= element.height/2;
+                    const orientation = element.boundaryOrientation || 'vertical';
+                    
+                    // 单边界：检查点是否接近边界线
+                    if (orientation === 'vertical') {
+                        // 竖直边界：检查x坐标是否接近0
+                        return Math.abs(scaledX) < 5;
+                    } else {
+                        // 水平边界：检查y坐标是否接近0
+                        return Math.abs(scaledY) < 5;
+                    }
                 } else if (element.shape === 'double-boundary') {
-                    // 双边界：检查y坐标在两个边界之间
-                    return Math.abs(scaledY) <= element.height/2;
+                    // 双边界：检查点是否接近边界线或在边界之间
+                    const topY = -element.height/2;
+                    const bottomY = element.height/2;
+                    
+                    // 检查是否接近上边界线
+                    if (Math.abs(scaledY - topY) < 5) {
+                        return true;
+                    }
+                    
+                    // 检查是否接近下边界线
+                    if (Math.abs(scaledY - bottomY) < 5) {
+                        return true;
+                    }
+                    
+                    // 检查是否在两个边界之间
+                    return scaledY > topY && scaledY < bottomY;
                 }
             }
             
@@ -1620,39 +1692,9 @@
                 drawParticle(particle);
             });
             
-            // 绘制选中元素的边界框
-            if (state.selectedElements.length > 0) {
-                // 计算所有选中元素的边界框
-                let minX = Infinity, minY = Infinity;
-                let maxX = -Infinity, maxY = -Infinity;
-                
-                state.selectedElements.forEach(element => {
-                    if (element.type === 'particle-emitter') {
-                        const radius = element.radius * element.scale;
-                        minX = Math.min(minX, element.x - radius);
-                        maxX = Math.max(maxX, element.x + radius);
-                        minY = Math.min(minY, element.y - radius);
-                        maxY = Math.max(maxY, element.y + radius);
-                    } else if (element.type === 'magnetic-field') {
-                        const halfWidth = (element.width * element.scale) / 2;
-                        const halfHeight = (element.height * element.scale) / 2;
-                        minX = Math.min(minX, element.x - halfWidth);
-                        maxX = Math.max(maxX, element.x + halfWidth);
-                        minY = Math.min(minY, element.y - halfHeight);
-                        maxY = Math.max(maxY, element.y + halfHeight);
-                    }
-                });
-                
-                // 绘制边界框
-                ctx.strokeStyle = '#1971c2';
-                ctx.lineWidth = 2;
-                ctx.setLineDash([5, 5]);
-                
-                const width = maxX - minX;
-                const height = maxY - minY;
-                
-                ctx.strokeRect(minX - 5, minY - 5, width + 10, height + 10);
-                ctx.setLineDash([]);
+            // 绘制选中元素的边界框 - 已改为在drawElement函数中绘制，自动跟随旋转
+            if (state.selectedElements.length > 0 && false) {
+                // 这个边界框绘制已被废弃，改用drawElement中的本地坐标系绘制
             }
             
             ctx.restore();
@@ -1787,7 +1829,7 @@
             } else if (element.type === 'magnetic-field') {
                 // 绘制磁场边界
                 ctx.strokeStyle = element.direction === 'out' ? '#e67700' : '#2b8a3e';
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 1; // 细线
                 ctx.setLineDash([5, 5]);
                 
                 if (element.shape === 'rectangle') {
@@ -1805,15 +1847,42 @@
                     ctx.stroke();
                 } else if (element.shape === 'single-boundary') {
                     ctx.beginPath();
-                    ctx.moveTo(-element.width/2, -element.height/2);
-                    ctx.lineTo(element.width/2, -element.height/2);
+                    
+                    const orientation = element.boundaryOrientation || 'vertical';
+                    
+                    // 计算画布可见区域
+                    const visibleWidth = canvas.width / state.canvasScale;
+                    const visibleHeight = canvas.height / state.canvasScale;
+                    
+                    if (orientation === 'vertical') {
+                        // 竖直边界：x=0处的直线
+                        ctx.moveTo(0, -visibleHeight/2);
+                        ctx.lineTo(0, visibleHeight/2);
+                    } else {
+                        // 水平边界：y=0处的直线
+                        ctx.moveTo(-visibleWidth/2, 0);
+                        ctx.lineTo(visibleWidth/2, 0);
+                    }
+                    
                     ctx.stroke();
                 } else if (element.shape === 'double-boundary') {
                     ctx.beginPath();
-                    ctx.moveTo(-element.width/2, -element.height/2);
-                    ctx.lineTo(element.width/2, -element.height/2);
-                    ctx.moveTo(-element.width/2, element.height/2);
-                    ctx.lineTo(element.width/2, element.height/2);
+                    
+                    // 获取可见画布大小
+                    const visibleWidth = canvas.width / state.canvasScale;
+                    
+                    // 双边界：两条水平线，长度为整个画布宽度
+                    const topY = -element.height/2;
+                    const bottomY = element.height/2;
+                    
+                    // 绘制上边界线
+                    ctx.moveTo(-visibleWidth/2, topY);
+                    ctx.lineTo(visibleWidth/2, topY);
+                    
+                    // 绘制下边界线
+                    ctx.moveTo(-visibleWidth/2, bottomY);
+                    ctx.lineTo(visibleWidth/2, bottomY);
+                    
                     ctx.stroke();
                 }
                 
@@ -1823,10 +1892,10 @@
                 drawMagneticFieldMarkers(element);
             }
             
-            // 如果元素被选中，绘制选中框
+            // 如果元素被选中，绘制选中框（在本地坐标系中绘制，自动跟随旋转）
             if (state.selectedElements.includes(element)) {
                 ctx.strokeStyle = '#1971c2';
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 1; // 细线
                 ctx.setLineDash([5, 5]);
                 
                 if (element.type === 'particle-emitter') {
@@ -1834,20 +1903,71 @@
                     ctx.arc(0, 0, element.radius + 5, 0, Math.PI * 2);
                     ctx.stroke();
                 } else if (element.type === 'magnetic-field') {
-                    let boundsWidth, boundsHeight;
-                    
-                    if (element.shape === 'circle') {
+                    if (element.shape === 'single-boundary') {
+                        // 单边界磁场特殊选中框：包含边界和有磁场的区域
+                        const orientation = element.boundaryOrientation || 'vertical';
+                        const range = element.boundaryRange || 'right';
+                        
+                        // 获取可见画布大小
+                        const visibleWidth = canvas.width / state.canvasScale;
+                        const visibleHeight = canvas.height / state.canvasScale;
+                        
+                        if (orientation === 'vertical') {
+                            // 竖直边界：选中框包含边界和磁场区域
+                            const height = visibleHeight + 10;
+                            const padding = 5;
+                            
+                            if (range === 'left') {
+                                // 磁场在左侧，选中框从边界向左延伸到画布边缘
+                                const width = visibleWidth/2 + padding;
+                                const startX = -visibleWidth/2 - padding;
+                                ctx.strokeRect(startX, -height/2, width, height);
+                            } else {
+                                // 磁场在右侧，选中框从边界向右延伸到画布边缘
+                                const width = visibleWidth/2 + padding;
+                                const startX = -padding;
+                                ctx.strokeRect(startX, -height/2, width, height);
+                            }
+                        } else {
+                            // 水平边界：选中框包含边界和磁场区域
+                            const width = visibleWidth + 10;
+                            const padding = 5;
+                            
+                            if (range === 'left') {
+                                // 磁场在上侧，选中框从边界向上延伸到画布边缘
+                                const height = visibleHeight/2 + padding;
+                                const startY = -visibleHeight/2 - padding;
+                                ctx.strokeRect(-width/2, startY, width, height);
+                            } else {
+                                // 磁场在下侧，选中框从边界向下延伸到画布边缘
+                                const height = visibleHeight/2 + padding;
+                                const startY = -padding;
+                                ctx.strokeRect(-width/2, startY, width, height);
+                            }
+                        }
+                    } else if (element.shape === 'circle') {
                         boundsWidth = element.width + 10;
                         boundsHeight = element.width + 10;
+                        ctx.strokeRect(-boundsWidth/2, -boundsHeight/2, boundsWidth, boundsHeight);
                     } else if (element.shape === 'triangle') {
                         boundsWidth = element.width + 10;
                         boundsHeight = element.height + 10;
+                        ctx.strokeRect(-boundsWidth/2, -boundsHeight/2, boundsWidth, boundsHeight);
+                    } else if (element.shape === 'double-boundary') {
+                        // 双边界磁场选中框：包含两条边界线和中间的磁场区域
+                        const visibleWidth = canvas.width / state.canvasScale;
+                        const padding = 5;
+                        
+                        // 选中框宽度为整个画布宽度，高度为两个边界之间的距离加上内边距
+                        const width = visibleWidth + padding * 2;
+                        const height = element.height + padding * 2;
+                        
+                        ctx.strokeRect(-width/2, -height/2, width, height);
                     } else {
                         boundsWidth = element.width + 10;
                         boundsHeight = element.height + 10;
+                        ctx.strokeRect(-boundsWidth/2, -boundsHeight/2, boundsWidth, boundsHeight);
                     }
-                    
-                    ctx.strokeRect(-boundsWidth/2, -boundsHeight/2, boundsWidth, boundsHeight);
                 }
                 
                 ctx.setLineDash([]);
@@ -1858,8 +1978,7 @@
 
         // 绘制磁场方向标记
         function drawMagneticFieldMarkers(field) {
-            const markerSpacing = 20;
-            const markerSize = 8;
+            const markerSpacing = 25; // 增大间距，减少标记数量
             
             // 计算标记数量
             let markers = [];
@@ -1899,23 +2018,123 @@
                 markers.push({x: 0, y: 0});
             } else if (field.shape === 'triangle') {
                 // 三角形内的标记
-                const rows = Math.floor(field.height / markerSpacing);
+                const rows = Math.ceil(field.height / markerSpacing);
                 
-                for (let row = 1; row < rows; row++) {
+                // 从顶部到底部绘制标记
+                for (let row = 0; row <= rows; row++) {
                     const y = -field.height/2 + row * markerSpacing;
-                    const widthAtY = field.width * (1 - (y + field.height/2) / field.height);
-                    const markersInRow = Math.floor(widthAtY / markerSpacing);
                     
-                    for (let i = 0; i <= markersInRow; i++) {
-                        const x = -widthAtY/2 + i * (widthAtY / markersInRow);
-                        markers.push({x, y});
+                    // 检查y是否在三角形范围内
+                    if (y <= field.height/2) {
+                        // 计算当前高度处的三角形宽度（顶部0，底部field.width）
+                    const progress = (y + field.height/2) / field.height; // 从0（顶部）到1（底部）
+                    const widthAtY = field.width * progress;
+                        const markersInRow = Math.max(0, Math.floor(widthAtY / markerSpacing));
+                        
+                        // 计算每行的起始x坐标，使标记居中
+                        const startX = -widthAtY/2;
+                        const step = widthAtY / Math.max(1, markersInRow);
+                        
+                        for (let i = 0; i <= markersInRow; i++) {
+                            const x = startX + i * step;
+                            markers.push({x, y});
+                        }
+                    }
+                }
+                
+                // 添加中心点
+                markers.push({x: 0, y: 0});
+            } else if (field.shape === 'single-boundary') {
+                // 单边界磁场标记：整个画布被一条线分割，一边有磁场，一边没有
+                const orientation = field.boundaryOrientation || 'vertical';
+                const range = field.boundaryRange || 'right';
+                
+                // 获取可见画布大小
+                const visibleWidth = canvas.width / state.canvasScale;
+                const visibleHeight = canvas.height / state.canvasScale;
+                
+                if (orientation === 'vertical') {
+                    // 竖直边界：x=0处的直线，磁场在左侧或右侧
+                    const rows = Math.ceil(visibleHeight / markerSpacing);
+                    const cols = Math.ceil(visibleWidth / markerSpacing);
+                    
+                    for (let row = 0; row <= rows; row++) {
+                        // 计算y坐标，覆盖整个可见画布高度
+                        const y = -visibleHeight/2 + row * markerSpacing;
+                        
+                        if (range === 'left') {
+                            // 磁场在左侧（x < 0）
+                            for (let col = 0; col < cols; col++) {
+                                const x = -visibleWidth/2 + col * markerSpacing;
+                                if (x < 0) {
+                                    markers.push({x, y});
+                                }
+                            }
+                        } else {
+                            // 磁场在右侧（x > 0）
+                            for (let col = 0; col < cols; col++) {
+                                const x = -visibleWidth/2 + col * markerSpacing;
+                                if (x > 0) {
+                                    markers.push({x, y});
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // 水平边界：y=0处的直线，磁场在上侧或下侧
+                    const cols = Math.ceil(visibleWidth / markerSpacing);
+                    const rows = Math.ceil(visibleHeight / markerSpacing);
+                    
+                    for (let col = 0; col <= cols; col++) {
+                        // 计算x坐标，覆盖整个可见画布宽度
+                        const x = -visibleWidth/2 + col * markerSpacing;
+                        
+                        if (range === 'left') {
+                            // 磁场在上侧（y < 0）
+                            for (let row = 0; row < rows; row++) {
+                                const y = -visibleHeight/2 + row * markerSpacing;
+                                if (y < 0) {
+                                    markers.push({x, y});
+                                }
+                            }
+                        } else {
+                            // 磁场在下侧（y > 0）
+                            for (let row = 0; row < rows; row++) {
+                                const y = -visibleHeight/2 + row * markerSpacing;
+                                if (y > 0) {
+                                    markers.push({x, y});
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if (field.shape === 'double-boundary') {
+                // 双边界磁场标记：只在两条边界之间显示标记
+                const visibleWidth = canvas.width / state.canvasScale;
+                const topY = -field.height/2;
+                const bottomY = field.height/2;
+                
+                // 计算标记行数和列数
+                const rows = Math.ceil(field.height / markerSpacing);
+                const cols = Math.ceil(visibleWidth / markerSpacing);
+                
+                for (let row = 0; row <= rows; row++) {
+                    // 计算y坐标，在两条边界之间
+                    const y = topY + (row + 0.5) * markerSpacing;
+                    if (y < bottomY) {
+                        // 只在两条边界之间显示标记
+                        for (let col = 0; col < cols; col++) {
+                            // 计算x坐标，覆盖整个可见画布宽度
+                            const x = -visibleWidth/2 + col * markerSpacing;
+                            markers.push({x, y});
+                        }
                     }
                 }
             }
             
             // 绘制标记
-            ctx.fillStyle = field.direction === 'out' ? 'rgba(230, 119, 0, 0.7)' : 'rgba(43, 138, 62, 0.7)';
-            ctx.font = 'bold 14px Arial';
+            ctx.fillStyle = field.direction === 'out' ? 'rgba(230, 119, 0, 0.8)' : 'rgba(43, 138, 62, 0.8)';
+            ctx.font = '10px Arial'; // 更小的字体
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             
@@ -1997,7 +2216,10 @@
                     scale: 1.0,
                     shape: 'rectangle',
                     direction: 'out',
-                    strength: 1.0
+                    strength: 1.0,
+                    // 单边界磁场属性
+                    boundaryOrientation: 'vertical', // 竖直或水平
+                    boundaryRange: 'right' // 左/上或右/下
                 };
             }
             
@@ -2071,6 +2293,28 @@
                 fieldWidthInput.value = state.selectedElement.width;
                 fieldHeightInput.value = state.selectedElement.height;
                 fieldRotationInput.value = state.selectedElement.rotation;
+                
+                // 单边界和双边界磁场特殊处理
+                if (state.selectedElement.shape === 'single-boundary') {
+                    // 显示单边界特殊属性，隐藏宽度和高度
+                    singleBoundaryProperties.style.display = 'block';
+                    fieldWidthInput.parentElement.parentElement.style.display = 'none';
+                    fieldHeightInput.parentElement.parentElement.style.display = 'none';
+                    
+                    // 更新单边界属性值
+                    boundaryOrientationSelect.value = state.selectedElement.boundaryOrientation || 'vertical';
+                    boundaryRangeSelect.value = state.selectedElement.boundaryRange || 'right';
+                } else if (state.selectedElement.shape === 'double-boundary') {
+                    // 双边界磁场：隐藏宽度和高度属性
+                    singleBoundaryProperties.style.display = 'none';
+                    fieldWidthInput.parentElement.parentElement.style.display = 'none';
+                    fieldHeightInput.parentElement.parentElement.style.display = 'none';
+                } else {
+                    // 显示所有属性
+                    singleBoundaryProperties.style.display = 'none';
+                    fieldWidthInput.parentElement.parentElement.style.display = 'block';
+                    fieldHeightInput.parentElement.parentElement.style.display = 'block';
+                }
             }
             
             // 更新变换控制面板
@@ -2353,27 +2597,64 @@
                 const distance = Math.sqrt(scaledX**2 + scaledY**2);
                 return distance <= field.width/2;
             } else if (field.shape === 'triangle') {
-                // 简单三角形检测（等边三角形，顶点在上，底边在下）
-                const top = -field.height/2;
-                const bottom = field.height/2;
-                const left = -field.width/2;
-                const right = field.width/2;
+                // 三角形检测（顶点在上，底边在下）
+                const halfHeight = field.height/2;
+                const halfWidth = field.width/2;
+                
+                // 三角形的三个顶点（局部坐标系）
+                const vertex1 = { x: 0, y: -halfHeight }; // 顶部顶点
+                const vertex2 = { x: -halfWidth, y: halfHeight }; // 左下顶点
+                const vertex3 = { x: halfWidth, y: halfHeight }; // 右下顶点
+                
+                // 使用Barycentric坐标法判断点是否在三角形内
+                // 计算三个边的向量
+                const v0 = { x: vertex3.x - vertex1.x, y: vertex3.y - vertex1.y };
+                const v1 = { x: vertex2.x - vertex1.x, y: vertex2.y - vertex1.y };
+                const v2 = { x: scaledX - vertex1.x, y: scaledY - vertex1.y };
+                
+                // 计算点积
+                const dot00 = v0.x * v0.x + v0.y * v0.y;
+                const dot01 = v0.x * v1.x + v0.y * v1.y;
+                const dot02 = v0.x * v2.x + v0.y * v2.y;
+                const dot11 = v1.x * v1.x + v1.y * v1.y;
+                const dot12 = v1.x * v2.x + v1.y * v2.y;
+                
+                // 计算Barycentric坐标
+                const invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+                const u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+                const v = (dot00 * dot12 - dot01 * dot02) * invDenom;
                 
                 // 检查点是否在三角形内
-                const area = field.width * field.height / 2;
-                
-                // 计算子三角形面积
-                const area1 = Math.abs(scaledX * (bottom - top) + left * (top - scaledY) + right * (scaledY - bottom)) / 2;
-                const area2 = Math.abs(left * (top - scaledY) + right * (scaledY - bottom) + 0 * (bottom - top)) / 2;
-                const area3 = Math.abs(scaledX * (bottom - scaledY) + right * (scaledY - bottom) + 0 * (bottom - scaledX)) / 2;
-                
-                return (area1 + area2 + area3) <= area + 0.1;
+                return (u >= 0) && (v >= 0) && (u + v <= 1);
             } else if (field.shape === 'single-boundary') {
-                // 单边界：只检查y坐标
-                return Math.abs(scaledY) <= field.height/2;
+                const orientation = field.boundaryOrientation || 'vertical';
+                const range = field.boundaryRange || 'right';
+                
+                // 单边界磁场：整个画布被一条线分割，一边有磁场，另一边没有
+                if (orientation === 'vertical') {
+                    // 竖直边界：x=0处的直线
+                    if (range === 'left') {
+                        // 磁场在左侧（x < 0）
+                        return scaledX < 0;
+                    } else {
+                        // 磁场在右侧（x > 0）
+                        return scaledX > 0;
+                    }
+                } else {
+                    // 水平边界：y=0处的直线
+                    if (range === 'left') {
+                        // 磁场在上侧（y < 0）
+                        return scaledY < 0;
+                    } else {
+                        // 磁场在下侧（y > 0）
+                        return scaledY > 0;
+                    }
+                }
             } else if (field.shape === 'double-boundary') {
                 // 双边界：检查y坐标在两个边界之间
-                return Math.abs(scaledY) <= field.height/2;
+                const topY = -field.height/2;
+                const bottomY = field.height/2;
+                return scaledY >= topY && scaledY <= bottomY;
             }
             
             return false;
@@ -2533,6 +2814,21 @@
             fieldRotationInput.addEventListener('change', function() {
                 if (state.selectedElement && state.selectedElement.type === 'magnetic-field') {
                     state.selectedElement.rotation = parseInt(this.value) || 0;
+                    draw();
+                }
+            });
+            
+            // 单边界磁场属性变化事件
+            boundaryOrientationSelect.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'magnetic-field' && state.selectedElement.shape === 'single-boundary') {
+                    state.selectedElement.boundaryOrientation = this.value;
+                    draw();
+                }
+            });
+            
+            boundaryRangeSelect.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'magnetic-field' && state.selectedElement.shape === 'single-boundary') {
+                    state.selectedElement.boundaryRange = this.value;
                     draw();
                 }
             });
