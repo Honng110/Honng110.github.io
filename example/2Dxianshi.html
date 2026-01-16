@@ -818,6 +818,11 @@
             canvasContainer.addEventListener('mouseup', handleCanvasMouseUp);
             canvasContainer.addEventListener('mouseleave', handleCanvasMouseLeave);
             
+            // 阻止默认右键菜单
+            canvasContainer.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+            
             // 双击事件
             canvasContainer.addEventListener('dblclick', handleDoubleClick);
             
@@ -915,6 +920,17 @@
                     clickedElement = element;
                     break;
                 }
+            }
+            
+            // 处理右键点击
+            if (e.button === 2) {
+                e.preventDefault(); // 阻止默认右键菜单
+                // 开始拖拽画布
+                state.isDraggingCanvas = true;
+                state.dragStart.x = e.clientX - state.canvasOffset.x;
+                state.dragStart.y = e.clientY - state.canvasOffset.y;
+                canvasContainer.style.cursor = 'grabbing';
+                return;
             }
             
             if (clickedElement) {
@@ -1162,12 +1178,19 @@
             }
             
             if (clickedElement) {
-                // 切换元素的旋转角度（每次双击旋转90度）
-                clickedElement.rotation = (clickedElement.rotation + 90) % 360;
+                if (clickedElement.type === 'particle-emitter') {
+                    // 对于粒子发射器，修改箭头方向和粒子发射角度
+                    clickedElement.angle = (clickedElement.angle + 90) % 360;
+                    clickedElement.rotation = clickedElement.angle; // 保持旋转角度与方向一致
+                } else {
+                    // 对于其他元素，只修改旋转角度
+                    clickedElement.rotation = (clickedElement.rotation + 90) % 360;
+                }
                 
                 // 如果元素被选中，更新控制面板
                 if (state.selectedElements.includes(clickedElement)) {
                     updateTransformControls();
+                    updatePropertiesPanel(); // 更新属性面板以反映角度变化
                 }
                 
                 draw();
@@ -2703,6 +2726,53 @@
                 }
             });
             
+            // 初始化一个示例场景
+            initializeExampleScene();
+        }
+
+        // 初始化示例场景
+        function initializeExampleScene() {
+            // 添加一个粒子发射器
+            const emitter = {
+                id: 'emitter_example',
+                type: 'particle-emitter',
+                x: 200,
+                y: 300,
+                radius: 20,
+                rotation: 0,
+                scale: 1.0,
+                particleType: 'electron',
+                speed: 30,
+                angle: 90,
+                emissionRate: 10,
+                lastEmissionTime: 0
+            };
+            
+            // 添加一个磁场
+            const magneticField = {
+                id: 'field_example',
+                type: 'magnetic-field',
+                x: 400,
+                y: 300,
+                width: 200,
+                height: 150,
+                rotation: 0,
+                scale: 1.0,
+                shape: 'rectangle',
+                direction: 'out',
+                strength: 1.0
+            };
+            
+            state.elements.push(emitter, magneticField);
+            state.selectedElements = [emitter];
+            state.selectedElement = emitter;
+            
+            // 显示变换控制按钮
+            transformControls.classList.add('active');
+            gestureHint.classList.add('active');
+            
+            updatePropertiesPanel();
+            draw();
         }
 
         // 初始化应用
