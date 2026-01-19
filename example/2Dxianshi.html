@@ -48,11 +48,35 @@
         }
         
         .left-panel {
-            width: 250px;
+            width: 125px; /* 减小左侧面板宽度为原来的一半 */
             background-color: #1e1e1e;
             padding: 15px;
             overflow-y: auto;
             border-right: 1px solid #333;
+            transition: width 0.3s ease, padding 0.3s ease;
+            position: relative;
+            min-width: 50px;
+        }
+
+        .left-panel.collapsed {
+            width: 50px;
+            padding: 15px 5px;
+        }
+
+        .left-panel.collapsed .panel-title,
+        .left-panel.collapsed .element-card p,
+        .left-panel.collapsed .element-card h3 {
+            display: none;
+        }
+
+        .left-panel.collapsed .element-card {
+            padding: 10px;
+            text-align: center;
+        }
+
+        .left-panel.collapsed .element-card i {
+            font-size: 1.5rem;
+            margin: 0;
         }
         
         .panel-title {
@@ -137,21 +161,48 @@
         }
         
         .right-panel {
-            width: 320px;
+            width: 240px; /* 增加右侧面板宽度为现在的1.5倍 */
             background-color: #1e1e1e;
             padding: 15px;
             overflow-y: auto;
             border-left: 1px solid #333;
+            transition: width 0.3s ease, padding 0.3s ease;
+            position: relative;
+            min-width: 50px;
+        }
+
+        .right-panel.collapsed {
+            width: 50px;
+            padding: 15px 5px;
+        }
+
+        .right-panel.collapsed * {
+            display: none;
+        }
+
+        .right-panel.collapsed #no-selection-panel {
+            display: block;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .right-panel.collapsed #no-selection-panel i {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .right-panel.collapsed #no-selection-panel p {
+            display: none;
         }
         
         /* 响应式设计：针对iPad等平板设备 */
         @media (max-width: 1200px) {
             .left-panel {
-                width: 200px; /* 减小左侧面板宽度 */
+                width: 125px; /* 保持减小后的宽度 */
             }
             
             .right-panel {
-                width: 250px; /* 减小右侧面板宽度 */
+                width: 240px; /* 增加右侧面板宽度为现在的1.5倍 */
             }
         }
         
@@ -230,29 +281,40 @@
         
         .property-item label {
             display: block;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
             color: #ccc;
             font-weight: 500;
         }
         
         .property-item input, 
-            .property-item select {
-                width: 100%;
-                padding: 12px 15px;
-                background-color: #252525;
-                border: 1px solid #444;
-                border-radius: 6px;
-                color: #e0e0e0;
-                font-size: 1rem;
-                transition: border-color 0.3s;
-                min-height: 48px;
-            }
+        .property-item select {
+            width: 100%;
+            padding: 10px 12px;
+            background-color: #252525;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 0.95rem;
+            transition: border-color 0.3s;
+            height: 42px;
+        }
         
         .property-item input:focus, 
         .property-item select:focus {
             outline: none;
             border-color: #4a9eff;
+        }
+        
+        /* 隐藏数字输入框的上下箭头 */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        input[type="number"] {
+            -moz-appearance: textfield;
         }
         
         .input-with-unit {
@@ -262,13 +324,12 @@
         
         .input-with-unit input {
             flex: 1;
-            margin-right: 5px;
         }
         
         .unit {
-            min-width: 40px;
+            min-width: 35px;
             color: #999;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
         
         .control-panel {
@@ -288,7 +349,7 @@
             border: 1px solid #333;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 1.1rem;
+            font-size: 1rem;
             transition: all 0.3s;
             display: flex;
             align-items: center;
@@ -332,30 +393,46 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 8px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         
         .physics-info-label {
-            color: #555;
+            color: #aaa;
         }
         
         .physics-info-value {
-            color: #1971c2;
+            color: #4a9eff;
             font-weight: 500;
         }
         
-        .coordinate-display {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 8px 12px;
-            border-radius: 5px;
-            font-size: 0.85rem;
-            color: #333;
-            z-index: 10;
-            border: 1px solid #e0e0e0;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        /* 新增：双列布局样式 */
+        .property-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .property-row .property-item {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .property-row .property-item label {
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .property-row .property-item input,
+        .property-row .property-item select {
+            padding: 9px 10px;
+            font-size: 0.9rem;
+            height: 38px;
+            width: 100%;
+        }
+        
+        /* 双列输入框加宽 */
+        .property-row .input-with-unit input {
+            width: 100%;
         }
         
         .selection-box {
@@ -423,6 +500,77 @@
         .gesture-hint.active {
             display: block;
         }
+        
+        /* 悬浮按钮样式 */
+        .floating-buttons {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .floating-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(30, 30, 30, 0.9);
+            border: 1px solid #4a9eff;
+            color: #4a9eff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .floating-btn:hover {
+            background-color: rgba(74, 158, 255, 0.2);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .floating-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .coordinate-display {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(30, 30, 30, 0.9);
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            color: #e0e0e0;
+            z-index: 10;
+            border: 1px solid #333;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 颜色选择器样式调整 */
+        input[type="color"] {
+            padding: 3px;
+            height: 40px;
+            width: 100%;
+            border-radius: 6px;
+            cursor: pointer;
+            background-color: #252525;
+            border: 1px solid #444;
+        }
+        
+        /* 调整单列输入框样式 */
+        .single-column-input .property-item input,
+        .single-column-input .property-item select {
+            padding: 10px 12px;
+            font-size: 0.95rem;
+            height: 42px;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -433,34 +581,17 @@
     </div>
     
     <div class="container">
-        <!-- 左侧元素列表 -->
-        <div class="left-panel">
-            <div class="panel-title">元素列表</div>
-            
-            <div class="element-card" data-type="particle-emitter">
-                <h3><i class="fas fa-bullseye"></i> 粒子发射器</h3>
-                <p>添加一个粒子发射器到画布上，可设置粒子类型、速度和方向</p>
-            </div>
-            
-            <div class="element-card" data-type="magnetic-field">
-                <h3><i class="fas fa-magnet"></i> 磁场</h3>
-                <p>添加一个磁场区域到画布上，可设置形状、方向和强度</p>
-            </div>
-            
-            <div class="panel-title" style="margin-top: 25px;">操作指南</div>
-            <div style="font-size: 0.85rem; color: #666; line-height: 1.5;">
-                <p><i class="fas fa-mouse-pointer"></i> <strong>选择元素</strong>: 点击画布上的元素</p>
-                <p><i class="fas fa-arrows-alt"></i> <strong>移动元素</strong>: 拖动选中元素</p>
-                <p><i class="fas fa-sync-alt"></i> <strong>旋转元素</strong>: 使用下方控制按钮</p>
-                <p><i class="fas fa-expand-alt"></i> <strong>缩放元素</strong>: 使用下方控制按钮</p>
-                <p><i class="fas fa-search"></i> <strong>缩放画布</strong>: 使用鼠标滚轮</p>
-                <p><i class="fas fa-hand-paper"></i> <strong>平移画布</strong>: 按住空格键拖动</p>
-                <p><i class="fas fa-mobile-alt"></i> <strong>iPad触控</strong>: 双指旋转/缩放元素</p>
-            </div>
-        </div>
-        
         <!-- 中间画布区域 -->
         <div class="center-panel">
+            <!-- 悬浮按钮 -->
+            <div class="floating-buttons">
+                <button class="floating-btn" id="add-emitter-btn" title="添加粒子发射器">
+                    <i class="fas fa-bullseye"></i>
+                </button>
+                <button class="floating-btn" id="add-field-btn" title="添加磁场">
+                    <i class="fas fa-magnet"></i>
+                </button>
+            </div>
             <div id="canvas-container">
                 <canvas id="simulation-canvas"></canvas>
                 <div class="canvas-overlay">
@@ -500,8 +631,37 @@
                 <p>请点击画布上的元素以编辑其属性</p>
             </div>
             
+            <!-- 变换控制 -->
+            <div class="property-group" id="transform-panel" style="display: none;">
+                <h3><i class="fas fa-edit"></i> 变换控制</h3>
+                
+                <!-- X坐标和Y坐标放在同一行 -->
+                <div class="property-row">
+                    <div class="property-item">
+                        <label for="element-x">X坐标(px)</label>
+                        <input type="number" id="element-x" step="1" value="0">
+                    </div>
+                    
+                    <div class="property-item">
+                        <label for="element-y">Y坐标(px)</label>
+                        <input type="number" id="element-y" step="1" value="0">
+                    </div>
+                </div>
+                
+                <div class="property-item">
+                    <label for="element-scale">缩放比例(倍)</label>
+                    <input type="number" id="element-scale" min="0.1" max="3" step="0.1" value="1.0">
+                </div>
+                
+                <div class="property-item">
+                    <button id="delete-element-btn" class="control-button warning" style="width: 100%; margin-top: 10px; padding: 10px; font-size: 0.9rem; height: auto;">
+                        <i class="fas fa-trash-alt"></i> 删除元素
+                    </button>
+                </div>
+            </div>
+            
             <!-- 粒子发射器属性 -->
-            <div id="emitter-properties" style="display: none;">
+            <div id="emitter-properties" style="display: none;" class="single-column-input">
                 <div class="property-group">
                     <h3><i class="fas fa-bullseye"></i> 粒子发射器属性</h3>
                     
@@ -519,19 +679,13 @@
                     
                     <div id="custom-particle-properties" style="display: none;">
                         <div class="property-item">
-                            <label for="custom-charge">电荷量 (相对单位)</label>
-                            <div class="input-with-unit">
-                                <input type="number" id="custom-charge" step="1" value="-1">
-                                <span class="unit">q</span>
-                            </div>
+                            <label for="custom-charge">电荷量(q)</label>
+                            <input type="number" id="custom-charge" step="1" value="-1">
                         </div>
                         
                         <div class="property-item">
-                            <label for="custom-mass">质量 (相对单位)</label>
-                            <div class="input-with-unit">
-                                <input type="number" id="custom-mass" step="1" value="1">
-                                <span class="unit">m</span>
-                            </div>
+                            <label for="custom-mass">质量(m)</label>
+                            <input type="number" id="custom-mass" step="1" value="1">
                         </div>
                         
                         <div class="property-item">
@@ -541,35 +695,23 @@
                     </div>
                     
                     <div class="property-item">
-                        <label for="particle-speed">速度大小</label>
-                        <div class="input-with-unit">
-                            <input type="number" id="particle-speed" min="1" max="100" step="1" value="3">
-                            <span class="unit">m/s</span>
-                        </div>
+                        <label for="particle-speed">速度大小(m/s)</label>
+                        <input type="number" id="particle-speed" min="1" max="100" step="1" value="3">
                     </div>
                     
                     <div class="property-item">
-                        <label for="particle-angle">速度方向</label>
-                        <div class="input-with-unit">
-                            <input type="number" id="particle-angle" min="0" max="360" step="1" value="0">
-                            <span class="unit">°</span>
-                        </div>
+                        <label for="particle-angle">速度方向(°)</label>
+                        <input type="number" id="particle-angle" min="0" max="360" step="1" value="0">
                     </div>
                     
                     <div class="property-item">
-                        <label for="emission-rate">发射频率</label>
-                        <div class="input-with-unit">
-                            <input type="number" id="emission-rate" min="1" max="60" step="1" value="1">
-                            <span class="unit">个/秒</span>
-                        </div>
+                        <label for="emission-rate">发射频率(10s/个)</label>
+                        <input type="number" id="emission-rate" min="0.1" max="60" step="0.1" value="10">
                     </div>
                     
                     <div class="property-item">
-                        <label for="emitter-size">发射器大小</label>
-                        <div class="input-with-unit">
-                            <input type="number" id="emitter-size" min="10" max="60" step="1" value="3">
-                            <span class="unit">px</span>
-                        </div>
+                        <label for="emitter-size">发射器大小(px)</label>
+                        <input type="number" id="emitter-size" min="10" max="60" step="1" value="3">
                     </div>
                 </div>
             </div>
@@ -598,35 +740,29 @@
                         </select>
                     </div>
                     
-                    <div class="property-item">
-                        <label for="field-strength">磁场强度</label>
-                        <div class="input-with-unit">
+                    <!-- 磁场强度和旋转角度放在同一行 -->
+                    <div class="property-row">
+                        <div class="property-item">
+                            <label for="field-strength">磁场强度(B)</label>
                             <input type="number" id="field-strength" min="0.1" max="10" step="0.1" value="1.0">
-                            <span class="unit">B</span>
                         </div>
-                    </div>
-                    
-                    <div class="property-item">
-                        <label for="field-width">宽度</label>
-                        <div class="input-with-unit">
-                            <input type="number" id="field-width" min="50" max="400" step="10" value="150">
-                            <span class="unit">px</span>
-                        </div>
-                    </div>
-                    
-                    <div class="property-item">
-                        <label for="field-height">高度</label>
-                        <div class="input-with-unit">
-                            <input type="number" id="field-height" min="50" max="400" step="10" value="100">
-                            <span class="unit">px</span>
-                        </div>
-                    </div>
-                    
-                    <div class="property-item">
-                        <label for="field-rotation">旋转角度</label>
-                        <div class="input-with-unit">
+                        
+                        <div class="property-item">
+                            <label for="field-rotation">旋转角度(°)</label>
                             <input type="number" id="field-rotation" min="0" max="360" step="1" value="0">
-                            <span class="unit">°</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 宽度和高度放在同一行 -->
+                    <div class="property-row">
+                        <div class="property-item">
+                            <label for="field-width">宽度(px)</label>
+                            <input type="number" id="field-width" min="50" max="400" step="10" value="150">
+                        </div>
+                        
+                        <div class="property-item">
+                            <label for="field-height">高度(px)</label>
+                            <input type="number" id="field-height" min="50" max="400" step="10" value="100">
                         </div>
                     </div>
                     
@@ -675,49 +811,6 @@
                         <span class="physics-info-label">回旋周期:</span>
                         <span class="physics-info-value" id="gyroperiod">0 s</span>
                     </div>
-                </div>
-            </div>
-            
-            <!-- 变换控制 -->
-            <div class="property-group" id="transform-panel" style="display: none;">
-                <h3><i class="fas fa-edit"></i> 变换控制</h3>
-                
-                <div class="property-item">
-                    <label for="element-x">X 坐标</label>
-                    <div class="input-with-unit">
-                        <input type="number" id="element-x" step="1" value="0">
-                        <span class="unit">px</span>
-                    </div>
-                </div>
-                
-                <div class="property-item">
-                    <label for="element-y">Y 坐标</label>
-                    <div class="input-with-unit">
-                        <input type="number" id="element-y" step="1" value="0">
-                        <span class="unit">px</span>
-                    </div>
-                </div>
-                
-                <div class="property-item">
-                    <label for="element-rotation">旋转角度</label>
-                    <div class="input-with-unit">
-                        <input type="number" id="element-rotation" min="0" max="360" step="1" value="0">
-                        <span class="unit">°</span>
-                    </div>
-                </div>
-                
-                <div class="property-item">
-                    <label for="element-scale">缩放比例</label>
-                    <div class="input-with-unit">
-                        <input type="number" id="element-scale" min="0.1" max="3" step="0.1" value="1.0">
-                        <span class="unit">倍</span>
-                    </div>
-                </div>
-                
-                <div class="property-item">
-                    <button id="delete-element-btn" class="control-button warning" style="width: 100%; margin-top: 10px;">
-                        <i class="fas fa-trash-alt"></i> 删除元素
-                    </button>
                 </div>
             </div>
         </div>
@@ -820,7 +913,24 @@
                 initialAngle: 0,
                 initialScale: 1,
                 initialRotation: 0
-            }
+            },
+            
+            // 侧边栏状态
+            sidebarState: {
+                left: {
+                    collapsed: false,
+                    autoHide: true,
+                    hovered: false,
+                    lastActivity: Date.now()
+                },
+                right: {
+                    collapsed: false,
+                    autoHide: true,
+                    hovered: false,
+                    lastActivity: Date.now()
+                }
+            },
+            sidebarAutoHideTimer: null
         };
 
         // 获取DOM元素
@@ -829,7 +939,6 @@
         const canvasContainer = document.getElementById('canvas-container');
         const canvasScaleElement = document.getElementById('canvas-scale');
         const particleCountElement = document.getElementById('particle-count');
-        const mouseCoordsElement = document.getElementById('mouse-coords');
         const selectionBox = document.getElementById('selection-box');
         const transformControls = document.getElementById('transform-controls');
         const gestureHint = document.getElementById('gesture-hint');
@@ -871,7 +980,6 @@
         // 变换控制控件
         const elementXInput = document.getElementById('element-x');
         const elementYInput = document.getElementById('element-y');
-        const elementRotationInput = document.getElementById('element-rotation');
         const elementScaleInput = document.getElementById('element-scale');
         
         // 物理信息显示
@@ -893,7 +1001,66 @@
         const rotateRightBtn = document.getElementById('rotate-right-btn');
         const scaleUpBtn = document.getElementById('scale-up-btn');
         const scaleDownBtn = document.getElementById('scale-down-btn');
+        
+        // 侧边栏元素
+        const rightPanel = document.querySelector('.right-panel');
 
+        // 侧边栏自动吸附功能
+        function initSidebarAutoHide() {
+            // 鼠标悬停事件
+            rightPanel.addEventListener('mouseenter', function() {
+                updateSidebarActivity('right');
+                showSidebar('right');
+            });
+            
+            rightPanel.addEventListener('mouseleave', function() {
+                state.sidebarState.right.hovered = false;
+                checkSidebarAutoHide();
+            });
+            
+            // 点击事件更新活动时间
+            rightPanel.addEventListener('click', function() {
+                updateSidebarActivity('right');
+            });
+            
+            // 开始自动隐藏检查
+            setInterval(checkSidebarAutoHide, 1000);
+        }
+        
+        // 更新侧边栏活动时间
+        function updateSidebarActivity(side) {
+            state.sidebarState[side].lastActivity = Date.now();
+            state.sidebarState[side].hovered = true;
+        }
+        
+        // 显示侧边栏
+        function showSidebar(side) {
+            if (side === 'right') {
+                rightPanel.classList.remove('collapsed');
+                state.sidebarState[side].collapsed = false;
+            }
+        }
+        
+        // 隐藏侧边栏
+        function hideSidebar(side) {
+            if (side === 'right') {
+                rightPanel.classList.add('collapsed');
+                state.sidebarState[side].collapsed = true;
+            }
+        }
+        
+        // 检查侧边栏是否需要自动隐藏
+        function checkSidebarAutoHide() {
+            const now = Date.now();
+            const autoHideDelay = 5000; // 5秒无活动后自动隐藏
+            
+            // 检查右侧面板
+            if (state.sidebarState.right.autoHide && !state.sidebarState.right.hovered && 
+                now - state.sidebarState.right.lastActivity > autoHideDelay) {
+                hideSidebar('right');
+            }
+        }
+        
         // 初始化画布
         function initCanvas() {
             resizeCanvas();
@@ -924,6 +1091,9 @@
             // 键盘事件
             document.addEventListener('keydown', handleKeyDown);
             document.addEventListener('keyup', handleKeyUp);
+            
+            // 初始化侧边栏自动隐藏功能
+            initSidebarAutoHide();
             
             // 初始绘制
             draw();
@@ -1109,6 +1279,7 @@
             const worldY = (y - state.canvasOffset.y) / state.canvasScale;
             
             // 更新鼠标坐标显示
+            const mouseCoordsElement = document.getElementById('mouse-coords');
             mouseCoordsElement.textContent = `(${Math.round(worldX)}, ${Math.round(worldY)})`;
             
             if (state.isDraggingElement && state.selectedElements.length > 0) {
@@ -1246,11 +1417,6 @@
             canvasContainer.style.cursor = 'default';
         }
         
-        // 双击事件处理函数已移除
-        // function handleDoubleClick(e) {
-        //     // 双击事件逻辑已移除
-        // }
-        
         // 触摸事件处理（iPad适配）
         function handleTouchStart(e) {
             e.preventDefault();
@@ -1299,20 +1465,12 @@
                     transformControls.classList.add('active');
                     gestureHint.classList.add('active');
                 } else {
-                    // 触摸空白处，开始框选
-                    state.selection.active = true;
-                    state.selection.start = {
-                        x: touch.clientX,
-                        y: touch.clientY
-                    };
-                    state.selection.end = {
-                        x: touch.clientX,
-                        y: touch.clientY
-                    };
-                    
-                    // 显示选择框
-                    selectionBox.style.display = 'block';
-                    updateSelectionBox();
+                    // 触摸空白处，开始拖动画布
+                    state.isDraggingCanvas = true;
+                    state.dragStart.x = touch.clientX;
+                    state.dragStart.y = touch.clientY;
+                    state.dragStart.canvasOffsetX = state.canvasOffset.x;
+                    state.dragStart.canvasOffsetY = state.canvasOffset.y;
                     
                     // 取消之前的选择
                     state.selectedElements = [];
@@ -1326,28 +1484,48 @@
                     updatePropertiesPanel();
                 }
                 
-                // 双击事件检测已移除
-                
-            } else if (touches.length === 2 && state.selectedElements.length > 0) {
-                // 双指触摸且有选中元素，开始旋转/缩放
+            } else if (touches.length === 2) {
+                // 双指触摸
                 const touch1 = touches[0];
                 const touch2 = touches[1];
                 
-                // 计算两点距离和角度
-                const dx = touch2.clientX - touch1.clientX;
-                const dy = touch2.clientY - touch1.clientY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-                
-                state.multiTouch.active = true;
-                state.multiTouch.initialDistance = distance;
-                state.multiTouch.initialAngle = angle;
-                state.multiTouch.initialScale = state.selectedElement ? state.selectedElement.scale : 1;
-                state.multiTouch.initialRotation = state.selectedElement ? state.selectedElement.rotation : 0;
-                
-                // 隐藏变换控制按钮
-                transformControls.classList.remove('active');
-                gestureHint.classList.add('active');
+                if (state.selectedElements.length > 0) {
+                    // 有选中元素，开始旋转/缩放元素
+                    // 计算两点距离和角度
+                    const dx = touch2.clientX - touch1.clientX;
+                    const dy = touch2.clientY - touch1.clientY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    state.multiTouch.active = true;
+                    state.multiTouch.initialDistance = distance;
+                    state.multiTouch.initialAngle = angle;
+                    state.multiTouch.initialScale = state.selectedElement ? state.selectedElement.scale : 1;
+                    state.multiTouch.initialRotation = state.selectedElement ? state.selectedElement.rotation : 0;
+                    
+                    // 隐藏变换控制按钮
+                    transformControls.classList.remove('active');
+                    gestureHint.classList.add('active');
+                } else {
+                    // 无选中元素，开始双指平移/缩放画布
+                    // 计算两点距离和中点
+                    const dx = touch2.clientX - touch1.clientX;
+                    const dy = touch2.clientY - touch1.clientY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const midX = (touch1.clientX + touch2.clientX) / 2;
+                    const midY = (touch1.clientY + touch2.clientY) / 2;
+                    
+                    state.multiTouch.active = true;
+                    state.multiTouch.initialDistance = distance;
+                    state.multiTouch.initialScale = state.canvasScale;
+                    state.multiTouch.initialCanvasOffset = { ...state.canvasOffset };
+                    state.multiTouch.initialMidpoint = { x: midX, y: midY };
+                    state.isDraggingCanvas = true;
+                    
+                    // 隐藏变换控制按钮
+                    transformControls.classList.remove('active');
+                    gestureHint.classList.remove('active');
+                }
             }
             
             draw();
@@ -1382,55 +1560,79 @@
                 }
                 
                 draw();
-            } else if (touches.length === 1 && state.selection.active) {
-                // 单指框选
+            } else if (touches.length === 1 && state.isDraggingCanvas) {
+                // 单指拖动画布
                 const touch = touches[0];
-                state.selection.end = {
-                    x: touch.clientX,
-                    y: touch.clientY
-                };
-                updateSelectionBox();
-            } else if (touches.length === 2 && state.multiTouch.active && state.selectedElements.length > 0) {
-                // 双指旋转/缩放
+                
+                // 计算偏移量
+                state.canvasOffset.x = state.dragStart.canvasOffsetX + (touch.clientX - state.dragStart.x);
+                state.canvasOffset.y = state.dragStart.canvasOffsetY + (touch.clientY - state.dragStart.y);
+                
+                draw();
+            } else if (touches.length === 2 && state.multiTouch.active) {
                 const touch1 = touches[0];
                 const touch2 = touches[1];
                 
-                // 计算当前两点距离和角度
-                const dx = touch2.clientX - touch1.clientX;
-                const dy = touch2.clientY - touch1.clientY;
-                const currentDistance = Math.sqrt(dx * dx + dy * dy);
-                const currentAngle = Math.atan2(dy, dx) * 180 / Math.PI;
-                
-                // 计算缩放比例
-                const scaleChange = currentDistance / state.multiTouch.initialDistance;
-                
-                // 计算旋转角度变化
-                const angleChange = currentAngle - state.multiTouch.initialAngle;
-                
-                // 应用变换到所有选中元素
-                state.selectedElements.forEach(element => {
-                    // 缩放
-                    element.scale = Math.max(0.1, Math.min(3, state.multiTouch.initialScale * scaleChange));
+                if (state.selectedElements.length > 0) {
+                    // 双指旋转/缩放选中元素
+                    // 计算当前两点距离和角度
+                    const dx = touch2.clientX - touch1.clientX;
+                    const dy = touch2.clientY - touch1.clientY;
+                    const currentDistance = Math.sqrt(dx * dx + dy * dy);
+                    const currentAngle = Math.atan2(dy, dx) * 180 / Math.PI;
                     
-                    // 旋转
-                    element.rotation = (state.multiTouch.initialRotation + angleChange) % 360;
-                    if (element.rotation < 0) element.rotation += 360;
-                });
-                
-                // 更新变换控制面板
-                updateTransformControls();
+                    // 计算缩放比例
+                    const scaleChange = currentDistance / state.multiTouch.initialDistance;
+                    
+                    // 计算旋转角度变化
+                    const angleChange = currentAngle - state.multiTouch.initialAngle;
+                    
+                    // 应用变换到所有选中元素
+                    state.selectedElements.forEach(element => {
+                        // 缩放
+                        element.scale = Math.max(0.1, Math.min(3, state.multiTouch.initialScale * scaleChange));
+                        
+                        // 旋转
+                        element.rotation = (state.multiTouch.initialRotation + angleChange) % 360;
+                        if (element.rotation < 0) element.rotation += 360;
+                    });
+                    
+                    // 更新变换控制面板
+                    updateTransformControls();
+                } else {
+                    // 双指平移/缩放画布
+                    // 计算当前两点距离和中点
+                    const dx = touch2.clientX - touch1.clientX;
+                    const dy = touch2.clientY - touch1.clientY;
+                    const currentDistance = Math.sqrt(dx * dx + dy * dy);
+                    const currentMidX = (touch1.clientX + touch2.clientX) / 2;
+                    const currentMidY = (touch1.clientY + touch2.clientY) / 2;
+                    
+                    // 计算缩放比例
+                    const scaleChange = currentDistance / state.multiTouch.initialDistance;
+                    const newScale = Math.max(0.1, Math.min(5, state.multiTouch.initialScale * scaleChange));
+                    
+                    // 计算中点偏移
+                    const midOffsetX = currentMidX - state.multiTouch.initialMidpoint.x;
+                    const midOffsetY = currentMidY - state.multiTouch.initialMidpoint.y;
+                    
+                    // 计算画布缩放中心调整
+                    const scaleRatio = newScale / state.multiTouch.initialScale;
+                    const canvasAdjustX = state.multiTouch.initialMidpoint.x - state.multiTouch.initialCanvasOffset.x;
+                    const canvasAdjustY = state.multiTouch.initialMidpoint.y - state.multiTouch.initialCanvasOffset.y;
+                    const scaleCenterOffsetX = canvasAdjustX * (scaleRatio - 1);
+                    const scaleCenterOffsetY = canvasAdjustY * (scaleRatio - 1);
+                    
+                    // 更新画布缩放和偏移
+                    state.canvasScale = newScale;
+                    state.canvasOffset.x = state.multiTouch.initialCanvasOffset.x - scaleCenterOffsetX + midOffsetX;
+                    state.canvasOffset.y = state.multiTouch.initialCanvasOffset.y - scaleCenterOffsetY + midOffsetY;
+                    
+                    // 更新缩放显示
+                    canvasScaleElement.textContent = `${Math.round(state.canvasScale * 100)}%`;
+                }
                 
                 draw();
-            }
-            
-            // 更新坐标显示
-            if (touches.length > 0) {
-                const touch = touches[0];
-                const x = touch.clientX - rect.left;
-                const y = touch.clientY - rect.top;
-                const worldX = (x - state.canvasOffset.x) / state.canvasScale;
-                const worldY = (y - state.canvasOffset.y) / state.canvasScale;
-                mouseCoordsElement.textContent = `(${Math.round(worldX)}, ${Math.round(worldY)})`;
             }
         }
         
@@ -1446,6 +1648,7 @@
             }
             
             state.isDraggingElement = false;
+            state.isDraggingCanvas = false;
             state.multiTouch.active = false;
             
             // 完成框选
@@ -1687,15 +1890,95 @@
                 });
             }
             
+            // 绘制轨迹圆（紫色虚线）
+            state.particles.forEach(particle => {
+                // 显示所有粒子的轨迹圆，包括已退出磁场的
+                if (particle.circleCenter && particle.circleRadius > 0) {
+                    ctx.save();
+                    
+                    // 绘制紫色虚线圆
+                    ctx.strokeStyle = '#9c27b0'; // 紫色
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.arc(particle.circleCenter.x, particle.circleCenter.y, particle.circleRadius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    // 绘制圆心（紫色小点）
+                    ctx.fillStyle = '#9c27b0';
+                    ctx.beginPath();
+                    ctx.arc(particle.circleCenter.x, particle.circleCenter.y, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // 绘制进入点（红色）
+                    if (particle.entryPoint) {
+                        ctx.fillStyle = '#ff5252';
+                        ctx.beginPath();
+                        ctx.arc(particle.entryPoint.x, particle.entryPoint.y, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    // 绘制退出点（红色）
+                    if (particle.exitPoint) {
+                        ctx.fillStyle = '#ff5252';
+                        ctx.beginPath();
+                        ctx.arc(particle.exitPoint.x, particle.exitPoint.y, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    // 绘制圆心角和theta标记（红色）
+                    if (particle.entryPoint) {
+                        ctx.save();
+                        ctx.strokeStyle = '#ff5252';
+                        ctx.fillStyle = '#ff5252';
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([]);
+                        
+                        // 确定结束点：如果已退出磁场则使用退出点，否则使用当前位置
+                        const endPoint = particle.exitPoint || particle;
+                        
+                        // 绘制进入点半径线
+                        ctx.beginPath();
+                        ctx.moveTo(particle.circleCenter.x, particle.circleCenter.y);
+                        ctx.lineTo(particle.entryPoint.x, particle.entryPoint.y);
+                        ctx.stroke();
+                        
+                        // 绘制结束点半径线
+                        ctx.beginPath();
+                        ctx.moveTo(particle.circleCenter.x, particle.circleCenter.y);
+                        ctx.lineTo(endPoint.x, endPoint.y);
+                        ctx.stroke();
+                        
+                        // 绘制theta角弧
+                        const startAngle = Math.atan2(particle.entryPoint.y - particle.circleCenter.y, particle.entryPoint.x - particle.circleCenter.x);
+                        const endAngle = Math.atan2(endPoint.y - particle.circleCenter.y, endPoint.x - particle.circleCenter.x);
+                        const arcRadius = 15;
+                        
+                        ctx.beginPath();
+                        ctx.arc(particle.circleCenter.x, particle.circleCenter.y, arcRadius, startAngle, endAngle, particle.angularSpeed > 0 ? false : true);
+                        ctx.stroke();
+                        
+                        // 绘制theta标签
+                        const midAngle = (startAngle + endAngle) / 2;
+                        const labelX = particle.circleCenter.x + Math.cos(midAngle) * (arcRadius + 10);
+                        const labelY = particle.circleCenter.y + Math.sin(midAngle) * (arcRadius + 10);
+                        
+                        ctx.font = '12px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('θ', labelX, labelY);
+                        
+                        ctx.restore();
+                    }
+                    
+                    ctx.restore();
+                }
+            });
+            
             // 绘制所有粒子
             state.particles.forEach(particle => {
                 drawParticle(particle);
             });
-            
-            // 绘制选中元素的边界框 - 已改为在drawElement函数中绘制，自动跟随旋转
-            if (state.selectedElements.length > 0 && false) {
-                // 这个边界框绘制已被废弃，改用drawElement中的本地坐标系绘制
-            }
             
             ctx.restore();
         }
@@ -1802,12 +2085,12 @@
                 // 绘制方向箭头（黄色）
                 ctx.strokeStyle = '#ffc107';
                 ctx.fillStyle = '#ffc107';
-                ctx.lineWidth = 1;
+                ctx.lineWidth = 0.5;
                 
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
                 const angleRad = element.angle * Math.PI / 180;
-                const arrowLength = element.radius * 3;
+                const arrowLength = element.radius * 5;
                 ctx.lineTo(
                     Math.cos(angleRad) * arrowLength,
                     -Math.sin(angleRad) * arrowLength
@@ -1819,7 +2102,7 @@
                 const arrowX = Math.cos(angleRad) * arrowLength;
                 const arrowY = -Math.sin(angleRad) * arrowLength;
                 ctx.translate(arrowX, arrowY);
-                ctx.rotate(-angleRad);
+                ctx.rotate(angleRad);
                 ctx.moveTo(0, 0);
                 ctx.lineTo(-8, -3);
                 ctx.lineTo(-8, 3);
@@ -1829,8 +2112,8 @@
             } else if (element.type === 'magnetic-field') {
                 // 绘制磁场边界
                 ctx.strokeStyle = element.direction === 'out' ? '#e67700' : '#2b8a3e';
-                ctx.lineWidth = 1; // 细线
-                ctx.setLineDash([5, 5]);
+                ctx.lineWidth = 0.5; // 细线
+                ctx.setLineDash([2, 2]);
                 
                 if (element.shape === 'rectangle') {
                     ctx.strokeRect(-element.width/2, -element.height/2, element.width, element.height);
@@ -1895,14 +2178,20 @@
             // 如果元素被选中，绘制选中框（在本地坐标系中绘制，自动跟随旋转）
             if (state.selectedElements.includes(element)) {
                 ctx.strokeStyle = '#1971c2';
-                ctx.lineWidth = 1; // 细线
+                ctx.lineWidth = 0.5; // 细线
                 ctx.setLineDash([5, 5]);
                 
                 if (element.type === 'particle-emitter') {
-                    ctx.beginPath();
-                    ctx.arc(0, 0, element.radius + 5, 0, Math.PI * 2);
-                    ctx.stroke();
+                    // 计算矩形选择框大小，包含整个发射器和箭头
+                    const arrowLength = element.radius * 5 +8; // 箭头长度 + 箭头头部长度
+                    const boxHalfWidth = Math.max(element.radius + 10, arrowLength);
+                    const boxHalfHeight = element.radius + 10;
+                    
+                    // 绘制矩形线框
+                    ctx.strokeRect(-boxHalfWidth, -boxHalfHeight, boxHalfWidth , boxHalfHeight * 2);
                 } else if (element.type === 'magnetic-field') {
+                    let boundsWidth, boundsHeight;
+                    
                     if (element.shape === 'single-boundary') {
                         // 单边界磁场特殊选中框：包含边界和有磁场的区域
                         const orientation = element.boundaryOrientation || 'vertical';
@@ -2134,7 +2423,7 @@
             
             // 绘制标记
             ctx.fillStyle = field.direction === 'out' ? 'rgba(230, 119, 0, 0.8)' : 'rgba(43, 138, 62, 0.8)';
-            ctx.font = '10px Arial'; // 更小的字体
+            ctx.font = '8px Arial'; // 更小的字体
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             
@@ -2195,7 +2484,7 @@
                     type: 'particle-emitter',
                     x: centerX,
                     y: centerY,
-                    radius: 10,
+                    radius: 6,
                     rotation: 0,
                     scale: 1.0,
                     particleType: 'electron',
@@ -2210,13 +2499,13 @@
                     type: 'magnetic-field',
                     x: centerX,
                     y: centerY,
-                    width: 150,
-                    height: 100,
+                    width: 200,
+                    height: 150,
                     rotation: 0,
                     scale: 1.0,
                     shape: 'rectangle',
                     direction: 'out',
-                    strength: 1.0,
+                    strength: 0.2,//磁感应强度
                     // 单边界磁场属性
                     boundaryOrientation: 'vertical', // 竖直或水平
                     boundaryRange: 'right' // 左/上或右/下
@@ -2249,6 +2538,11 @@
             noSelectionPanel.style.display = 'none';
             physicsInfoPanel.style.display = 'block';
             transformPanel.style.display = 'block';
+            
+            // 当元素被选中时，自动显示右侧属性面板
+            showSidebar('right');
+            // 更新右侧面板活动时间
+            updateSidebarActivity('right');
             
             // 如果有多个选中元素，只显示变换控制面板
             if (state.selectedElements.length > 1) {
@@ -2329,7 +2623,6 @@
             const element = state.selectedElements[0];
             elementXInput.value = Math.round(element.x);
             elementYInput.value = Math.round(element.y);
-            elementRotationInput.value = element.rotation;
             elementScaleInput.value = element.scale.toFixed(1);
         }
 
@@ -2388,7 +2681,8 @@
             
             emitters.forEach(emitter => {
                 const timeSinceLastEmission = currentTime - emitter.lastEmissionTime;
-                const emissionInterval = 1000 / emitter.emissionRate;
+                // 发射频率基准为10s发射一个，输入10表示1s发射一个
+                const emissionInterval = 10000 / emitter.emissionRate;
                 
                 if (timeSinceLastEmission >= emissionInterval) {
                     // 发射新粒子
@@ -2408,7 +2702,10 @@
                     if (!particleData) return;
                     
                     // 计算粒子初始位置（考虑发射器旋转和缩放）
-                    const angleRad = emitter.angle * Math.PI / 180;
+                    // 粒子的发射方向应该是发射器旋转角度加上箭头角度
+                    // 由于绘制时使用了负旋转角度，这里也需要使用负角度以保持一致
+                    const totalAngle = -emitter.rotation + emitter.angle;
+                    const angleRad = totalAngle * Math.PI / 180;
                     const offsetX = Math.cos(angleRad) * emitter.radius * emitter.scale;
                     const offsetY = -Math.sin(angleRad) * emitter.radius * emitter.scale;
                     
@@ -2424,7 +2721,7 @@
                         charge: particleData.charge,
                         mass: particleData.mass,
                         lifetime: 0,
-                        maxLifetime: 15000, // 粒子存在时间(ms)
+                        maxLifetime: 30000, // 粒子存在时间(ms)
                         inMagneticField: false,
                         // 圆周运动相关参数
                         circleCenter: null,
@@ -2490,8 +2787,12 @@
                     
                     if (inMagneticField && magneticField) {
                         // 进入磁场，开始圆周运动
-                        const bDirection = magneticField.direction === 'out' ? 1 : -1;
+                        const bDirection = magneticField.direction === 'out' ? -1 : 1;
                         const bStrength = magneticField.strength;
+                        
+                        // 记录进入点
+                        particle.entryPoint = { x: particle.x, y: particle.y };
+                        particle.exitPoint = null;
                         
                         // 计算圆周运动参数
                         const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
@@ -2529,6 +2830,7 @@
                         }
                     } else {
                         // 离开磁场，恢复直线运动
+                        particle.exitPoint = { x: particle.x, y: particle.y };
                         particle.circleCenter = null;
                         particle.circleRadius = 0;
                         particle.angularSpeed = 0;
@@ -2683,18 +2985,13 @@
 
         // 初始化事件监听器
         function initEventListeners() {
-            // 左侧元素卡片点击事件
-            elementCards.forEach(card => {
-                card.addEventListener('click', () => {
-                    // 移除所有卡片的active类
-                    elementCards.forEach(c => c.classList.remove('active'));
-                    // 添加当前卡片的active类
-                    card.classList.add('active');
-                    
-                    // 添加对应元素到画布
-                    const elementType = card.getAttribute('data-type');
-                    addElement(elementType);
-                });
+            // 悬浮按钮点击事件
+            document.getElementById('add-emitter-btn').addEventListener('click', () => {
+                addElement('particle-emitter');
+            });
+            
+            document.getElementById('add-field-btn').addEventListener('click', () => {
+                addElement('magnetic-field');
             });
             
             // 粒子类型选择变化
@@ -2752,16 +3049,23 @@
                 }
             });
             
+            particleAngleInput.addEventListener('input', function() {
+                if (state.selectedElement && state.selectedElement.type === 'particle-emitter') {
+                    state.selectedElement.angle = parseInt(this.value) || 0;
+                    draw();
+                }
+            });
+            
             particleAngleInput.addEventListener('change', function() {
                 if (state.selectedElement && state.selectedElement.type === 'particle-emitter') {
-                    state.selectedElement.angle = parseInt(this.value) || 90;
+                    state.selectedElement.angle = parseInt(this.value) || 0;
                     draw();
                 }
             });
             
             emissionRateInput.addEventListener('change', function() {
                 if (state.selectedElement && state.selectedElement.type === 'particle-emitter') {
-                    state.selectedElement.emissionRate = parseInt(this.value) || 10;
+                    state.selectedElement.emissionRate = parseFloat(this.value) || 10;
                 }
             });
             
@@ -2849,15 +3153,6 @@
                     const deltaY = parseInt(this.value) - state.selectedElements[0].y;
                     state.selectedElements.forEach(element => {
                         element.y += deltaY;
-                    });
-                    draw();
-                }
-            });
-            
-            elementRotationInput.addEventListener('change', function() {
-                if (state.selectedElements.length > 0) {
-                    state.selectedElements.forEach(element => {
-                        element.rotation = parseInt(this.value) || 0;
                     });
                     draw();
                 }
@@ -3022,53 +3317,6 @@
                 }
             });
             
-            // 初始化一个示例场景
-            initializeExampleScene();
-        }
-
-        // 初始化示例场景
-        function initializeExampleScene() {
-            // 添加一个粒子发射器
-            const emitter = {
-                id: 'emitter_example',
-                type: 'particle-emitter',
-                x: 200,
-                y: 300,
-                radius: 20,
-                rotation: 0,
-                scale: 1.0,
-                particleType: 'electron',
-                speed: 30,
-                angle: 90,
-                emissionRate: 10,
-                lastEmissionTime: 0
-            };
-            
-            // 添加一个磁场
-            const magneticField = {
-                id: 'field_example',
-                type: 'magnetic-field',
-                x: 400,
-                y: 300,
-                width: 200,
-                height: 150,
-                rotation: 0,
-                scale: 1.0,
-                shape: 'rectangle',
-                direction: 'out',
-                strength: 1.0
-            };
-            
-            state.elements.push(emitter, magneticField);
-            state.selectedElements = [emitter];
-            state.selectedElement = emitter;
-            
-            // 显示变换控制按钮
-            transformControls.classList.add('active');
-            gestureHint.classList.add('active');
-            
-            updatePropertiesPanel();
-            draw();
         }
 
         // 初始化应用
