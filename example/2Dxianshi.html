@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>带电粒子在匀强磁场中运动模拟平台</title>
+    <title>带电粒子在电磁场中运动模拟平台</title>
     <style>
         * {
             margin: 0;
@@ -281,40 +281,29 @@
         
         .property-item label {
             display: block;
-            font-size: 0.85rem;
-            margin-bottom: 6px;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
             color: #ccc;
             font-weight: 500;
         }
         
         .property-item input, 
-        .property-item select {
-            width: 100%;
-            padding: 10px 12px;
-            background-color: #252525;
-            border: 1px solid #444;
-            border-radius: 6px;
-            color: #e0e0e0;
-            font-size: 0.95rem;
-            transition: border-color 0.3s;
-            height: 42px;
-        }
+            .property-item select {
+                width: 100%;
+                padding: 12px 15px;
+                background-color: #252525;
+                border: 1px solid #444;
+                border-radius: 6px;
+                color: #e0e0e0;
+                font-size: 1rem;
+                transition: border-color 0.3s;
+                min-height: 48px;
+            }
         
         .property-item input:focus, 
         .property-item select:focus {
             outline: none;
             border-color: #4a9eff;
-        }
-        
-        /* 隐藏数字输入框的上下箭头 */
-        input[type="number"]::-webkit-outer-spin-button,
-        input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        
-        input[type="number"] {
-            -moz-appearance: textfield;
         }
         
         .input-with-unit {
@@ -324,12 +313,13 @@
         
         .input-with-unit input {
             flex: 1;
+            margin-right: 5px;
         }
         
         .unit {
-            min-width: 35px;
+            min-width: 40px;
             color: #999;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
         }
         
         .control-panel {
@@ -349,7 +339,7 @@
             border: 1px solid #333;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 1.1rem;
             transition: all 0.3s;
             display: flex;
             align-items: center;
@@ -393,46 +383,16 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 8px;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
         
         .physics-info-label {
-            color: #aaa;
+            color: #555;
         }
         
         .physics-info-value {
-            color: #4a9eff;
+            color: #1971c2;
             font-weight: 500;
-        }
-        
-        /* 新增：双列布局样式 */
-        .property-row {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-        
-        .property-row .property-item {
-            flex: 1;
-            margin-bottom: 0;
-        }
-        
-        .property-row .property-item label {
-            font-size: 0.8rem;
-            margin-bottom: 5px;
-        }
-        
-        .property-row .property-item input,
-        .property-row .property-item select {
-            padding: 9px 10px;
-            font-size: 0.9rem;
-            height: 38px;
-            width: 100%;
-        }
-        
-        /* 双列输入框加宽 */
-        .property-row .input-with-unit input {
-            width: 100%;
         }
         
         .selection-box {
@@ -538,45 +498,12 @@
         .floating-btn:active {
             transform: scale(0.95);
         }
-        
-        .coordinate-display {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background-color: rgba(30, 30, 30, 0.9);
-            padding: 8px 12px;
-            border-radius: 5px;
-            font-size: 0.85rem;
-            color: #e0e0e0;
-            z-index: 10;
-            border: 1px solid #333;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        
-        /* 颜色选择器样式调整 */
-        input[type="color"] {
-            padding: 3px;
-            height: 40px;
-            width: 100%;
-            border-radius: 6px;
-            cursor: pointer;
-            background-color: #252525;
-            border: 1px solid #444;
-        }
-        
-        /* 调整单列输入框样式 */
-        .single-column-input .property-item input,
-        .single-column-input .property-item select {
-            padding: 10px 12px;
-            font-size: 0.95rem;
-            height: 42px;
-        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="header">
-        <h1>带电粒子在匀强磁场中运动模拟平台</h1>
+        <h1>带电粒子在电磁场中运动模拟平台</h1>
         <p>点击左侧元素添加到画布，点击画布上的元素可编辑属性，支持移动、旋转、缩放操作</p>
     </div>
     
@@ -591,15 +518,15 @@
                 <button class="floating-btn" id="add-field-btn" title="添加磁场">
                     <i class="fas fa-magnet"></i>
                 </button>
+                <button class="floating-btn" id="add-electric-field-btn" title="添加电场">
+                    <i class="fas fa-bolt"></i>
+                </button>
             </div>
             <div id="canvas-container">
                 <canvas id="simulation-canvas"></canvas>
                 <div class="canvas-overlay">
                     画布比例: <span id="canvas-scale">100%</span> | 
                     粒子数量: <span id="particle-count">0</span>
-                </div>
-                <div class="coordinate-display">
-                    坐标: <span id="mouse-coords">(0, 0)</span>
                 </div>
                 <div class="selection-box" id="selection-box" style="display: none;"></div>
                 <div class="transform-controls" id="transform-controls">
@@ -631,37 +558,8 @@
                 <p>请点击画布上的元素以编辑其属性</p>
             </div>
             
-            <!-- 变换控制 -->
-            <div class="property-group" id="transform-panel" style="display: none;">
-                <h3><i class="fas fa-edit"></i> 变换控制</h3>
-                
-                <!-- X坐标和Y坐标放在同一行 -->
-                <div class="property-row">
-                    <div class="property-item">
-                        <label for="element-x">X坐标(px)</label>
-                        <input type="number" id="element-x" step="1" value="0">
-                    </div>
-                    
-                    <div class="property-item">
-                        <label for="element-y">Y坐标(px)</label>
-                        <input type="number" id="element-y" step="1" value="0">
-                    </div>
-                </div>
-                
-                <div class="property-item">
-                    <label for="element-scale">缩放比例(倍)</label>
-                    <input type="number" id="element-scale" min="0.1" max="3" step="0.1" value="1.0">
-                </div>
-                
-                <div class="property-item">
-                    <button id="delete-element-btn" class="control-button warning" style="width: 100%; margin-top: 10px; padding: 10px; font-size: 0.9rem; height: auto;">
-                        <i class="fas fa-trash-alt"></i> 删除元素
-                    </button>
-                </div>
-            </div>
-            
             <!-- 粒子发射器属性 -->
-            <div id="emitter-properties" style="display: none;" class="single-column-input">
+            <div id="emitter-properties" style="display: none;">
                 <div class="property-group">
                     <h3><i class="fas fa-bullseye"></i> 粒子发射器属性</h3>
                     
@@ -679,13 +577,19 @@
                     
                     <div id="custom-particle-properties" style="display: none;">
                         <div class="property-item">
-                            <label for="custom-charge">电荷量(q)</label>
-                            <input type="number" id="custom-charge" step="1" value="-1">
+                            <label for="custom-charge">电荷量 (相对单位)</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="custom-charge" step="1" value="-1">
+                                <span class="unit">q</span>
+                            </div>
                         </div>
                         
                         <div class="property-item">
-                            <label for="custom-mass">质量(m)</label>
-                            <input type="number" id="custom-mass" step="1" value="1">
+                            <label for="custom-mass">质量 (相对单位)</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="custom-mass" step="1" value="1">
+                                <span class="unit">m</span>
+                            </div>
                         </div>
                         
                         <div class="property-item">
@@ -695,23 +599,35 @@
                     </div>
                     
                     <div class="property-item">
-                        <label for="particle-speed">速度大小(m/s)</label>
-                        <input type="number" id="particle-speed" min="1" max="100" step="1" value="3">
+                        <label for="particle-speed">速度大小</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="particle-speed" min="1" max="100" step="1" value="3">
+                            <span class="unit">m/s</span>
+                        </div>
                     </div>
                     
                     <div class="property-item">
-                        <label for="particle-angle">速度方向(°)</label>
-                        <input type="number" id="particle-angle" min="0" max="360" step="1" value="0">
+                        <label for="particle-angle">速度方向</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="particle-angle" min="0" max="360" step="1" value="0">
+                            <span class="unit">°</span>
+                        </div>
                     </div>
                     
                     <div class="property-item">
-                        <label for="emission-rate">发射频率(10s/个)</label>
-                        <input type="number" id="emission-rate" min="0.1" max="60" step="0.1" value="10">
+                        <label for="emission-rate">发射频率</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="emission-rate" min="0.1" max="60" step="0.1" value="10">
+                            <span class="unit">10s/个</span>
+                        </div>
                     </div>
                     
                     <div class="property-item">
-                        <label for="emitter-size">发射器大小(px)</label>
-                        <input type="number" id="emitter-size" min="10" max="60" step="1" value="3">
+                        <label for="emitter-size">发射器大小</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="emitter-size" min="10" max="60" step="1" value="3">
+                            <span class="unit">px</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -740,29 +656,35 @@
                         </select>
                     </div>
                     
-                    <!-- 磁场强度和旋转角度放在同一行 -->
-                    <div class="property-row">
-                        <div class="property-item">
-                            <label for="field-strength">磁场强度(B)</label>
+                    <div class="property-item">
+                        <label for="field-strength">磁场强度</label>
+                        <div class="input-with-unit">
                             <input type="number" id="field-strength" min="0.1" max="10" step="0.1" value="1.0">
-                        </div>
-                        
-                        <div class="property-item">
-                            <label for="field-rotation">旋转角度(°)</label>
-                            <input type="number" id="field-rotation" min="0" max="360" step="1" value="0">
+                            <span class="unit">B</span>
                         </div>
                     </div>
                     
-                    <!-- 宽度和高度放在同一行 -->
-                    <div class="property-row">
-                        <div class="property-item">
-                            <label for="field-width">宽度(px)</label>
+                    <div class="property-item">
+                        <label for="field-width">宽度</label>
+                        <div class="input-with-unit">
                             <input type="number" id="field-width" min="50" max="400" step="10" value="150">
+                            <span class="unit">px</span>
                         </div>
-                        
-                        <div class="property-item">
-                            <label for="field-height">高度(px)</label>
+                    </div>
+                    
+                    <div class="property-item">
+                        <label for="field-height">高度</label>
+                        <div class="input-with-unit">
                             <input type="number" id="field-height" min="50" max="400" step="10" value="100">
+                            <span class="unit">px</span>
+                        </div>
+                    </div>
+                    
+                    <div class="property-item">
+                        <label for="field-rotation">旋转角度</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="field-rotation" min="0" max="360" step="1" value="0">
+                            <span class="unit">°</span>
                         </div>
                     </div>
                     
@@ -779,6 +701,82 @@
                         <div class="property-item">
                             <label for="boundary-range">范围</label>
                             <select id="boundary-range">
+                                <option value="left">左/上</option>
+                                <option value="right">右/下</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 电场属性 -->
+            <div id="electric-field-properties" style="display: none;">
+                <div class="property-group">
+                    <h3><i class="fas fa-bolt"></i> 电场属性</h3>
+                    
+                    <div class="property-item">
+                            <label for="electric-field-shape">电场形状</label>
+                            <select id="electric-field-shape">
+                                <option value="rectangle">矩形</option>
+                            </select>
+                        </div>
+                    
+                    <div class="property-item">
+                        <label for="electric-field-direction">电场方向</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="electric-field-direction" min="0" max="360" step="1" value="0">
+                            <span class="unit">°</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: #999; margin-top: 5px;">
+                            0°为水平向右，90°为竖直向上
+                        </div>
+                    </div>
+                    
+                    <div class="property-item">
+                        <label for="electric-field-strength">电场强度</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="electric-field-strength" min="0.1" max="10" step="0.1" value="1.0">
+                            <span class="unit">E</span>
+                        </div>
+                    </div>
+                    
+                    <div class="property-item">
+                        <label for="electric-field-width">宽度</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="electric-field-width" min="50" max="400" step="10" value="150">
+                            <span class="unit">px</span>
+                        </div>
+                    </div>
+                    
+                    <div class="property-item">
+                        <label for="electric-field-height">高度</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="electric-field-height" min="50" max="400" step="10" value="100">
+                            <span class="unit">px</span>
+                        </div>
+                    </div>
+                    
+                    <div class="property-item">
+                        <label for="electric-field-rotation">旋转角度</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="electric-field-rotation" min="0" max="360" step="1" value="0">
+                            <span class="unit">°</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 单边界电场特殊属性 -->
+                    <div id="electric-single-boundary-properties" style="display: none;">
+                        <div class="property-item">
+                            <label for="electric-boundary-orientation">边界方向</label>
+                            <select id="electric-boundary-orientation">
+                                <option value="vertical">竖直</option>
+                                <option value="horizontal">水平</option>
+                            </select>
+                        </div>
+                        
+                        <div class="property-item">
+                            <label for="electric-boundary-range">范围</label>
+                            <select id="electric-boundary-range">
                                 <option value="left">左/上</option>
                                 <option value="right">右/下</option>
                             </select>
@@ -811,6 +809,49 @@
                         <span class="physics-info-label">回旋周期:</span>
                         <span class="physics-info-value" id="gyroperiod">0 s</span>
                     </div>
+                </div>
+            </div>
+            
+            <!-- 变换控制 -->
+            <div class="property-group" id="transform-panel" style="display: none;">
+                <h3><i class="fas fa-edit"></i> 变换控制</h3>
+                
+                <div class="property-item">
+                    <label for="element-x">X 坐标</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="element-x" step="1" value="0">
+                        <span class="unit">px</span>
+                    </div>
+                </div>
+                
+                <div class="property-item">
+                    <label for="element-y">Y 坐标</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="element-y" step="1" value="0">
+                        <span class="unit">px</span>
+                    </div>
+                </div>
+                
+                <div class="property-item">
+                    <label for="element-rotation">旋转角度</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="element-rotation" min="0" max="360" step="1" value="0">
+                        <span class="unit">°</span>
+                    </div>
+                </div>
+                
+                <div class="property-item">
+                    <label for="element-scale">缩放比例</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="element-scale" min="0.1" max="3" step="0.1" value="1.0">
+                        <span class="unit">倍</span>
+                    </div>
+                </div>
+                
+                <div class="property-item">
+                    <button id="delete-element-btn" class="control-button warning" style="width: 100%; margin-top: 10px;">
+                        <i class="fas fa-trash-alt"></i> 删除元素
+                    </button>
                 </div>
             </div>
         </div>
@@ -930,7 +971,14 @@
                     lastActivity: Date.now()
                 }
             },
-            sidebarAutoHideTimer: null
+            sidebarAutoHideTimer: null,
+            
+            // 场状态记录（用于检测场是否移动）
+            magneticFieldsState: new Map(),
+            electricFieldsState: new Map(),
+            
+            // 已绘制的轨迹圆缓存
+            drawnCircles: new Map()
         };
 
         // 获取DOM元素
@@ -950,6 +998,7 @@
         const noSelectionPanel = document.getElementById('no-selection-panel');
         const emitterProperties = document.getElementById('emitter-properties');
         const fieldProperties = document.getElementById('field-properties');
+        const electricFieldProperties = document.getElementById('electric-field-properties');
         const transformPanel = document.getElementById('transform-panel');
         const physicsInfoPanel = document.getElementById('physics-info-panel');
         const customParticleProperties = document.getElementById('custom-particle-properties');
@@ -977,9 +1026,23 @@
         const boundaryOrientationSelect = document.getElementById('boundary-orientation');
         const boundaryRangeSelect = document.getElementById('boundary-range');
         
+        // 电场属性控件
+        const electricFieldShapeSelect = document.getElementById('electric-field-shape');
+        const electricFieldDirectionInput = document.getElementById('electric-field-direction');
+        const electricFieldStrengthInput = document.getElementById('electric-field-strength');
+        const electricFieldWidthInput = document.getElementById('electric-field-width');
+        const electricFieldHeightInput = document.getElementById('electric-field-height');
+        const electricFieldRotationInput = document.getElementById('electric-field-rotation');
+        
+        // 单边界电场特殊属性控件
+        const electricSingleBoundaryProperties = document.getElementById('electric-single-boundary-properties');
+        const electricBoundaryOrientationSelect = document.getElementById('electric-boundary-orientation');
+        const electricBoundaryRangeSelect = document.getElementById('electric-boundary-range');
+        
         // 变换控制控件
         const elementXInput = document.getElementById('element-x');
         const elementYInput = document.getElementById('element-y');
+        const elementRotationInput = document.getElementById('element-rotation');
         const elementScaleInput = document.getElementById('element-scale');
         
         // 物理信息显示
@@ -1001,6 +1064,11 @@
         const rotateRightBtn = document.getElementById('rotate-right-btn');
         const scaleUpBtn = document.getElementById('scale-up-btn');
         const scaleDownBtn = document.getElementById('scale-down-btn');
+        
+        // 悬浮按钮
+        const addEmitterBtn = document.getElementById('add-emitter-btn');
+        const addFieldBtn = document.getElementById('add-field-btn');
+        const addElectricFieldBtn = document.getElementById('add-electric-field-btn');
         
         // 侧边栏元素
         const rightPanel = document.querySelector('.right-panel');
@@ -1278,10 +1346,6 @@
             const worldX = (x - state.canvasOffset.x) / state.canvasScale;
             const worldY = (y - state.canvasOffset.y) / state.canvasScale;
             
-            // 更新鼠标坐标显示
-            const mouseCoordsElement = document.getElementById('mouse-coords');
-            mouseCoordsElement.textContent = `(${Math.round(worldX)}, ${Math.round(worldY)})`;
-            
             if (state.isDraggingElement && state.selectedElements.length > 0) {
                 // 拖拽所有选中的元素
                 const dx = (e.clientX - state.dragStart.x) / state.canvasScale;
@@ -1483,6 +1547,8 @@
                     // 更新属性面板
                     updatePropertiesPanel();
                 }
+                
+                // 双击事件检测已移除
                 
             } else if (touches.length === 2) {
                 // 双指触摸
@@ -1729,7 +1795,7 @@
                 // 圆形发射器
                 const distance = Math.sqrt(scaledX**2 + scaledY**2);
                 return distance <= element.radius;
-            } else if (element.type === 'magnetic-field') {
+            } else if (element.type === 'magnetic-field' || element.type === 'electric-field') {
                 // 根据形状判断
                 if (element.shape === 'rectangle') {
                     return Math.abs(scaledX) <= element.width/2 && Math.abs(scaledY) <= element.height/2;
@@ -1804,7 +1870,7 @@
                     top: element.y - radius,
                     bottom: element.y + radius
                 };
-            } else if (element.type === 'magnetic-field') {
+            } else if (element.type === 'magnetic-field' || element.type === 'electric-field') {
                 // 考虑旋转和缩放
                 const halfWidth = element.width * element.scale / 2;
                 const halfHeight = element.height * element.scale / 2;
@@ -1864,6 +1930,53 @@
             selectionBox.style.height = `${height}px`;
         }
 
+        // 检查场是否发生变化
+        function checkFieldsChanged() {
+            const magneticFields = state.elements.filter(el => el.type === 'magnetic-field');
+            const electricFields = state.elements.filter(el => el.type === 'electric-field');
+            let fieldsChanged = false;
+            
+            // 检查每个磁场的状态
+            magneticFields.forEach(field => {
+                const fieldKey = `${field.id}_${field.x}_${field.y}_${field.rotation}_${field.scale}_${field.width}_${field.height}`;
+                
+                if (!state.magneticFieldsState.has(field.id) || state.magneticFieldsState.get(field.id) !== fieldKey) {
+                    fieldsChanged = true;
+                    state.magneticFieldsState.set(field.id, fieldKey);
+                }
+            });
+            
+            // 检查每个电场的状态
+            electricFields.forEach(field => {
+                const fieldKey = `${field.id}_${field.x}_${field.y}_${field.rotation}_${field.scale}_${field.width}_${field.height}`;
+                
+                if (!state.electricFieldsState.has(field.id) || state.electricFieldsState.get(field.id) !== fieldKey) {
+                    fieldsChanged = true;
+                    state.electricFieldsState.set(field.id, fieldKey);
+                }
+            });
+            
+            // 如果场发生变化，清除所有粒子的轨迹圆
+            if (fieldsChanged) {
+                state.particles.forEach(particle => {
+                    particle.circleCenter = null;
+                    particle.circleRadius = 0;
+                    particle.entryPoint = null;
+                    particle.exitPoint = null;
+                    particle.inMagneticField = false;
+                    particle.inElectricField = false;
+                    particle.electricAcceleration = { x: 0, y: 0 };
+                    particle.electricEntryPoint = null;
+                    particle.electricExitPoint = null;
+                    particle.velocityPerpendicular = null;
+                    particle.velocityParallel = null;
+                });
+                
+                // 清除已绘制的轨迹圆缓存
+                state.drawnCircles.clear();
+            }
+        }
+
         // 绘制函数
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1890,40 +2003,62 @@
                 });
             }
             
-            // 绘制轨迹圆（紫色虚线）
+            // 绘制轨迹圆（紫色虚线）- 只绘制唯一的圆
+            state.drawnCircles.clear(); // 清空之前的缓存
+            const uniqueCircles = new Map(); // 用于存储唯一的圆
+            
             state.particles.forEach(particle => {
-                // 显示所有粒子的轨迹圆，包括已退出磁场的
                 if (particle.circleCenter && particle.circleRadius > 0) {
-                    ctx.save();
+                    const circleKey = `${particle.circleCenter.x.toFixed(2)},${particle.circleCenter.y.toFixed(2)},${particle.circleRadius.toFixed(2)}`;
                     
-                    // 绘制紫色虚线圆
-                    ctx.strokeStyle = '#9c27b0'; // 紫色
-                    ctx.lineWidth = 1;
-                    ctx.setLineDash([5, 5]);
-                    ctx.beginPath();
-                    ctx.arc(particle.circleCenter.x, particle.circleCenter.y, particle.circleRadius, 0, Math.PI * 2);
-                    ctx.stroke();
-                    
-                    // 绘制圆心（紫色小点）
-                    ctx.fillStyle = '#9c27b0';
-                    ctx.beginPath();
-                    ctx.arc(particle.circleCenter.x, particle.circleCenter.y, 2, 0, Math.PI * 2);
-                    ctx.fill();
-                    
+                    if (!uniqueCircles.has(circleKey)) {
+                        uniqueCircles.set(circleKey, particle);
+                        state.drawnCircles.set(circleKey, particle);
+                        
+                        // 绘制紫色虚线圆
+                        ctx.save();
+                        ctx.strokeStyle = '#9c27b0'; // 紫色
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([5, 5]);
+                        ctx.beginPath();
+                        ctx.arc(particle.circleCenter.x, particle.circleCenter.y, particle.circleRadius, 0, Math.PI * 2);
+                        ctx.stroke();
+                        
+                        // 绘制圆心（紫色小点）
+                        ctx.fillStyle = '#9c27b0';
+                        ctx.beginPath();
+                        ctx.arc(particle.circleCenter.x, particle.circleCenter.y, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        ctx.restore();
+                    }
+                }
+            });
+            
+            // 绘制所有粒子
+            state.particles.forEach(particle => {
+                drawParticle(particle);
+                
+                // 绘制每个粒子的特殊标记（进入点、退出点、圆心角等）
+                if (particle.circleCenter && particle.circleRadius > 0) {
                     // 绘制进入点（红色）
                     if (particle.entryPoint) {
+                        ctx.save();
                         ctx.fillStyle = '#ff5252';
                         ctx.beginPath();
                         ctx.arc(particle.entryPoint.x, particle.entryPoint.y, 3, 0, Math.PI * 2);
                         ctx.fill();
+                        ctx.restore();
                     }
                     
                     // 绘制退出点（红色）
                     if (particle.exitPoint) {
+                        ctx.save();
                         ctx.fillStyle = '#ff5252';
                         ctx.beginPath();
                         ctx.arc(particle.exitPoint.x, particle.exitPoint.y, 3, 0, Math.PI * 2);
                         ctx.fill();
+                        ctx.restore();
                     }
                     
                     // 绘制圆心角和theta标记（红色）
@@ -1970,15 +2105,9 @@
                         
                         ctx.restore();
                     }
-                    
-                    ctx.restore();
                 }
             });
             
-            // 绘制所有粒子
-            state.particles.forEach(particle => {
-                drawParticle(particle);
-            });
             
             ctx.restore();
         }
@@ -2173,6 +2302,21 @@
                 
                 // 绘制磁场方向标记
                 drawMagneticFieldMarkers(element);
+            } else if (element.type === 'electric-field') {
+                // 绘制电场边界
+                ctx.strokeStyle = '#FFF9D4'; // 浅黄色表示电场
+                ctx.lineWidth = 0.5; // 细线
+                ctx.setLineDash([2, 2]);
+                
+                // 只保留矩形电场
+                if (element.shape === 'rectangle') {
+                    ctx.strokeRect(-element.width/2, -element.height/2, element.width, element.height);
+                }
+                
+                ctx.setLineDash([]);
+                
+                // 绘制电场线（平行直线，带箭头）
+                drawElectricFieldLines(element);
             }
             
             // 如果元素被选中，绘制选中框（在本地坐标系中绘制，自动跟随旋转）
@@ -2189,11 +2333,9 @@
                     
                     // 绘制矩形线框
                     ctx.strokeRect(-boxHalfWidth, -boxHalfHeight, boxHalfWidth , boxHalfHeight * 2);
-                } else if (element.type === 'magnetic-field') {
-                    let boundsWidth, boundsHeight;
-                    
+                } else if (element.type === 'magnetic-field' || element.type === 'electric-field') {
                     if (element.shape === 'single-boundary') {
-                        // 单边界磁场特殊选中框：包含边界和有磁场的区域
+                        // 单边界场特殊选中框：包含边界和有场的区域
                         const orientation = element.boundaryOrientation || 'vertical';
                         const range = element.boundaryRange || 'right';
                         
@@ -2202,33 +2344,33 @@
                         const visibleHeight = canvas.height / state.canvasScale;
                         
                         if (orientation === 'vertical') {
-                            // 竖直边界：选中框包含边界和磁场区域
+                            // 竖直边界：选中框包含边界和场区域
                             const height = visibleHeight + 10;
                             const padding = 5;
                             
                             if (range === 'left') {
-                                // 磁场在左侧，选中框从边界向左延伸到画布边缘
+                                // 场在左侧，选中框从边界向左延伸到画布边缘
                                 const width = visibleWidth/2 + padding;
                                 const startX = -visibleWidth/2 - padding;
                                 ctx.strokeRect(startX, -height/2, width, height);
                             } else {
-                                // 磁场在右侧，选中框从边界向右延伸到画布边缘
+                                // 场在右侧，选中框从边界向右延伸到画布边缘
                                 const width = visibleWidth/2 + padding;
                                 const startX = -padding;
                                 ctx.strokeRect(startX, -height/2, width, height);
                             }
                         } else {
-                            // 水平边界：选中框包含边界和磁场区域
+                            // 水平边界：选中框包含边界和场区域
                             const width = visibleWidth + 10;
                             const padding = 5;
                             
                             if (range === 'left') {
-                                // 磁场在上侧，选中框从边界向上延伸到画布边缘
+                                // 场在上侧，选中框从边界向上延伸到画布边缘
                                 const height = visibleHeight/2 + padding;
                                 const startY = -visibleHeight/2 - padding;
                                 ctx.strokeRect(-width/2, startY, width, height);
                             } else {
-                                // 磁场在下侧，选中框从边界向下延伸到画布边缘
+                                // 场在下侧，选中框从边界向下延伸到画布边缘
                                 const height = visibleHeight/2 + padding;
                                 const startY = -padding;
                                 ctx.strokeRect(-width/2, startY, width, height);
@@ -2243,7 +2385,7 @@
                         boundsHeight = element.height + 10;
                         ctx.strokeRect(-boundsWidth/2, -boundsHeight/2, boundsWidth, boundsHeight);
                     } else if (element.shape === 'double-boundary') {
-                        // 双边界磁场选中框：包含两条边界线和中间的磁场区域
+                        // 双边界场选中框：包含两条边界线和中间的场区域
                         const visibleWidth = canvas.width / state.canvasScale;
                         const padding = 5;
                         
@@ -2438,6 +2580,80 @@
             });
         }
 
+        // 绘制电场线（平行直线，带箭头）
+        function drawElectricFieldLines(field) {
+            const lineSpacing = 30; // 电场线间距，原来的一半
+            const arrowSize = 4; // 箭头大小
+            
+            // 计算电场方向（弧度）
+            const fieldAngle = (field.direction * Math.PI) / 180;
+            const cosAngle = Math.cos(fieldAngle);
+            const sinAngle = Math.sin(fieldAngle);
+            
+            // 计算电场线数量
+            let lines = [];
+            
+            if (field.shape === 'rectangle') {
+                // 矩形电场：绘制平行线
+                // 计算垂直于电场方向的最大宽度
+                const perpendicularWidth = Math.abs(field.width * sinAngle) + Math.abs(field.height * cosAngle);
+                const numLines = Math.floor(perpendicularWidth / lineSpacing);
+                
+                for (let i = 0; i <= numLines; i++) {
+                    // 计算电场线的起始点和结束点
+                    const offset = -perpendicularWidth/2 + i * lineSpacing;
+                    
+                    // 计算垂直于电场方向的偏移向量
+                    const perpX = -sinAngle * offset;
+                    const perpY = cosAngle * offset;
+                    
+                    // 沿着电场方向计算线的长度
+                    const parallelLength = Math.abs(field.width * cosAngle) + Math.abs(field.height * sinAngle);
+                    
+                    // 计算线的起始点和结束点
+                    const startX = perpX - cosAngle * parallelLength/2;
+                    const startY = perpY - sinAngle * parallelLength/2;
+                    const endX = perpX + cosAngle * parallelLength/2;
+                    const endY = perpY + sinAngle * parallelLength/2;
+                    
+                    lines.push({startX, startY, endX, endY});
+                }
+            } 
+           
+    
+            // 绘制电场线和箭头 - 改为深蓝色
+            ctx.strokeStyle = 'rgba(255,249,212, 0.8)';
+            ctx.fillStyle = 'rgba(255,249,212, 0.8)';
+            ctx.lineWidth = 0.5;
+            
+            lines.forEach(line => {
+                // 绘制电场线
+                ctx.beginPath();
+                ctx.moveTo(line.startX, line.startY);
+                ctx.lineTo(line.endX, line.endY);
+                ctx.stroke();
+                
+                // 绘制箭头：每条电场线只画一个箭头，位于线的中间位置
+                // const arrowX = line.startX + (line.endX - line.startX) * 0.5;
+                // const arrowY = line.startY + (line.endY - line.startY) * 0.5;
+                const arrowX = line.endX
+                const arrowY = line.endY
+                // 绘制箭头
+                ctx.save();
+                ctx.translate(arrowX, arrowY);
+                ctx.rotate(fieldAngle);
+                
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-arrowSize, -arrowSize/2);
+                ctx.lineTo(-arrowSize, arrowSize/2);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.restore();
+            });
+        }
+
         // 绘制粒子
         function drawParticle(particle) {
             ctx.save();
@@ -2505,8 +2721,25 @@
                     scale: 1.0,
                     shape: 'rectangle',
                     direction: 'out',
-                    strength: 0.2,//磁感应强度
+                    strength: 0.2,
                     // 单边界磁场属性
+                    boundaryOrientation: 'vertical', // 竖直或水平
+                    boundaryRange: 'right' // 左/上或右/下
+                };
+            } else if (type === 'electric-field') {
+                element = {
+                    id: 'electric_field_' + Date.now(),
+                    type: 'electric-field',
+                    x: centerX,
+                    y: centerY,
+                    width: 200,
+                    height: 150,
+                    rotation: 0,
+                    scale: 1.0,
+                    shape: 'rectangle',
+                    direction: 0, // 电场方向角度，0°为水平向右
+                    strength: 20,
+                    // 单边界电场属性
                     boundaryOrientation: 'vertical', // 竖直或水平
                     boundaryRange: 'right' // 左/上或右/下
                 };
@@ -2530,6 +2763,7 @@
                 noSelectionPanel.style.display = 'block';
                 emitterProperties.style.display = 'none';
                 fieldProperties.style.display = 'none';
+                electricFieldProperties.style.display = 'none';
                 transformPanel.style.display = 'none';
                 physicsInfoPanel.style.display = 'block';
                 return;
@@ -2548,6 +2782,7 @@
             if (state.selectedElements.length > 1) {
                 emitterProperties.style.display = 'none';
                 fieldProperties.style.display = 'none';
+                electricFieldProperties.style.display = 'none';
                 updateTransformControls();
                 return;
             }
@@ -2556,6 +2791,7 @@
             if (state.selectedElement.type === 'particle-emitter') {
                 emitterProperties.style.display = 'block';
                 fieldProperties.style.display = 'none';
+                electricFieldProperties.style.display = 'none';
                 
                 // 更新控件值
                 particleTypeSelect.value = state.selectedElement.particleType;
@@ -2579,6 +2815,7 @@
             } else if (state.selectedElement.type === 'magnetic-field') {
                 emitterProperties.style.display = 'none';
                 fieldProperties.style.display = 'block';
+                electricFieldProperties.style.display = 'none';
                 
                 // 更新控件值
                 fieldShapeSelect.value = state.selectedElement.shape;
@@ -2609,6 +2846,24 @@
                     fieldWidthInput.parentElement.parentElement.style.display = 'block';
                     fieldHeightInput.parentElement.parentElement.style.display = 'block';
                 }
+            } else if (state.selectedElement.type === 'electric-field') {
+                emitterProperties.style.display = 'none';
+                fieldProperties.style.display = 'none';
+                electricFieldProperties.style.display = 'block';
+                
+                // 更新控件值
+                electricFieldShapeSelect.value = state.selectedElement.shape;
+                electricFieldDirectionInput.value = state.selectedElement.direction;
+                electricFieldStrengthInput.value = state.selectedElement.strength;
+                electricFieldWidthInput.value = state.selectedElement.width;
+                electricFieldHeightInput.value = state.selectedElement.height;
+                electricFieldRotationInput.value = state.selectedElement.rotation;
+                
+                // 单边界和双边界电场特殊处理
+                // 只显示矩形电场的属性
+                electricSingleBoundaryProperties.style.display = 'none';
+                electricFieldWidthInput.parentElement.parentElement.style.display = 'block';
+                electricFieldHeightInput.parentElement.parentElement.style.display = 'block';
             }
             
             // 更新变换控制面板
@@ -2623,6 +2878,7 @@
             const element = state.selectedElements[0];
             elementXInput.value = Math.round(element.x);
             elementYInput.value = Math.round(element.y);
+            elementRotationInput.value = element.rotation;
             elementScaleInput.value = element.scale.toFixed(1);
         }
 
@@ -2723,12 +2979,20 @@
                         lifetime: 0,
                         maxLifetime: 30000, // 粒子存在时间(ms)
                         inMagneticField: false,
+                        inElectricField: false,
+                        electricAcceleration: { x: 0, y: 0 },
                         // 圆周运动相关参数
                         circleCenter: null,
                         circleRadius: 0,
                         angularSpeed: 0,
                         circleAngle: 0,
-                        lastUpdateTime: currentTime
+                        lastUpdateTime: currentTime,
+                        // 电场运动相关参数
+                        velocityPerpendicular: null, // 垂直电场方向速度
+                        velocityParallel: null, // 平行电场方向速度
+                        electricEntryTime: 0,
+                        electricEntryPoint: null,
+                        electricExitPoint: null
                     };
                     
                     state.particles.push(particle);
@@ -2746,10 +3010,98 @@
             });
         }
 
+        // 检查点是否在电场中
+        function isPointInElectricField(x, y, field) {
+            // 将点转换到电场局部坐标系
+            const dx = x - field.x;
+            const dy = y - field.y;
+            
+            // 考虑旋转
+            const angle = -field.rotation * Math.PI / 180;
+            const rotatedX = dx * Math.cos(angle) - dy * Math.sin(angle);
+            const rotatedY = dx * Math.sin(angle) + dy * Math.cos(angle);
+            
+            // 考虑缩放
+            const scaledX = rotatedX / field.scale;
+            const scaledY = rotatedY / field.scale;
+            
+            if (field.shape === 'rectangle') {
+                return Math.abs(scaledX) <= field.width/2 && Math.abs(scaledY) <= field.height/2;
+            } else if (field.shape === 'circle') {
+                const distance = Math.sqrt(scaledX**2 + scaledY**2);
+                return distance <= field.width/2;
+            } else if (field.shape === 'triangle') {
+                // 三角形检测（顶点在上，底边在下）
+                const halfHeight = field.height/2;
+                const halfWidth = field.width/2;
+                
+                // 三角形的三个顶点（局部坐标系）
+                const vertex1 = { x: 0, y: -halfHeight }; // 顶部顶点
+                const vertex2 = { x: -halfWidth, y: halfHeight }; // 左下顶点
+                const vertex3 = { x: halfWidth, y: halfHeight }; // 右下顶点
+                
+                // 使用Barycentric坐标法判断点是否在三角形内
+                // 计算三个边的向量
+                const v0 = { x: vertex3.x - vertex1.x, y: vertex3.y - vertex1.y };
+                const v1 = { x: vertex2.x - vertex1.x, y: vertex2.y - vertex1.y };
+                const v2 = { x: scaledX - vertex1.x, y: scaledY - vertex1.y };
+                
+                // 计算点积
+                const dot00 = v0.x * v0.x + v0.y * v0.y;
+                const dot01 = v0.x * v1.x + v0.y * v1.y;
+                const dot02 = v0.x * v2.x + v0.y * v2.y;
+                const dot11 = v1.x * v1.x + v1.y * v1.y;
+                const dot12 = v1.x * v2.x + v1.y * v2.y;
+                
+                // 计算Barycentric坐标
+                const invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+                const u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+                const v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+                
+                // 检查点是否在三角形内
+                return (u >= 0) && (v >= 0) && (u + v <= 1);
+            } else if (field.shape === 'single-boundary') {
+                const orientation = field.boundaryOrientation || 'vertical';
+                const range = field.boundaryRange || 'right';
+                
+                // 单边界电场：整个画布被一条线分割，一边有电场，另一边没有
+                if (orientation === 'vertical') {
+                    // 竖直边界：x=0处的直线
+                    if (range === 'left') {
+                        // 电场在左侧（x < 0）
+                        return scaledX < 0;
+                    } else {
+                        // 电场在右侧（x > 0）
+                        return scaledX > 0;
+                    }
+                } else {
+                    // 水平边界：y=0处的直线
+                    if (range === 'left') {
+                        // 电场在上侧（y < 0）
+                        return scaledY < 0;
+                    } else {
+                        // 电场在下侧（y > 0）
+                        return scaledY > 0;
+                    }
+                }
+            } else if (field.shape === 'double-boundary') {
+                // 双边界：检查y坐标在两个边界之间
+                const topY = -field.height/2;
+                const bottomY = field.height/2;
+                return scaledY >= topY && scaledY <= bottomY;
+            }
+            
+            return false;
+        }
+
         // 更新粒子运动（修正版，符合高中物理要求）
         function updateParticles(deltaTime) {
-            // 获取所有磁场
+            // 检查场是否被移动或修改
+            checkFieldsChanged();
+            
+            // 获取所有磁场和电场
             const magneticFields = state.elements.filter(el => el.type === 'magnetic-field');
+            const electricFields = state.elements.filter(el => el.type === 'electric-field');
             
             // 更新每个粒子的位置
             state.particles.forEach((particle, index) => {
@@ -2781,13 +3133,25 @@
                     }
                 }
                 
+                // 检查粒子是否在电场中
+                let inElectricField = false;
+                let electricField = null;
+                
+                for (const field of electricFields) {
+                    if (isPointInElectricField(particle.x, particle.y, field)) {
+                        inElectricField = true;
+                        electricField = field;
+                        break;
+                    }
+                }
+                
                 // 如果磁场状态发生变化
                 if (inMagneticField !== particle.inMagneticField) {
                     particle.inMagneticField = inMagneticField;
                     
                     if (inMagneticField && magneticField) {
                         // 进入磁场，开始圆周运动
-                        const bDirection = magneticField.direction === 'out' ? -1 : 1;
+                        const bDirection = magneticField.direction === 'out' ? 1 : -1;
                         const bStrength = magneticField.strength;
                         
                         // 记录进入点
@@ -2829,11 +3193,74 @@
                             particle.circleAngle = Math.atan2(dy, dx);
                         }
                     } else {
-                        // 离开磁场，恢复直线运动
+                        // 离开磁场，保留轨迹圆但不再更新粒子圆周运动
                         particle.exitPoint = { x: particle.x, y: particle.y };
-                        particle.circleCenter = null;
-                        particle.circleRadius = 0;
-                        particle.angularSpeed = 0;
+                        // 不清除circleCenter和circleRadius，保留轨迹圆
+                        particle.angularSpeed = 0; // 停止圆周运动
+                        particle.inMagneticField = false; // 标记为不在磁场中
+                    }
+                }
+                
+                // 如果电场状态发生变化
+                if (inElectricField !== particle.inElectricField) {
+                    particle.inElectricField = inElectricField;
+                    
+                    if (inElectricField && electricField) {
+                        // 进入电场，计算加速度
+                        // 电场方向角度（0°为水平向右，相对于电场区域）
+                        const fieldDirectionAngle = electricField.direction * Math.PI / 180;
+                        
+                        // 考虑电场区域的旋转角度（相对于全局坐标系）
+                        const fieldRotationAngle = electricField.rotation * Math.PI / 180;
+                        
+                        // 综合电场方向和区域旋转，得到最终的电场方向（全局坐标系）
+                        const finalAngle = fieldDirectionAngle - fieldRotationAngle;
+                        const cosAngle = Math.cos(finalAngle);
+                        const sinAngle = Math.sin(finalAngle);
+                        
+                        // 电场强度
+                        const eStrength = electricField.strength;
+                        
+                        // 粒子受到的力 F = qE
+                        // 加速度 a = F/m = qE/m
+                        const accelerationMagnitude = (Math.abs(particle.charge) * eStrength) / particle.mass;
+                        
+                        // 加速度方向：正电荷与电场方向相同，负电荷与电场方向相反
+                        const directionMultiplier = particle.charge > 0 ? 1 : -1;
+                        
+                        // 计算加速度分量（全局坐标系）
+                        particle.electricAcceleration.x = cosAngle * accelerationMagnitude * directionMultiplier;
+                        particle.electricAcceleration.y = -sinAngle * accelerationMagnitude * directionMultiplier; // 注意负号，因为y轴向下为正
+                        
+                        // 记录进入点
+                        particle.electricEntryPoint = { x: particle.x, y: particle.y };
+                        particle.electricEntryTime = Date.now();
+                        
+                        // 将速度分解为平行和垂直于电场方向的分量
+                        // 速度在电场方向上的投影（平行分量）
+                        const speedParallel = particle.vx * cosAngle + particle.vy * (-sinAngle); // 注意vy需要取负号
+                        
+                        // 速度在垂直电场方向上的投影（垂直分量）
+                        // 垂直方向单位向量：将电场方向旋转90度
+                        const perpX = -sinAngle;
+                        const perpY = -cosAngle; // 注意负号
+                        const speedPerpendicular = particle.vx * perpX + particle.vy * perpY;
+                        
+                        // 保存分解后的速度
+                        particle.velocityParallel = speedParallel;
+                        particle.velocityPerpendicular = speedPerpendicular;
+                        
+                        // 保存电场方向单位向量
+                        particle.electricFieldDirection = { x: cosAngle, y: -sinAngle };
+                        particle.electricFieldPerpendicular = { x: perpX, y: perpY };
+                    } else {
+                        // 离开电场，清除加速度和分解速度
+                        particle.electricAcceleration = { x: 0, y: 0 };
+                        particle.electricExitPoint = { x: particle.x, y: particle.y };
+                        particle.velocityPerpendicular = null;
+                        particle.velocityParallel = null;
+                        particle.electricFieldDirection = null;
+                        particle.electricFieldPerpendicular = null;
                     }
                 }
                 
@@ -2853,8 +3280,40 @@
                     
                     particle.vx = tangentX;
                     particle.vy = tangentY;
+                } else if (particle.inElectricField && particle.electricFieldDirection) {
+                    // 在电场中做匀加速曲线运动
+                    // 计算在电场中运动的时间（从进入电场开始）
+                    const timeInField = (Date.now() - particle.electricEntryTime) / 1000;
+                    
+                    // 垂直电场方向：匀速直线运动
+                    const perpDistance = particle.velocityPerpendicular * timeInField;
+                    const perpX = particle.electricFieldPerpendicular.x * perpDistance;
+                    const perpY = particle.electricFieldPerpendicular.y * perpDistance;
+                    
+                    // 平行电场方向：匀加速直线运动
+                    // s = v0t + 1/2 a t^2
+                    const parallelDistance = particle.velocityParallel * timeInField + 
+                                           0.5 * (particle.electricAcceleration.x * particle.electricFieldDirection.x + 
+                                                  particle.electricAcceleration.y * particle.electricFieldDirection.y) * timeInField * timeInField;
+                    const parallelX = particle.electricFieldDirection.x * parallelDistance;
+                    const parallelY = particle.electricFieldDirection.y * parallelDistance;
+                    
+                    // 计算新位置：起始点 + 垂直分量 + 平行分量
+                    particle.x = particle.electricEntryPoint.x + perpX + parallelX;
+                    particle.y = particle.electricEntryPoint.y + perpY + parallelY;
+                    
+                    // 更新速度：垂直分量不变，平行分量加上加速度×时间
+                    const newParallelSpeed = particle.velocityParallel + 
+                                           (particle.electricAcceleration.x * particle.electricFieldDirection.x + 
+                                            particle.electricAcceleration.y * particle.electricFieldDirection.y) * timeInField;
+                    
+                    // 合成速度
+                    particle.vx = particle.electricFieldPerpendicular.x * particle.velocityPerpendicular + 
+                                particle.electricFieldDirection.x * newParallelSpeed;
+                    particle.vy = particle.electricFieldPerpendicular.y * particle.velocityPerpendicular + 
+                                particle.electricFieldDirection.y * newParallelSpeed;
                 } else {
-                    // 在磁场外做匀速直线运动
+                    // 在场外做匀速直线运动
                     particle.x += particle.vx * dt;
                     particle.y += particle.vy * dt;
                 }
@@ -2986,12 +3445,16 @@
         // 初始化事件监听器
         function initEventListeners() {
             // 悬浮按钮点击事件
-            document.getElementById('add-emitter-btn').addEventListener('click', () => {
+            addEmitterBtn.addEventListener('click', () => {
                 addElement('particle-emitter');
             });
             
-            document.getElementById('add-field-btn').addEventListener('click', () => {
+            addFieldBtn.addEventListener('click', () => {
                 addElement('magnetic-field');
+            });
+            
+            addElectricFieldBtn.addEventListener('click', () => {
+                addElement('electric-field');
             });
             
             // 粒子类型选择变化
@@ -3137,6 +3600,63 @@
                 }
             });
             
+            // 电场属性变化事件
+            electricFieldShapeSelect.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'electric-field') {
+                    state.selectedElement.shape = this.value;
+                    draw();
+                }
+            });
+            
+            electricFieldDirectionInput.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'electric-field') {
+                    state.selectedElement.direction = parseInt(this.value) || 0;
+                    draw();
+                }
+            });
+            
+            electricFieldStrengthInput.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'electric-field') {
+                    state.selectedElement.strength = parseFloat(this.value) || 1.0;
+                }
+            });
+            
+            electricFieldWidthInput.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'electric-field') {
+                    state.selectedElement.width = parseInt(this.value) || 150;
+                    draw();
+                }
+            });
+            
+            electricFieldHeightInput.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'electric-field') {
+                    state.selectedElement.height = parseInt(this.value) || 100;
+                    draw();
+                }
+            });
+            
+            electricFieldRotationInput.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'electric-field') {
+                    state.selectedElement.rotation = parseInt(this.value) || 0;
+                    draw();
+                }
+            });
+            
+            // 单边界电场属性变化事件
+            electricBoundaryOrientationSelect.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'electric-field' && state.selectedElement.shape === 'single-boundary') {
+                    state.selectedElement.boundaryOrientation = this.value;
+                    draw();
+                }
+            });
+            
+            electricBoundaryRangeSelect.addEventListener('change', function() {
+                if (state.selectedElement && state.selectedElement.type === 'electric-field' && state.selectedElement.shape === 'single-boundary') {
+                    state.selectedElement.boundaryRange = this.value;
+                    draw();
+                }
+            });
+            
             // 变换控制事件
             elementXInput.addEventListener('change', function() {
                 if (state.selectedElements.length > 0) {
@@ -3153,6 +3673,15 @@
                     const deltaY = parseInt(this.value) - state.selectedElements[0].y;
                     state.selectedElements.forEach(element => {
                         element.y += deltaY;
+                    });
+                    draw();
+                }
+            });
+            
+            elementRotationInput.addEventListener('change', function() {
+                if (state.selectedElements.length > 0) {
+                    state.selectedElements.forEach(element => {
+                        element.rotation = parseInt(this.value) || 0;
                     });
                     draw();
                 }
@@ -3316,7 +3845,6 @@
                     draw();
                 }
             });
-            
         }
 
         // 初始化应用
