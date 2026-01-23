@@ -1,0 +1,1723 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <title>高中物理图线合集 · 圆形悬浮按钮版</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #f6f8fa;
+            --card: #fff;
+            --axis: #303133;
+            --grid: #e4e7ed;
+            --text: #606266;
+            --edit: #52c41a;
+            --limit: #409eff;
+            --line: #409eff;
+            --dot: #f56c6c;
+            --proj: var(--edit);
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            font-family: Inter, system-ui;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px;
+            padding-top: 30px;
+        }
+
+        #main {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+        }
+
+        #canvas {
+            width: 800px;
+            height: 500px;
+            background: var(--card);
+            box-shadow: 0 4px 16px #0001;
+            border-radius: 8px 8px 0 0;
+        }
+
+        #displacementCanvas {
+            width: 800px;
+            height: 200px;
+            background: var(--card);
+            box-shadow: 0 4px 16px #0001;
+            border-radius: 0 0 8px 8px;
+            margin-top: -4px;
+        }
+
+        #controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 10px 0;
+            justify-content: center;
+        }
+
+        button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 4px;
+            background: #409eff;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background .2s;
+        }
+
+        button:hover {
+            background: #66b1ff;
+        }
+
+        select,
+        input[type=range] {
+            font-size: 14px;
+        }
+
+        .axis text {
+            font-size: 12px;
+            fill: var(--text);
+        }
+
+        .axis path,
+        .axis line {
+            stroke: var(--axis);
+        }
+
+        .grid line {
+            stroke: var(--grid);
+            stroke-dasharray: 2, 2;
+        }
+
+        .handle {
+            fill: var(--edit);
+            stroke: #fff;
+            stroke-width: 2;
+            cursor: move;
+        }
+
+        .limit {
+            fill: var(--limit);
+            stroke: #fff;
+            stroke-width: 2;
+            cursor: move;
+        }
+
+        .proj {
+            stroke: var(--proj);
+            stroke-dasharray: 4, 4;
+            pointer-events: none;
+        }
+
+        .dot {
+            fill: var(--dot);
+            stroke: #fff;
+            stroke-width: 2;
+        }
+
+        .displacement-dot {
+            fill: #8a2be2;
+            stroke: #fff;
+            stroke-width: 2;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .axis-arrow {
+            stroke: var(--axis);
+            fill: var(--axis);
+        }
+
+        /* 左侧悬浮按钮 - 四分之一圆版本 */
+        .fab-container-left {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .fab-main-left {
+            width: 56px;
+            height: 56px;
+            border-radius: 0 0 56px 0;
+            background: linear-gradient(135deg, #409eff, #66b1ff);
+            box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            padding-left: 8px;
+            padding-top: 8px;
+            box-sizing: border-box;
+        }
+
+        .fab-main-left:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
+        }
+
+        .fab-menu-left {
+            position: absolute;
+            top: 10px;
+            left: 56px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-20px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            gap: 8px;
+        }
+
+        .fab-container-left.expanded .fab-menu-left {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+
+        /* 右侧悬浮按钮 - 四分之一圆版本 */
+        .fab-container-right {
+            position: absolute;
+            top: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .fab-main-right {
+            width: 56px;
+            height: 56px;
+            border-radius: 0 0 0 56px;
+            background: linear-gradient(225deg, #409eff, #66b1ff);
+            box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            padding-right: 8px;
+            padding-top: 8px;
+            box-sizing: border-box;
+        }
+
+        .fab-main-right:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
+        }
+
+        .fab-menu-right {
+            position: absolute;
+            top: 56px;
+            right: 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-20px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: white;
+            padding: 16px;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 240px;
+        }
+
+        .fab-container-right.expanded .fab-menu-right {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .fab-item {
+            width: 48px;
+            height: 48px;
+            border-radius: 24px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #606266;
+            font-size: 14px;
+            font-weight: 500;
+            transform-origin: center;
+        }
+
+        .fab-item:hover {
+            background: #409eff;
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(64, 158, 255, 0.3);
+        }
+
+        .fab-item.active {
+            background: #409eff;
+            color: white;
+            box-shadow: 0 4px 8px rgba(64, 158, 255, 0.3);
+        }
+
+        /* 按钮图标 */
+        .fab-item[data-type="line"]::before {
+            content: "—";
+            font-size: 18px;
+        }
+
+        .fab-item[data-type="poly"]::before {
+            content: "Z";
+            font-size: 16px;
+            transform: rotate(90deg);
+        }
+
+        .fab-item[data-type="para"]::before {
+            content: "⌒";
+            font-size: 18px;
+        }
+
+        .fab-item[data-type="sin"]::before {
+            content: "~";
+            font-size: 18px;
+        }
+
+        /* 右侧菜单项目 */
+        .fab-menu-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .fab-menu-item.row {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .fab-menu-item label {
+            font-size: 12px;
+            color: #606266;
+            font-weight: 500;
+        }
+
+        .fab-menu-item input[type="range"] {
+            width: 100%;
+        }
+
+        .fab-menu-item .slider-input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .fab-menu-item .slider-input-group input[type="range"] {
+            flex: 1;
+        }
+
+        .fab-menu-item .slider-input-group input[type="number"] {
+            width: 60px;
+            padding: 4px 8px;
+            border: 1px solid #dcdfe6;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .fab-menu-item input[type="color"] {
+            width: 60px;
+            height: 30px;
+            padding: 2px;
+            border: 1px solid #dcdfe6;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .fab-menu-item button {
+            width: 100%;
+            margin-top: 4px;
+        }
+        
+        /* 添加静止段显示 */
+        .static-segment {
+            stroke: #ff9800;
+            stroke-width: 1;
+            stroke-dasharray: 3, 3;
+        }
+        
+        .static-point {
+            fill: #ff9800;
+            stroke: #fff;
+            stroke-width: 1;
+        }
+        
+        /* 位移画布新样式 */
+        .displacement-arrow {
+            stroke: #8a2be2;
+            stroke-width: 2;
+            fill: #8a2be2;
+        }
+        
+        .ghost-arrow {
+            stroke: #8a2be2;
+            stroke-width: 2;
+            stroke-dasharray: 5, 3;
+            fill: #8a2be2;
+            opacity: 0.5;
+        }
+        
+        .displacement-line {
+            stroke: #8a2be2;
+            stroke-width: 2;
+            marker-end: url(#arrowhead);
+        }
+        
+        .displacement-label {
+            font-size: 12px;
+            fill: #303133;
+            text-anchor: middle;
+            font-weight: 500;
+        }
+        
+        .position-label {
+            font-size: 11px;
+            fill: #8a2be2;
+            text-anchor: middle;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="main">
+        <div id="canvas"></div>
+
+        <!-- 左侧悬浮按钮（四分之一圆版本） -->
+        <div class="fab-container-left" id="fabContainerLeft">
+            <div class="fab-main-left" id="fabMainLeft">
+                ...
+            </div>
+            <div class="fab-menu-left">
+                <div class="fab-item active" data-type="line" title="直线"></div>
+                <div class="fab-item" data-type="poly" title="折线"></div>
+                <div class="fab-item" data-type="para" title="抛物线"></div>
+                <div class="fab-item" data-type="sin" title="正弦"></div>
+            </div>
+        </div>
+
+        <!-- 右侧悬浮按钮（四分之一圆版本） -->
+        <div class="fab-container-right" id="fabContainerRight">
+            <div class="fab-main-right" id="fabMainRight">
+                ⚙
+            </div>
+            <div class="fab-menu-right">
+                <div class="fab-menu-item">
+                    <label>时间范围 /s</label>
+                    <div class="slider-input-group">
+                        <input type="range" id="xMaxRight" min="4" max="20" value="8" step="1">
+                        <input type="number" id="xMaxInput" min="4" max="20" value="8" step="1">
+                    </div>
+                </div>
+                <div class="fab-menu-item">
+                    <label>位移范围 /m</label>
+                    <div class="slider-input-group">
+                        <input type="range" id="yRangeRight" min="2" max="10" value="8" step="1">
+                        <input type="number" id="yRangeInput" min="2" max="10" value="8" step="1">
+                    </div>
+                </div>
+                <div class="fab-menu-item row">
+                    <label>线颜色</label>
+                    <input type="color" id="lineColorRight" value="#409eff">
+                </div>
+                <div class="fab-menu-item">
+                    <button id="defaultRight">恢复默认</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="controls">
+            <button id="playPause">▶ 开始</button>
+            <button id="reset">⟲ 重置</button>
+            <button id="editBtn">编辑</button>
+        </div>
+        <div id="displacementCanvas"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script>
+        /* ---------- 常量 ---------- */
+        const M = { top: 80, right: 40, bottom: 40, left: 60 };
+        const W = 800 - M.left - M.right;
+        const H = 460 - M.top - M.bottom;
+        const D_H = 200 - M.top - M.bottom;
+        const T = 8; // 动画帧间隔
+
+        /* ---------- 配置 ---------- */
+        let cfg = {
+            xMax: 8,
+            yRange: 8,
+            lineColor: '#409eff',
+            lineWidth: 2.5,
+            showGrid: true,
+            showArrow: true,
+            curveType: 'line'
+        };
+        let t = 0, timer = null;
+        let editMode = false;
+        let isPlaying = false;
+
+        /* ---------- 动画相关 ---------- */
+        let animationStartTime = 0;
+        let animationStartX = 0;
+        let animationDuration = 0;
+        let animationId = null;
+        
+        /* ---------- 位移画布状态 ---------- */
+        let startY = null; // 记录起始位置
+        let currentY = null; // 当前位置
+
+        /* ---------- 悬浮按钮状态 ---------- */
+        let fabLeftExpanded = false;
+        let fabRightExpanded = false;
+        let fabLeftTimeout = null;
+        let fabRightTimeout = null;
+
+        /* ---------- SVG ---------- */
+        // 主画布
+        const svg = d3.select('#canvas')
+            .append('svg')
+            .attr('viewBox', `0 0 ${W + M.left + M.right} ${H + M.top + M.bottom}`)
+            .style('background', 'white');
+        const g = svg.append('g').attr('transform', `translate(${M.left},${M.top})`);
+
+        // 位移画布
+        const displacementSvg = d3.select('#displacementCanvas')
+            .append('svg')
+            .attr('viewBox', `0 0 ${W + M.left + M.right} ${D_H + M.top + M.bottom}`)
+            .style('background', 'white');
+        const displacementG = displacementSvg.append('g').attr('transform', `translate(${M.left},${M.top})`);
+        
+        // 添加箭头定义
+        displacementSvg.append('defs').append('marker')
+            .attr('id', 'arrowhead')
+            .attr('viewBox', '0 0 10 10')
+            .attr('refX', 5)
+            .attr('refY', 5)
+            .attr('markerWidth', 6)
+            .attr('markerHeight', 6)
+            .attr('orient', 'auto')
+            .append('path')
+            .attr('d', 'M 0 0 L 10 5 L 0 10 z')
+            .attr('fill', '#8a2be2');
+
+        /* ---------- 比例尺 ---------- */
+        let xScale, yScale, displacementXScale, displacementYScale;
+        function updateScales() {
+            xScale = d3.scaleLinear().domain([0, cfg.xMax]).range([0, W]);
+            yScale = d3.scaleLinear().domain([-cfg.yRange / 2, cfg.yRange / 2]).range([H, 0]);
+
+            // 位移画布比例尺
+            displacementXScale = d3.scaleLinear().domain([-cfg.yRange / 2, cfg.yRange / 2]).range([0, W]);
+            displacementYScale = d3.scaleLinear().domain([0, 1]).range([D_H, 0]);
+        }
+        updateScales();
+
+        /* ---------- 绘制坐标轴箭头 ---------- */
+        function drawAxisArrows() {
+            // 清除之前的箭头
+            svg.selectAll('.axis-arrow').remove();
+            displacementSvg.selectAll('.axis-arrow').remove();
+
+            if (!cfg.showArrow) return;
+
+            // 偏移量
+            const arrowOffsetX = 20; // x轴箭头水平右移20px
+            const arrowOffsetY = 20; // y轴箭头竖直上移20px
+
+            // 主画布X轴箭头（向右）- 延长半个刻度
+            const xAxisExtension = 8;
+            svg.append('polygon')
+                .attr('class', 'axis-arrow')
+                .attr('points', `${M.left + W + xAxisExtension + arrowOffsetX},${M.top + yScale(0)} ${M.left + W - 5 + arrowOffsetX},${M.top + yScale(0) - 5} ${M.left + W - 5 + arrowOffsetX},${M.top + yScale(0) + 5}`)
+                .attr('fill', '#303133');
+
+            // 主画布Y轴箭头（向上）- 延长半个刻度
+            const yAxisExtension = 8;
+            svg.append('polygon')
+                .attr('class', 'axis-arrow')
+                .attr('points', `${M.left + xScale(0)},${M.top - yAxisExtension - arrowOffsetY} ${M.left + xScale(0) - 5},${M.top + 5 - arrowOffsetY} ${M.left + xScale(0) + 5},${M.top + 5 - arrowOffsetY}`)
+                .attr('fill', '#303133');
+
+            // 位移画布X轴箭头（向右）- 延长半个刻度
+            displacementSvg.append('polygon')
+                .attr('class', 'axis-arrow')
+                .attr('points', `${M.left + W + xAxisExtension + arrowOffsetX},${M.top + displacementYScale(0.5)} ${M.left + W - 5 + arrowOffsetX},${M.top + displacementYScale(0.5) - 5} ${M.left + W - 5 + arrowOffsetX},${M.top + displacementYScale(0.5) + 5}`)
+                .attr('fill', '#303133');
+        }
+
+        /* ---------- 网格 & 轴 ---------- */
+        // 主画布
+        const gridG = g.append('g').attr('class', 'grid');
+        const xAxisG = g.append('g').attr('class', 'axis x');
+        const yAxisG = g.append('g').attr('class', 'axis y');
+
+        // 位移画布
+        const displacementGridG = displacementG.append('g').attr('class', 'grid');
+        const displacementXAxisG = displacementG.append('g').attr('class', 'axis x');
+
+        function drawAxis() {
+            // 清除之前的网格线
+            gridG.selectAll('*').remove();
+            displacementGridG.selectAll('*').remove();
+
+            // 获取所有刻度值
+            const xTicks = xScale.ticks();
+            const yTicks = yScale.ticks();
+            const displacementXTicks = displacementXScale.ticks();
+
+            // 绘制主画布网格线
+            if (cfg.showGrid) {
+                // x方向网格线（垂直线）
+                gridG.selectAll('.x-grid-line')
+                    .data(xTicks)
+                    .enter()
+                    .append('line')
+                    .attr('class', 'x-grid-line')
+                    .attr('x1', d => xScale(d))
+                    .attr('y1', 0)
+                    .attr('x2', d => xScale(d))
+                    .attr('y2', H)
+                    .attr('stroke', 'rgba(0, 0, 0, 0.1)')
+                    .attr('stroke-width', 0.5)
+                    .attr('stroke-dasharray', '1, 2');
+
+                // y方向网格线（水平线）
+                gridG.selectAll('.y-grid-line')
+                    .data(yTicks)
+                    .enter()
+                    .append('line')
+                    .attr('class', 'y-grid-line')
+                    .attr('x1', 0)
+                    .attr('y1', d => yScale(d))
+                    .attr('x2', W)
+                    .attr('y2', d => yScale(d))
+                    .attr('stroke', 'rgba(0, 0, 0, 0.1)')
+                    .attr('stroke-width', 0.5)
+                    .attr('stroke-dasharray', '1, 2');
+
+                // 位移画布网格线
+                displacementGridG.selectAll('.x-grid-line')
+                    .data(displacementXTicks)
+                    .enter()
+                    .append('line')
+                    .attr('class', 'x-grid-line')
+                    .attr('x1', d => displacementXScale(d))
+                    .attr('y1', 0)
+                    .attr('x2', d => displacementXScale(d))
+                    .attr('y2', D_H)
+                    .attr('stroke', 'rgba(0, 0, 0, 0.1)')
+                    .attr('stroke-width', 0.5)
+                    .attr('stroke-dasharray', '1, 2');
+            }
+
+            // 绘制坐标轴 - 延长半个刻度
+            const axisExtension = 20;
+
+            // 主画布X轴
+            xAxisG.selectAll('*').remove();
+            xAxisG.attr('transform', `translate(0,${yScale(0)})`)
+                .call(d3.axisBottom(xScale));
+
+            // 绘制X轴线 - 延长右侧
+            xAxisG.append('path')
+                .attr('d', `M${-axisExtension},0H${W + axisExtension}`)
+                .attr('stroke', '#303133')
+                .attr('stroke-width', 1)
+                .attr('fill', 'none');
+
+            // 调整X轴0刻度位置，避免与Y轴重叠
+            xAxisG.selectAll('.tick').each(function (d, i) {
+                const tick = d3.select(this);
+                if (d === 0) {
+                    tick.select('text').attr('dx', '-0.5em');
+                }
+            });
+
+            // 主画布Y轴
+            yAxisG.selectAll('*').remove();
+            yAxisG.attr('transform', `translate(${xScale(0)},0)`)
+                .call(d3.axisLeft(yScale));
+
+            // 绘制Y轴线 - 延长上方
+            yAxisG.append('path')
+                .attr('d', `M0,${H + axisExtension}V${-axisExtension}`)
+                .attr('stroke', '#303133')
+                .attr('stroke-width', 1)
+                .attr('fill', 'none');
+
+            // 位移画布X轴
+            displacementXAxisG.selectAll('*').remove();
+            displacementXAxisG.attr('transform', `translate(0,${displacementYScale(0.5)})`)
+                .call(d3.axisBottom(displacementXScale));
+
+            // 绘制位移画布X轴线 - 延长右侧
+            displacementXAxisG.append('path')
+                .attr('d', `M${-axisExtension},0H${W + axisExtension}`)
+                .attr('stroke', '#303133')
+                .attr('stroke-width', 1)
+                .attr('fill', 'none');
+
+            // 移除位移画布Y轴（不需要）
+            displacementG.select('.axis.y').remove();
+
+            // 设置位移画布标签 - 移到右端箭头下面
+            displacementG.selectAll('.displacement-label').remove();
+            displacementG.append('text')
+                .attr('class', 'displacement-label')
+                .attr('x', W + axisExtension - 25)
+                .attr('y', displacementYScale(0.5) + 35)
+                .style('text-anchor', 'start')
+                .style('font-size', '12px')
+                .style('fill', '#606266')
+                .text('位置/m');
+
+            // 绘制箭头
+            drawAxisArrows();
+        }
+
+        drawAxis();
+
+        /* ---------- 图层 ---------- */
+        // 主画布
+        const curveG = g.append('g').attr('class', 'curve');
+        const handleG = g.append('g').attr('class', 'handles');
+        const limitG = g.append('g').attr('class', 'limit');
+        const projG = g.append('g').attr('class', 'proj');
+        const dot = g.append('circle').attr('class', 'dot')
+            .attr('r', 6);
+        const staticSegmentG = g.append('g').attr('class', 'static-segments');
+        const staticPointG = g.append('g').attr('class', 'static-points');
+
+        // 位移画布
+        const displacementDot = displacementG.append('circle')
+            .attr('class', 'displacement-dot')
+            .attr('r', 6);
+            
+        // 位移画布新图层
+        const displacementArrowG = displacementG.append('g').attr('class', 'displacement-arrows');
+        const ghostArrowG = displacementG.append('g').attr('class', 'ghost-arrows');
+        const displacementLineG = displacementG.append('g').attr('class', 'displacement-lines');
+        const displacementLabelG = displacementG.append('g').attr('class', 'displacement-labels');
+
+        /* ---------- 数据 ---------- */
+        const data = {
+            line: [{ x: 0, y: 0 }, { x: 8, y: 4 }],
+            poly: [{ x: 0, y: 0 }, { x: 4, y: 3 }, { x: 8, y: 1 }],
+            para: { vertex: { x: 4, y: 2 }, yIntercept: { x: 0, y: 1 } },
+            sin: { amp: 2, period: 8 }
+        };
+
+        /* ---------- 工具函数：计算图线上某点的y值 ---------- */
+        function getYOnCurve(x, type) {
+            switch (type) {
+                case 'line':
+                    const [p0, p1] = data.line;
+                    if (p1.x === p0.x) return p0.y;
+                    return p0.y + (p1.y - p0.y) * (x - p0.x) / (p1.x - p0.x);
+
+                case 'poly':
+                    const poly = data.poly;
+                    const idx = d3.bisect(poly.map(d => d.x), x) - 1;
+                    if (idx < 0) return poly[0].y;
+                    if (idx >= poly.length - 1) return poly[poly.length - 1].y;
+                    const pA = poly[idx], pB = poly[idx + 1];
+                    if (pB.x === pA.x) return pA.y;
+                    return pA.y + (pB.y - pA.y) * (x - pA.x) / (pB.x - pA.x);
+
+                case 'para':
+                    const { vertex, yIntercept } = data.para;
+                    const a = (yIntercept.y - vertex.y) / (yIntercept.x - vertex.x) ** 2;
+                    return vertex.y + a * (x - vertex.x) ** 2;
+
+                case 'sin':
+                    const { amp, period } = data.sin;
+                    return amp * Math.sin(2 * Math.PI * x / period);
+            }
+            return 0;
+        }
+
+        /* ---------- 限制点（蓝色）初始化 ---------- */
+        const limits = {
+            line: [{ x: 0, y: 0 }, { x: 8, y: 4 }],
+            poly: [{ x: 0, y: 0 }, { x: 8, y: 1 }],
+            para: [{ x: 0, y: 1 }, { x: 8, y: 9 }],
+            sin: [{ x: 0, y: 0 }, { x: 8, y: 0 }]
+        };
+
+        // 初始化限制点的y值
+        Object.keys(limits).forEach(type => {
+            limits[type].forEach(pt => {
+                pt.y = getYOnCurve(pt.x, type);
+            });
+        });
+
+        /* ---------- 通用工具 ---------- */
+        function snapInt(v) { return Math.abs(v - Math.round(v)) < 0.1 ? Math.round(v) : v; }
+
+        /* ---------- 调整蓝色限制点到坐标轴范围内 ---------- */
+        function adjustLimitPointsWithinBounds(limitPts, type) {
+            // 确保限制点在有效范围内并排序
+            limitPts.sort((a, b) => a.x - b.x);
+
+            // 对每个限制点进行调整
+            limitPts.forEach((pt, i) => {
+                // 1. 先确保x在[0, cfg.xMax]范围内
+                pt.x = Math.max(0, Math.min(pt.x, cfg.xMax));
+
+                // 2. 计算当前x在图线上的y值
+                pt.y = getYOnCurve(pt.x, type);
+
+                // 3. 如果y超出范围，调整x使y在范围内
+                const yMin = -cfg.yRange / 2;
+                const yMax = cfg.yRange / 2;
+
+                if (pt.y < yMin || pt.y > yMax) {
+                    if (type === 'line') {
+                        const [p0, p1] = data.line;
+                        if (Math.abs(p1.x - p0.x) > 0.001) {
+                            const slope = (p1.y - p0.y) / (p1.x - p0.x);
+                            if (Math.abs(slope) > 0.001) {
+                                const xAtYMin = p0.x + (yMin - p0.y) / slope;
+                                const xAtYMax = p0.x + (yMax - p0.y) / slope;
+                                const candidates = [];
+                                if (xAtYMin >= 0 && xAtYMin <= cfg.xMax) candidates.push({ x: xAtYMin, y: yMin });
+                                if (xAtYMax >= 0 && xAtYMax <= cfg.xMax) candidates.push({ x: xAtYMax, y: yMax });
+
+                                if (candidates.length > 0) {
+                                    candidates.sort((a, b) => Math.abs(a.x - pt.x) - Math.abs(b.x - pt.x));
+                                    pt.x = candidates[0].x;
+                                    pt.y = candidates[0].y;
+                                } else {
+                                    pt.x = Math.max(0, Math.min(pt.x, cfg.xMax));
+                                    pt.y = Math.max(yMin, Math.min(pt.y, yMax));
+                                }
+                            } else {
+                                pt.x = Math.max(0, Math.min(pt.x, cfg.xMax));
+                                pt.y = p0.y;
+                            }
+                        }
+                    } else if (type === 'para') {
+                        const { vertex, yIntercept } = data.para;
+                        const a = (yIntercept.y - vertex.y) / (yIntercept.x - vertex.x) ** 2;
+                        const xAtYMin = vertex.x + Math.sqrt((yMin - vertex.y) / a);
+                        const xAtYMax = vertex.x + Math.sqrt((yMax - vertex.y) / a);
+                        const xAtYMin2 = vertex.x - Math.sqrt((yMin - vertex.y) / a);
+                        const xAtYMax2 = vertex.x - Math.sqrt((yMax - vertex.y) / a);
+
+                        const candidates = [];
+                        if (xAtYMin >= 0 && xAtYMin <= cfg.xMax) candidates.push({ x: xAtYMin, y: yMin });
+                        if (xAtYMax >= 0 && xAtYMax <= cfg.xMax) candidates.push({ x: xAtYMax, y: yMax });
+                        if (xAtYMin2 >= 0 && xAtYMin2 <= cfg.xMax) candidates.push({ x: xAtYMin2, y: yMin });
+                        if (xAtYMax2 >= 0 && xAtYMax2 <= cfg.xMax) candidates.push({ x: xAtYMax2, y: yMax });
+
+                        if (candidates.length > 0) {
+                            candidates.sort((a, b) => Math.abs(a.x - pt.x) - Math.abs(b.x - pt.x));
+                            pt.x = candidates[0].x;
+                            pt.y = candidates[0].y;
+                        } else {
+                            pt.x = Math.max(0, Math.min(pt.x, cfg.xMax));
+                            pt.y = Math.max(yMin, Math.min(pt.y, yMax));
+                        }
+                    } else if (type === 'sin') {
+                        const { amp, period } = data.sin;
+                        const candidates = [];
+
+                        if (Math.abs(yMin / amp) <= 1) {
+                            const sinValueMin = Math.asin(yMin / amp);
+                            const x1 = (sinValueMin * period) / (2 * Math.PI);
+                            const x2 = ((Math.PI - sinValueMin) * period) / (2 * Math.PI);
+                            const periods = Math.floor(cfg.xMax / period);
+                            for (let n = 0; n <= periods; n++) {
+                                const x1n = x1 + n * period;
+                                const x2n = x2 + n * period;
+                                if (x1n >= 0 && x1n <= cfg.xMax) candidates.push({ x: x1n, y: yMin });
+                                if (x2n >= 0 && x2n <= cfg.xMax) candidates.push({ x: x2n, y: yMin });
+                            }
+                        }
+
+                        if (Math.abs(yMax / amp) <= 1) {
+                            const sinValueMax = Math.asin(yMax / amp);
+                            const x1 = (sinValueMax * period) / (2 * Math.PI);
+                            const x2 = ((Math.PI - sinValueMax) * period) / (2 * Math.PI);
+                            const periods = Math.floor(cfg.xMax / period);
+                            for (let n = 0; n <= periods; n++) {
+                                const x1n = x1 + n * period;
+                                const x2n = x2 + n * period;
+                                if (x1n >= 0 && x1n <= cfg.xMax) candidates.push({ x: x1n, y: yMax });
+                                if (x2n >= 0 && x2n <= cfg.xMax) candidates.push({ x: x2n, y: yMax });
+                            }
+                        }
+
+                        if (candidates.length > 0) {
+                            candidates.sort((a, b) => Math.abs(a.x - pt.x) - Math.abs(b.x - pt.x));
+                            pt.x = candidates[0].x;
+                            pt.y = candidates[0].y;
+                        } else {
+                            pt.x = Math.max(0, Math.min(pt.x, cfg.xMax));
+                            pt.y = Math.max(yMin, Math.min(pt.y, yMax));
+                        }
+                    } else if (type === 'poly') {
+                        pt.x = Math.max(0, Math.min(pt.x, cfg.xMax));
+                        pt.y = Math.max(yMin, Math.min(pt.y, yMax));
+                    }
+                }
+            });
+
+            // 确保两个点不重叠且保持最小距离
+            if (limitPts[1].x - limitPts[0].x < 0.2) {
+                if (limitPts[0].x <= 0.1) {
+                    limitPts[1].x = limitPts[0].x + 0.2;
+                    limitPts[1].y = getYOnCurve(limitPts[1].x, type);
+                } else {
+                    limitPts[0].x = limitPts[1].x - 0.2;
+                    limitPts[0].y = getYOnCurve(limitPts[0].x, type);
+                }
+            }
+
+            return limitPts;
+        }
+
+        /* ---------- 绘制静止段 ---------- */
+        function drawStaticSegment() {
+            // 清除之前的静止段
+            staticSegmentG.selectAll('*').remove();
+            staticPointG.selectAll('*').remove();
+            
+            const type = cfg.curveType;
+            const limitPts = limits[type];
+            const xMin = limitPts[0].x;
+            
+            // 如果左限制点的x大于0，绘制静止段
+            if (xMin > 0) {
+                // 获取左限制点的y值
+                const yStart = getYOnCurve(xMin, type);
+                
+                // 绘制静止线段（从(0, yStart)到(xMin, yStart)）
+                staticSegmentG.append('line')
+                    .attr('class', 'static-segment')
+                    .attr('x1', xScale(0))
+                    .attr('y1', yScale(yStart))
+                    .attr('x2', xScale(xMin))
+                    .attr('y2', yScale(yStart))
+                    .attr('stroke', '#ff9800')
+                    .attr('stroke-width', 2)
+                    .attr('stroke-dasharray', '5, 3');
+                // 绘制从静止点到x轴的横坐标虚线（从(xMin, yStart)到(xMin, yScale(0))）
+            staticSegmentG.append('line')
+            .attr('class', 'static-segment')
+            .attr('x1', xScale(xMin))
+            .attr('y1', yScale(yStart))
+            .attr('x2', xScale(xMin))
+            .attr('y2', yScale(0))
+            .attr('stroke', '#ff9800')
+            .attr('stroke-width', 1)
+            .attr('stroke-dasharray', '3, 3');
+                // 在时间零点绘制静止点
+                staticPointG.append('circle')
+                    .attr('class', 'static-point')
+                    .attr('cx', xScale(0))
+                    .attr('cy', yScale(yStart))
+                    .attr('r', 4);
+            }
+        }
+
+        /* ---------- 图线绘制 ---------- */
+        function drawCurve() {
+            curveG.selectAll('*').remove();
+            handleG.selectAll('*').remove();
+            limitG.selectAll('*').remove();
+            projG.selectAll('*').remove();
+
+            const color = cfg.lineColor, width = cfg.lineWidth;
+            const type = cfg.curveType;
+            const limitPts = limits[type];
+
+            // 调整蓝色限制点到坐标轴范围内
+            const adjustedLimitPts = adjustLimitPointsWithinBounds([...limitPts], type);
+
+            // 更新原始限制点数据
+            limitPts[0].x = adjustedLimitPts[0].x;
+            limitPts[0].y = adjustedLimitPts[0].y;
+            limitPts[1].x = adjustedLimitPts[1].x;
+            limitPts[1].y = adjustedLimitPts[1].y;
+
+            // 绘制静止段
+            drawStaticSegment();
+
+            // 根据不同类型绘制限制点之间的图线
+            switch (type) {
+                case 'line': drawLine(color, width, limitPts); break;
+                case 'poly': drawPoly(color, width, limitPts); break;
+                case 'para': drawPara(color, width, limitPts); break;
+                case 'sin': drawSin(color, width, limitPts); break;
+            }
+
+            // 绘制限制点（蓝色）
+            drawLimitPoints(limitPts);
+
+            // 在编辑模式下绘制编辑点（绿色）
+            if (editMode) {
+                switch (type) {
+                    case 'line':
+                        data.line.forEach((p, i) => addHandle(p, i, color));
+                        break;
+                    case 'poly':
+                        data.poly.forEach((p, i) => addHandle(p, i, color));
+                        break;
+                    case 'para':
+                        addHandle(data.para.vertex, 'v', color);
+                        addHandle(data.para.yIntercept, 'y0', color);
+                        break;
+                    case 'sin':
+                        const ampPt = { x: data.sin.period / 4, y: data.sin.amp };
+                        addHandle(ampPt, 'amp', color);
+                        const perPt = { x: data.sin.period, y: 0 };
+                        addHandle(perPt, 'per', color);
+                        break;
+                }
+            }
+
+            // 更新动点位置，确保在非编辑模式下显示
+            updateDotByX();
+            updateDisplacementDot();
+
+            // 控制动点的显示/隐藏
+            if (editMode) {
+                dot.classed('hidden', true);
+            } else {
+                dot.classed('hidden', false);
+            }
+        }
+
+        /* ---------- 各类型图线绘制函数 ---------- */
+        function drawLine(color, width, limitPts) {
+            const [x1, x2] = [limitPts[0].x, limitPts[1].x];
+            const [y1, y2] = [getYOnCurve(x1, 'line'), getYOnCurve(x2, 'line')];
+
+            curveG.append('line')
+                .attr('x1', xScale(x1)).attr('y1', yScale(y1))
+                .attr('x2', xScale(x2)).attr('y2', yScale(y2))
+                .attr('stroke', color).attr('stroke-width', width);
+        }
+
+        function drawPoly(color, width, limitPts) {
+            const [xMin, xMax] = [limitPts[0].x, limitPts[1].x];
+            const filtered = data.poly.filter(p => p.x >= xMin && p.x <= xMax);
+
+            if (filtered.length === 0 || filtered[0].x > xMin) {
+                filtered.unshift({ x: xMin, y: getYOnCurve(xMin, 'poly') });
+            }
+            if (filtered[filtered.length - 1].x < xMax) {
+                filtered.push({ x: xMax, y: getYOnCurve(xMax, 'poly') });
+            }
+
+            const lineGen = d3.line().x(d => xScale(d.x)).y(d => yScale(d.y));
+            curveG.append('path').datum(filtered)
+                .attr('d', lineGen).attr('fill', 'none')
+                .attr('stroke', color).attr('stroke-width', width);
+        }
+
+        function drawPara(color, width, limitPts) {
+            const { vertex, yIntercept } = data.para;
+            const a = (yIntercept.y - vertex.y) / (yIntercept.x - vertex.x) ** 2;
+            const [xMin, xMax] = [limitPts[0].x, limitPts[1].x];
+
+            const pts = d3.range(xMin, xMax + 0.05, 0.05)
+                .map(x => ({ x, y: vertex.y + a * (x - vertex.x) ** 2 }));
+
+            const lineGen = d3.line().x(d => xScale(d.x)).y(d => yScale(d.y));
+            curveG.append('path').datum(pts).attr('d', lineGen)
+                .attr('fill', 'none').attr('stroke', color).attr('stroke-width', width);
+        }
+
+        function drawSin(color, width, limitPts) {
+            const { amp, period } = data.sin;
+            const [xMin, xMax] = [limitPts[0].x, limitPts[1].x];
+
+            const pts = d3.range(xMin, xMax + 0.05, 0.05)
+                .map(x => ({ x, y: amp * Math.sin(2 * Math.PI * x / period) }));
+
+            const lineGen = d3.line().x(d => xScale(d.x)).y(d => yScale(d.y));
+            curveG.append('path').datum(pts).attr('d', lineGen)
+                .attr('fill', 'none').attr('stroke', color).attr('stroke-width', width);
+        }
+
+        /* ---------- 绿色编辑点 ---------- */
+        function addHandle(p, id, color) {
+            const hx = xScale(p.x), hy = yScale(p.y);
+
+            projG.append('line').attr('class', 'proj')
+                .attr('x1', hx).attr('y1', yScale(0))
+                .attr('x2', hx).attr('y2', hy);
+            projG.append('line').attr('class', 'proj')
+                .attr('x1', xScale(0)).attr('y1', hy)
+                .attr('x2', hx).attr('y2', hy);
+
+            handleG.append('circle').datum({ p, id })
+                .attr('class', 'handle').attr('r', 6)
+                .attr('cx', hx).attr('cy', hy)
+                .call(d3.drag().on('drag', function (e) {
+                    const [mx, my] = d3.pointer(e, g.node());
+                    let nx = xScale.invert(mx);
+                    let ny = yScale.invert(my);
+                    nx = snapInt(nx);
+                    ny = snapInt(ny);
+
+                    p.x = nx;
+                    p.y = ny;
+
+                    if (id === 'amp') {
+                        data.sin.amp = Math.abs(ny);
+                    }
+                    if (id === 'per') {
+                        data.sin.period = Math.max(0.5, nx);
+                    }
+
+                    drawCurve();
+                }));
+        }
+
+        /* ---------- 蓝色限制点 ---------- */
+        function drawLimitPoints(limitPts) {
+            if (!editMode) return;
+
+            limitPts.forEach((p, i) => {
+                const hx = xScale(p.x), hy = yScale(p.y);
+
+                limitG.append('circle').datum({ p, i })
+                    .attr('class', 'limit').attr('r', 6)
+                    .attr('cx', hx).attr('cy', hy)
+                    .call(d3.drag().on('drag', function (e) {
+                        const [mx, my] = d3.pointer(e, g.node());
+                        let nx = xScale.invert(mx);
+                        nx = snapInt(nx);
+
+                        if (i === 0) {
+                            nx = Math.max(0, Math.min(nx, limitPts[1].x - 0.1));
+                        } else {
+                            nx = Math.max(limitPts[0].x + 0.1, Math.min(nx, cfg.xMax));
+                        }
+
+                        p.x = nx;
+                        p.y = getYOnCurve(nx, cfg.curveType);
+
+                        drawCurve();
+                    }));
+            });
+        }
+
+        /* ---------- 获取当前动点的x坐标 ---------- */
+        function getCurrentX() {
+            if (editMode) return 0;
+            const cx = dot.attr('cx');
+            if (!cx) return 0;
+            return xScale.invert(parseFloat(cx));
+        }
+
+        /* ---------- 更新动点位置 ---------- */
+        function updateDotByX() {
+            const type = cfg.curveType;
+            const limitPts = limits[type];
+            const [xMin, xMax] = [limitPts[0].x, limitPts[1].x];
+            const currentX = getCurrentX();
+
+            let xVal, yVal;
+
+            // 判断动点当前应该处于静止段还是运动段
+            if (currentX < xMin) {
+                // 在静止段：动点静止在初始位置
+                xVal = currentX;
+                yVal = getYOnCurve(xMin, type); // 静止在初始y值
+                
+                // 确保静止段不超过xMin
+                if (xVal > xMin) xVal = xMin;
+            } else {
+                // 在运动段：沿图线运动
+                xVal = xMin + t * (xMax - xMin);
+                yVal = getYOnCurve(xVal, type);
+            }
+
+            dot.attr('cx', xScale(xVal))
+                .attr('cy', yScale(yVal));
+
+            updateDisplacementDot(yVal);
+        }
+
+        /* ---------- 绘制位移箭头和标签 ---------- */
+        function updateDisplacementArrow(yVal) {
+            // 清除之前的箭头和标签
+            displacementArrowG.selectAll('*').remove();
+            ghostArrowG.selectAll('*').remove();
+            displacementLineG.selectAll('*').remove();
+            displacementLabelG.selectAll('*').remove();
+            
+            if (editMode) return;
+            
+            // 计算紫色点的位置
+            const dotX = displacementXScale(yVal);
+            const dotY = displacementYScale(0.5);
+            
+            // 绘制竖直向下的箭头（在当前紫色点上方）
+            const arrowLength = 25;
+            const arrowStartY = dotY - arrowLength;
+            
+            // 箭头线
+            displacementArrowG.append('line')
+                .attr('class', 'displacement-arrow')
+                .attr('x1', dotX)
+                .attr('y1', arrowStartY)
+                .attr('x2', dotX)
+                .attr('y2', dotY - 3) // 留出一点空间，不碰到紫色点
+                .attr('stroke', '#8a2be2')
+                .attr('stroke-width', 2);
+            
+            // 箭头头部
+            displacementArrowG.append('path')
+                .attr('class', 'displacement-arrow')
+                .attr('d', `M${dotX - 4},${dotY - 8} L${dotX},${dotY - 3} L${dotX + 4},${dotY - 8}`)
+                .attr('fill', '#8a2be2');
+            
+            // 显示当前位置标签
+            displacementLabelG.append('text')
+                .attr('class', 'position-label')
+                .attr('x', dotX)
+                .attr('y', arrowStartY - 15)
+                .text(`x_0=${yVal.toFixed(1)}`);
+            
+            // 如果已经开始播放且有起始位置，绘制起始虚影箭头和位移线
+            if (startY !== null) {
+                const startX = displacementXScale(startY);
+                
+                // 绘制起始虚影箭头
+                ghostArrowG.append('line')
+                    .attr('class', 'ghost-arrow')
+                    .attr('x1', startX)
+                    .attr('y1', arrowStartY)
+                    .attr('x2', startX)
+                    .attr('y2', dotY - 3);
+                
+                ghostArrowG.append('path')
+                    .attr('class', 'ghost-arrow')
+                    .attr('d', `M${startX - 4},${dotY - 8} L${startX},${dotY - 3} L${startX + 4},${dotY - 8}`);
+                
+                // 绘制起始位置标签
+                displacementLabelG.append('text')
+                    .attr('class', 'position-label')
+                    .attr('x', startX)
+                    .attr('y', arrowStartY - 15)
+                    .text(`x_0=${startY.toFixed(1)}`);
+                
+                // 绘制连接两个箭头的位移线
+                const displacement = yVal - startY;
+                const midX = (startX + dotX) / 2;
+                
+                displacementLineG.append('line')
+                    .attr('class', 'displacement-line')
+                    .attr('x1', startX)
+                    .attr('y1', arrowStartY + 5)
+                    .attr('x2', dotX)
+                    .attr('y2', arrowStartY + 5);
+                
+                // 绘制位移值标签
+                displacementLabelG.append('text')
+                    .attr('class', 'displacement-label')
+                    .attr('x', midX)
+                    .attr('y', arrowStartY)
+                    .text(`Δx=${displacement.toFixed(1)}`);
+            }
+        }
+
+        /* ---------- 更新位移点 ---------- */
+        function updateDisplacementDot(yVal = null) {
+            if (yVal === null) {
+                const type = cfg.curveType;
+                const limitPts = limits[type];
+                const [xMin, xMax] = [limitPts[0].x, limitPts[1].x];
+                const xVal = xMin + t * (xMax - xMin);
+                yVal = getYOnCurve(xVal, type);
+            }
+            
+            currentY = yVal;
+
+            displacementDot.attr('cx', displacementXScale(yVal))
+                .attr('cy', displacementYScale(0.5));
+                
+            // 更新位移箭头和标签
+            updateDisplacementArrow(yVal);
+        }
+
+        /* ---------- 动画函数 ---------- */
+        function animate(timestamp) {
+            if (!isPlaying) return;
+
+            if (animationStartTime === 0) {
+                animationStartTime = timestamp;
+                // 动画开始时记录起始位置
+                if (startY === null) {
+                    const type = cfg.curveType;
+                    const limitPts = limits[type];
+                    const [xMin, xMax] = [limitPts[0].x, limitPts[1].x];
+                    const currentX = getCurrentX();
+                    
+                    if (currentX < xMin) {
+                        startY = getYOnCurve(xMin, type);
+                    } else {
+                        startY = getYOnCurve(currentX, type);
+                    }
+                }
+            }
+
+            const elapsed = (timestamp - animationStartTime) / 1000;
+            let currentX = animationStartX + elapsed;
+
+            const type = cfg.curveType;
+            const limitPts = limits[type];
+            const [xMin, xMax] = [limitPts[0].x, limitPts[1].x];
+            
+            let yVal;
+
+            // 判断动点当前应该处于静止段还是运动段
+            if (currentX < xMin) {
+                // 在静止段：动点静止在初始位置
+                yVal = getYOnCurve(xMin, type); // 静止在初始y值
+            } else {
+                // 在运动段：沿图线运动
+                if (currentX >= xMax) {
+                    currentX = xMax;
+                    pause();
+                    updatePlayPauseButton();
+                }
+                
+                t = (currentX - xMin) / (xMax - xMin);
+                yVal = getYOnCurve(currentX, type);
+            }
+
+            dot.attr('cx', xScale(currentX))
+                .attr('cy', yScale(yVal));
+
+            displacementDot.attr('cx', displacementXScale(yVal))
+                .attr('cy', displacementYScale(0.5));
+                
+            // 更新位移箭头和标签
+            updateDisplacementArrow(yVal);
+
+            if (currentX < xMax) {
+                animationId = requestAnimationFrame(animate);
+            }
+        }
+
+        /* ---------- 播放控制 ---------- */
+        function play() {
+            if (editMode) return;
+
+            const type = cfg.curveType;
+            const limitPts = limits[type];
+            const [xMin, xMax] = [limitPts[0].x, limitPts[1].x];
+
+            const currentX = getCurrentX();
+
+            // 如果当前在静止段，从当前时间开始播放
+            if (currentX < xMin) {
+                t = 0;
+                animationStartX = currentX;
+            } else if (currentX >= xMax - 0.001) {
+                // 如果已经到达终点，从头开始
+                t = 0;
+                animationStartX = 0;
+                startY = null; // 重置起始位置
+            } else {
+                // 在运动段中，从当前位置继续
+                t = (currentX - xMin) / (xMax - xMin);
+                animationStartX = currentX;
+            }
+
+            animationStartTime = 0;
+
+            isPlaying = true;
+            updatePlayPauseButton();
+
+            animationId = requestAnimationFrame(animate);
+        }
+
+        function pause() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            isPlaying = false;
+            updatePlayPauseButton();
+        }
+
+        function reset() {
+            pause();
+            t = 0;
+            animationStartX = 0;
+            animationStartTime = 0;
+            startY = null; // 重置起始位置
+
+            updateDotByX();
+            updatePlayPauseButton();
+            
+            // 清除位移箭头和标签
+            displacementArrowG.selectAll('*').remove();
+            ghostArrowG.selectAll('*').remove();
+            displacementLineG.selectAll('*').remove();
+            displacementLabelG.selectAll('*').remove();
+        }
+
+        function updatePlayPauseButton() {
+            const button = d3.select('#playPause');
+
+            if (editMode) {
+                button.text('▶ 开始');
+                return;
+            }
+
+            if (isPlaying) {
+                button.text('⏸ 暂停');
+            } else if (Math.abs(t - 1) < 0.01) {
+                button.text('▶ 开始');
+            } else {
+                button.text('▶ 开始');
+            }
+        }
+
+        /* ---------- 左侧悬浮按钮功能 ---------- */
+        function setupLeftFAB() {
+            const fabContainer = document.getElementById('fabContainerLeft');
+            const fabMain = document.getElementById('fabMainLeft');
+            const fabItems = document.querySelectorAll('#fabContainerLeft .fab-item');
+
+            function toggleLeftFAB() {
+                fabLeftExpanded = !fabLeftExpanded;
+                fabContainer.classList.toggle('expanded', fabLeftExpanded);
+
+                if (fabLeftTimeout) {
+                    clearTimeout(fabLeftTimeout);
+                    fabLeftTimeout = null;
+                }
+
+                if (fabLeftExpanded) {
+                    fabLeftTimeout = setTimeout(() => {
+                        if (fabLeftExpanded) {
+                            fabLeftExpanded = false;
+                            fabContainer.classList.remove('expanded');
+                        }
+                    }, 3000);
+                }
+            }
+
+            fabMain.addEventListener('click', toggleLeftFAB);
+
+            fabMain.addEventListener('mouseenter', () => {
+                if (!fabLeftExpanded) {
+                    fabLeftExpanded = true;
+                    fabContainer.classList.add('expanded');
+                }
+
+                if (fabLeftTimeout) {
+                    clearTimeout(fabLeftTimeout);
+                    fabLeftTimeout = null;
+                }
+            });
+
+            fabContainer.addEventListener('mouseleave', () => {
+                fabLeftTimeout = setTimeout(() => {
+                    if (fabLeftExpanded) {
+                        fabLeftExpanded = false;
+                        fabContainer.classList.remove('expanded');
+                    }
+                }, 500);
+            });
+
+            fabContainer.addEventListener('mouseenter', () => {
+                if (fabLeftTimeout) {
+                    clearTimeout(fabLeftTimeout);
+                    fabLeftTimeout = null;
+                }
+            });
+
+            fabItems.forEach(item => {
+                item.addEventListener('click', function () {
+                    fabItems.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+
+                    const type = this.getAttribute('data-type');
+                    cfg.curveType = type;
+
+                    pause();
+                    reset();
+                    drawCurve();
+                    updatePlayPauseButton();
+
+                    fabLeftExpanded = false;
+                    fabContainer.classList.remove('expanded');
+                });
+            });
+
+            const activeBtn = document.querySelector(`#fabContainerLeft .fab-item[data-type="${cfg.curveType}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+        }
+
+        /* ---------- 右侧悬浮按钮功能 ---------- */
+        function setupRightFAB() {
+            const fabContainer = document.getElementById('fabContainerRight');
+            const fabMain = document.getElementById('fabMainRight');
+
+            const xMaxSlider = document.getElementById('xMaxRight');
+            const xMaxInput = document.getElementById('xMaxInput');
+            const yRangeSlider = document.getElementById('yRangeRight');
+            const yRangeInput = document.getElementById('yRangeInput');
+            const lineColorInput = document.getElementById('lineColorRight');
+            const defaultButton = document.getElementById('defaultRight');
+
+            function toggleRightFAB() {
+                fabRightExpanded = !fabRightExpanded;
+                fabContainer.classList.toggle('expanded', fabRightExpanded);
+
+                if (fabRightTimeout) {
+                    clearTimeout(fabRightTimeout);
+                    fabRightTimeout = null;
+                }
+
+                if (fabRightExpanded) {
+                    fabRightTimeout = setTimeout(() => {
+                        if (fabRightExpanded) {
+                            fabRightExpanded = false;
+                            fabContainer.classList.remove('expanded');
+                        }
+                    }, 3000);
+                }
+            }
+
+            fabMain.addEventListener('click', toggleRightFAB);
+
+            fabMain.addEventListener('mouseenter', () => {
+                if (!fabRightExpanded) {
+                    fabRightExpanded = true;
+                    fabContainer.classList.add('expanded');
+                }
+
+                if (fabRightTimeout) {
+                    clearTimeout(fabRightTimeout);
+                    fabRightTimeout = null;
+                }
+            });
+
+            fabContainer.addEventListener('mouseleave', () => {
+                fabRightTimeout = setTimeout(() => {
+                    if (fabRightExpanded) {
+                        fabRightExpanded = false;
+                        fabContainer.classList.remove('expanded');
+                    }
+                }, 500);
+            });
+
+            fabContainer.addEventListener('mouseenter', () => {
+                if (fabRightTimeout) {
+                    clearTimeout(fabRightTimeout);
+                    fabRightTimeout = null;
+                }
+            });
+
+            // 同步时间范围滑块和输入框
+            xMaxSlider.value = cfg.xMax;
+            xMaxInput.value = cfg.xMax;
+
+            xMaxSlider.addEventListener('input', function () {
+                const value = parseInt(this.value);
+                xMaxInput.value = value;
+                cfg.xMax = value;
+                updateScales();
+                drawAxis();
+                drawCurve();
+            });
+
+            xMaxInput.addEventListener('change', function () {
+                let value = parseInt(this.value);
+                if (value < 4) value = 4;
+                if (value > 20) value = 20;
+                this.value = value;
+                xMaxSlider.value = value;
+                cfg.xMax = value;
+                updateScales();
+                drawAxis();
+                drawCurve();
+            });
+
+            // 同步位移范围滑块和输入框
+            yRangeSlider.value = cfg.yRange;
+            yRangeInput.value = cfg.yRange;
+
+            yRangeSlider.addEventListener('input', function () {
+                const value = parseInt(this.value);
+                yRangeInput.value = value;
+                cfg.yRange = value;
+                updateScales();
+                drawAxis();
+                drawCurve();
+            });
+
+            yRangeInput.addEventListener('change', function () {
+                let value = parseInt(this.value);
+                if (value < 2) value = 2;
+                if (value > 10) value = 10;
+                this.value = value;
+                yRangeSlider.value = value;
+                cfg.yRange = value;
+                updateScales();
+                drawAxis();
+                drawCurve();
+            });
+
+            // 颜色选择器
+            lineColorInput.value = cfg.lineColor;
+            lineColorInput.addEventListener('input', function () {
+                cfg.lineColor = this.value;
+                drawCurve();
+            });
+
+            // 恢复默认按钮
+            defaultButton.addEventListener('click', function () {
+                cfg = {
+                    xMax: 8,
+                    yRange: 8,
+                    lineColor: '#409eff',
+                    lineWidth: 2.5,
+                    showGrid: true,
+                    showArrow: true,
+                    curveType: 'line'
+                };
+
+                data.line = [{ x: 0, y: 0 }, { x: 8, y: 4 }];
+                data.poly = [{ x: 0, y: 0 }, { x: 4, y: 3 }, { x: 8, y: 1 }];
+                data.para = { vertex: { x: 4, y: 2 }, yIntercept: { x: 0, y: 1 } };
+                data.sin = { amp: 2, period: 8 };
+
+                limits.line = [{ x: 0, y: 0 }, { x: 8, y: 4 }];
+                limits.poly = [{ x: 0, y: 0 }, { x: 8, y: 1 }];
+                limits.para = [{ x: 0, y: 1 }, { x: 8, y: 9 }];
+                limits.sin = [{ x: 0, y: 0 }, { x: 8, y: 0 }];
+
+                reset();
+                editMode = false;
+                d3.select('#editBtn').text('编辑');
+
+                const fabItems = document.querySelectorAll('#fabContainerLeft .fab-item');
+                fabItems.forEach(btn => btn.classList.remove('active'));
+                const activeBtn = document.querySelector('#fabContainerLeft .fab-item[data-type="line"]');
+                if (activeBtn) activeBtn.classList.add('active');
+
+                xMaxSlider.value = cfg.xMax;
+                xMaxInput.value = cfg.xMax;
+                yRangeSlider.value = cfg.yRange;
+                yRangeInput.value = cfg.yRange;
+                lineColorInput.value = cfg.lineColor;
+
+                updateScales();
+                drawAxis();
+                drawCurve();
+                updatePlayPauseButton();
+
+                fabRightExpanded = false;
+                fabContainer.classList.remove('expanded');
+            });
+        }
+
+        /* ---------- 按钮事件绑定 ---------- */
+        d3.select('#playPause').on('click', function () {
+            if (editMode) return;
+            if (isPlaying) {
+                pause();
+            } else {
+                play();
+            }
+        });
+
+        d3.select('#reset').on('click', reset);
+
+        /* ---------- 编辑模式切换 ---------- */
+        d3.select('#editBtn').on('click', function () {
+            editMode = !editMode;
+            d3.select('#editBtn').text(editMode ? '完成' : '编辑');
+
+            if (editMode) {
+                const type = cfg.curveType;
+                limits[type].forEach(pt => {
+                    pt.y = getYOnCurve(pt.x, type);
+                });
+                pause();
+            } else {
+                updateDotByX();
+            }
+
+            drawCurve();
+            updatePlayPauseButton();
+        });
+
+        /* ---------- 折线双击插入节点 ---------- */
+        curveG.on('dblclick', e => {
+            if (!editMode || cfg.curveType !== 'poly') return;
+
+            const [mx, my] = d3.pointer(e, g.node());
+            const px = xScale.invert(mx);
+            const py = yScale.invert(my);
+
+            let insertIdx = data.poly.length;
+            for (let i = 0; i < data.poly.length - 1; i++) {
+                if (px > data.poly[i].x && px < data.poly[i + 1].x) {
+                    insertIdx = i + 1;
+                    break;
+                }
+            }
+
+            data.poly.splice(insertIdx, 0, {
+                x: snapInt(px),
+                y: snapInt(py)
+            });
+
+            drawCurve();
+        });
+
+        /* ---------- 初始化 ---------- */
+        setupLeftFAB();
+        setupRightFAB();
+        drawCurve();
+        updatePlayPauseButton();
+    </script>
+</body>
+
+</html>
