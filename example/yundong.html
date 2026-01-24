@@ -357,27 +357,27 @@
             width: 100%;
             margin-top: 4px;
         }
-        
+
         /* 添加静止段显示 */
         .static-segment {
             stroke: #ff9800;
             stroke-width: 1;
             stroke-dasharray: 3, 3;
         }
-        
+
         .static-point {
             fill: #ff9800;
             stroke: #fff;
             stroke-width: 1;
         }
-        
+
         /* 位移画布新样式 */
         .displacement-arrow {
             stroke: #8a2be2;
             stroke-width: 2;
             fill: #8a2be2;
         }
-        
+
         .ghost-arrow {
             stroke: #8a2be2;
             stroke-width: 2;
@@ -385,20 +385,20 @@
             fill: #8a2be2;
             opacity: 0.5;
         }
-        
+
         .displacement-line {
             stroke: #8a2be2;
             stroke-width: 2;
             marker-end: url(#arrowhead);
         }
-        
+
         .displacement-label {
             font-size: 12px;
             fill: #303133;
             text-anchor: middle;
             font-weight: 500;
         }
-        
+
         .position-label {
             font-size: 11px;
             fill: #8a2be2;
@@ -492,7 +492,7 @@
         let animationStartX = 0;
         let animationDuration = 0;
         let animationId = null;
-        
+
         /* ---------- 位移画布状态 ---------- */
         let startY = null; // 记录起始位置
         let currentY = null; // 当前位置
@@ -517,7 +517,7 @@
             .attr('viewBox', `0 0 ${W + M.left + M.right} ${D_H + M.top + M.bottom}`)
             .style('background', 'white');
         const displacementG = displacementSvg.append('g').attr('transform', `translate(${M.left},${M.top})`);
-        
+
         // 添加箭头定义
         displacementSvg.append('defs').append('marker')
             .attr('id', 'arrowhead')
@@ -723,7 +723,7 @@
         const displacementDot = displacementG.append('circle')
             .attr('class', 'displacement-dot')
             .attr('r', 6);
-            
+
         // 位移画布新图层
         const displacementArrowG = displacementG.append('g').attr('class', 'displacement-arrows');
         const ghostArrowG = displacementG.append('g').attr('class', 'ghost-arrows');
@@ -913,16 +913,16 @@
             // 清除之前的静止段
             staticSegmentG.selectAll('*').remove();
             staticPointG.selectAll('*').remove();
-            
+
             const type = cfg.curveType;
             const limitPts = limits[type];
             const xMin = limitPts[0].x;
-            
+
             // 如果左限制点的x大于0，绘制静止段
             if (xMin > 0) {
                 // 获取左限制点的y值
                 const yStart = getYOnCurve(xMin, type);
-                
+
                 // 绘制静止线段（从(0, yStart)到(xMin, yStart)）
                 staticSegmentG.append('line')
                     .attr('class', 'static-segment')
@@ -934,15 +934,15 @@
                     .attr('stroke-width', 2)
                     .attr('stroke-dasharray', '5, 3');
                 // 绘制从静止点到x轴的横坐标虚线（从(xMin, yStart)到(xMin, yScale(0))）
-            staticSegmentG.append('line')
-            .attr('class', 'static-segment')
-            .attr('x1', xScale(xMin))
-            .attr('y1', yScale(yStart))
-            .attr('x2', xScale(xMin))
-            .attr('y2', yScale(0))
-            .attr('stroke', '#ff9800')
-            .attr('stroke-width', 1)
-            .attr('stroke-dasharray', '3, 3');
+                staticSegmentG.append('line')
+                    .attr('class', 'static-segment')
+                    .attr('x1', xScale(xMin))
+                    .attr('y1', yScale(yStart))
+                    .attr('x2', xScale(xMin))
+                    .attr('y2', yScale(0))
+                    .attr('stroke', '#ff9800')
+                    .attr('stroke-width', 1)
+                    .attr('stroke-dasharray', '3, 3');
                 // 在时间零点绘制静止点
                 staticPointG.append('circle')
                     .attr('class', 'static-point')
@@ -1159,7 +1159,7 @@
                 // 在静止段：动点静止在初始位置
                 xVal = currentX;
                 yVal = getYOnCurve(xMin, type); // 静止在初始y值
-                
+
                 // 确保静止段不超过xMin
                 if (xVal > xMin) xVal = xMin;
             } else {
@@ -1181,79 +1181,81 @@
             ghostArrowG.selectAll('*').remove();
             displacementLineG.selectAll('*').remove();
             displacementLabelG.selectAll('*').remove();
-            
+
             if (editMode) return;
-            
+
             // 计算紫色点的位置
             const dotX = displacementXScale(yVal);
             const dotY = displacementYScale(0.5);
-            
+
             // 绘制竖直向下的箭头（在当前紫色点上方）
             const arrowLength = 25;
             const arrowStartY = dotY - arrowLength;
-            
+
             // 箭头线
             displacementArrowG.append('line')
                 .attr('class', 'displacement-arrow')
                 .attr('x1', dotX)
-                .attr('y1', arrowStartY)
+                .attr('y1', arrowStartY - 10)
                 .attr('x2', dotX)
-                .attr('y2', dotY - 3) // 留出一点空间，不碰到紫色点
+                .attr('y2', dotY - 15) // 留出一点空间，不碰到紫色点
                 .attr('stroke', '#8a2be2')
                 .attr('stroke-width', 2);
-            
+
             // 箭头头部
             displacementArrowG.append('path')
                 .attr('class', 'displacement-arrow')
-                .attr('d', `M${dotX - 4},${dotY - 8} L${dotX},${dotY - 3} L${dotX + 4},${dotY - 8}`)
+                .attr('d', `M${dotX - 4},${dotY - 18} L${dotX},${dotY - 8} L${dotX + 4},${dotY - 18}`)
                 .attr('fill', '#8a2be2');
-            
+
             // 显示当前位置标签
             displacementLabelG.append('text')
                 .attr('class', 'position-label')
                 .attr('x', dotX)
                 .attr('y', arrowStartY - 15)
-                .text(`x_0=${yVal.toFixed(1)}`);
-            
+                .text(`x'=${yVal.toFixed(1)}`);
+
             // 如果已经开始播放且有起始位置，绘制起始虚影箭头和位移线
             if (startY !== null) {
                 const startX = displacementXScale(startY);
-                
+
                 // 绘制起始虚影箭头
                 ghostArrowG.append('line')
                     .attr('class', 'ghost-arrow')
                     .attr('x1', startX)
-                    .attr('y1', arrowStartY)
+                    .attr('y1', arrowStartY - 10)
                     .attr('x2', startX)
-                    .attr('y2', dotY - 3);
-                
+                    .attr('y2', dotY - 15);
+
                 ghostArrowG.append('path')
                     .attr('class', 'ghost-arrow')
-                    .attr('d', `M${startX - 4},${dotY - 8} L${startX},${dotY - 3} L${startX + 4},${dotY - 8}`);
-                
+                    .attr('d', `M${startX - 4},${dotY - 18} L${startX},${dotY - 8} L${startX + 4},${dotY - 18}`);
+
                 // 绘制起始位置标签
                 displacementLabelG.append('text')
                     .attr('class', 'position-label')
                     .attr('x', startX)
                     .attr('y', arrowStartY - 15)
-                    .text(`x_0=${startY.toFixed(1)}`);
-                
+                    .text(`x=${startY.toFixed(1)}`);
+
                 // 绘制连接两个箭头的位移线
                 const displacement = yVal - startY;
                 const midX = (startX + dotX) / 2;
-                
+
+                const arrowX = (startX > dotX) ? dotX + 8 : dotX - 8;
+
                 displacementLineG.append('line')
                     .attr('class', 'displacement-line')
                     .attr('x1', startX)
-                    .attr('y1', arrowStartY + 5)
-                    .attr('x2', dotX)
-                    .attr('y2', arrowStartY + 5);
-                
+                    .attr('y1', arrowStartY)
+                    .attr('x2', arrowX)
+                    .attr('y2', arrowStartY);
+
                 // 绘制位移值标签
                 displacementLabelG.append('text')
                     .attr('class', 'displacement-label')
                     .attr('x', midX)
-                    .attr('y', arrowStartY)
+                    .attr('y', arrowStartY - 10)
                     .text(`Δx=${displacement.toFixed(1)}`);
             }
         }
@@ -1267,12 +1269,12 @@
                 const xVal = xMin + t * (xMax - xMin);
                 yVal = getYOnCurve(xVal, type);
             }
-            
+
             currentY = yVal;
 
             displacementDot.attr('cx', displacementXScale(yVal))
                 .attr('cy', displacementYScale(0.5));
-                
+
             // 更新位移箭头和标签
             updateDisplacementArrow(yVal);
         }
@@ -1289,7 +1291,7 @@
                     const limitPts = limits[type];
                     const [xMin, xMax] = [limitPts[0].x, limitPts[1].x];
                     const currentX = getCurrentX();
-                    
+
                     if (currentX < xMin) {
                         startY = getYOnCurve(xMin, type);
                     } else {
@@ -1304,7 +1306,7 @@
             const type = cfg.curveType;
             const limitPts = limits[type];
             const [xMin, xMax] = [limitPts[0].x, limitPts[1].x];
-            
+
             let yVal;
 
             // 判断动点当前应该处于静止段还是运动段
@@ -1318,7 +1320,7 @@
                     pause();
                     updatePlayPauseButton();
                 }
-                
+
                 t = (currentX - xMin) / (xMax - xMin);
                 yVal = getYOnCurve(currentX, type);
             }
@@ -1328,7 +1330,7 @@
 
             displacementDot.attr('cx', displacementXScale(yVal))
                 .attr('cy', displacementYScale(0.5));
-                
+
             // 更新位移箭头和标签
             updateDisplacementArrow(yVal);
 
@@ -1380,6 +1382,7 @@
         }
 
         function reset() {
+
             pause();
             t = 0;
             animationStartX = 0;
@@ -1388,7 +1391,8 @@
 
             updateDotByX();
             updatePlayPauseButton();
-            
+
+
             // 清除位移箭头和标签
             displacementArrowG.selectAll('*').remove();
             ghostArrowG.selectAll('*').remove();
@@ -1400,17 +1404,24 @@
             const button = d3.select('#playPause');
 
             if (editMode) {
-                button.text('▶ 开始');
+                button.text('禁用');
                 return;
             }
 
             if (isPlaying) {
                 button.text('⏸ 暂停');
             } else if (Math.abs(t - 1) < 0.01) {
-                button.text('▶ 开始');
+                button.text('▶ 结束');
             } else {
-                button.text('▶ 开始');
+                if (button.text() === '⏸ 暂停') {
+                    button.text('▶ 继续');
+                } else {
+                    button.text('▶ 开始');
+                }
             }
+
+
+
         }
 
         /* ---------- 左侧悬浮按钮功能 ---------- */
@@ -1663,7 +1674,11 @@
             if (isPlaying) {
                 pause();
             } else {
-                play();
+                if (d3.select(this).text() === '▶ 结束') {
+                    return;
+                } else {
+                    play();
+                }
             }
         });
 
@@ -1673,6 +1688,7 @@
         d3.select('#editBtn').on('click', function () {
             editMode = !editMode;
             d3.select('#editBtn').text(editMode ? '完成' : '编辑');
+            d3.select('#reset').text(editMode ? '禁用' : '重置');
 
             if (editMode) {
                 const type = cfg.curveType;
