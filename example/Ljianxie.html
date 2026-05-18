@@ -631,13 +631,28 @@
             ytCtx.stroke();
             ytCtx.setLineDash([]);
 
-            // y(t) 金色实线
-            ytCtx.strokeStyle = '#d29922'; ytCtx.lineWidth = 2.5;
+            // y(t) 分段绘制
+            // 2~4s 绿色实线（细一些）
+            ytCtx.strokeStyle = '#3fb950'; ytCtx.lineWidth = 1.5;
             ytCtx.beginPath();
-            for (let pt = 0; pt <= tMax; pt += 0.02) {
+            let started = false;
+            for (let pt = 2; pt <= Math.min(4, tMax); pt += 0.02) {
                 const y = getWave1(xM, pt) + getWave2(xM, pt);
                 const px = tToPix(pt), py = yToPix(y);
-                pt === 0 ? ytCtx.moveTo(px, py) : ytCtx.lineTo(px, py);
+                if (!started) { ytCtx.moveTo(px, py); started = true; }
+                else ytCtx.lineTo(px, py);
+            }
+            ytCtx.stroke();
+
+            // 4~8s 金色实线
+            ytCtx.strokeStyle = '#d29922'; ytCtx.lineWidth = 2.5;
+            ytCtx.beginPath();
+            started = false;
+            for (let pt = 4; pt <= tMax; pt += 0.02) {
+                const y = getWave1(xM, pt) + getWave2(xM, pt);
+                const px = tToPix(pt), py = yToPix(y);
+                if (!started) { ytCtx.moveTo(px, py); started = true; }
+                else ytCtx.lineTo(px, py);
             }
             ytCtx.stroke();
 
