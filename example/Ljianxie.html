@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简谐横波干涉演示 - M点运动</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 6px;
+            font-size: 22px;
+            color: #58a6ff;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #8b949e;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .panel {
+            background: #161b22;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #30363d;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #58a6ff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+
+        .panel-title::before {
+            content: '';
+            display: inline-block;
+            width: 3px;
+            height: 14px;
+            background: #58a6ff;
+            border-radius: 2px;
+        }
+
+        canvas {
+            width: 100%;
+            border-radius: 6px;
+            background: #0d1117;
+            display: block;
+        }
+
+        .controls {
+            background: #161b22;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #30363d;
+            margin-bottom: 16px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .slider-label {
+            min-width: 60px;
+            font-size: 13px;
+            color: #8b949e;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 4px;
+            background: #30363d;
+            border-radius: 2px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #58a6ff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .time-display {
+            min-width: 70px;
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            color: #58a6ff;
+            font-weight: bold;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-play {
+            background: #238636;
+            color: white;
+        }
+
+        .btn-play:hover {
+            background: #2ea043;
+        }
+
+        .btn-reset {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+        }
+
+        .btn-reset:hover {
+            background: #30363d;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .info-card {
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            border-left: 3px solid;
+        }
+
+        .info-card.wave1 {
+            border-color: #f85149;
+        }
+
+        .info-card.wave2 {
+            border-color: #3fb950;
+        }
+
+        .info-card.m-point {
+            border-color: #d29922;
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: #8b949e;
+            margin-bottom: 3px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .wave1 .info-value {
+            color: #f85149;
+        }
+
+        .wave2 .info-value {
+            color: #3fb950;
+        }
+
+        .m-point .info-value {
+            color: #d29922;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 8px;
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-line {
+            width: 24px;
+            height: 2px;
+            border-radius: 1px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .analysis {
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 12.5px;
+            line-height: 1.8;
+            color: #8b949e;
+        }
+
+        .analysis strong {
+            color: #58a6ff;
+        }
+
+        .highlight {
+            color: #d29922;
+            font-weight: bold;
+        }
+
+        .diminish {
+            color: #f85149;
+            font-weight: bold;
+        }
+
+        .status-bar {
+            text-align: center;
+            padding: 6px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .status-still {
+            background: #21262d;
+            color: #8b949e;
+        }
+
+        .status-single {
+            background: rgba(63, 185, 80, 0.15);
+            color: #3fb950;
+        }
+
+        .status-weaken {
+            background: rgba(248, 81, 73, 0.15);
+            color: #f85149;
+        }
+    </style>
+    <base target="_blank">
+</head>
+
+<body>
+    <div class="container">
+        <img src="img/1.png" alt="" style="width: 100%; border-radius: 12px; margin-bottom: 16px;">
+        <h1>简谐横波干涉演示</h1>
+        <p class="subtitle">两列相向传播的简谐横波 | λ=4m, T=4s, v=1m/s | 重点观察质点 M(x=8m)</p>
+
+        <div class="controls">
+            <div class="slider-container">
+                <span class="slider-label">时间 t</span>
+                <input type="range" id="timeSlider" min="0" max="800" value="0" step="1">
+                <span class="time-display" id="timeDisplay">0.00s</span>
+            </div>
+            <div class="btn-group">
+                <button class="btn-play" id="playBtn">▶ 播放</button>
+                <button class="btn-reset" id="resetBtn">↺ 重置</button>
+            </div>
+            <div class="info-grid">
+                <div class="info-card wave1">
+                    <div class="info-label">左波 y₁ (A₁=10cm)</div>
+                    <div class="info-value" id="y1Display">0.00 cm</div>
+                </div>
+                <div class="info-card wave2">
+                    <div class="info-label">右波 y₂ (A₂=6cm)</div>
+                    <div class="info-value" id="y2Display">0.00 cm</div>
+                </div>
+                <div class="info-card m-point">
+                    <div class="info-label">M点合位移 y</div>
+                    <div class="info-value" id="yDisplay">0.00 cm</div>
+                </div>
+            </div>
+            <div class="status-bar status-still" id="statusBar">M点状态：静止（两波均未到达）</div>
+        </div>
+
+        <div class="main-grid">
+            <div class="panel">
+                <div class="panel-title">波形传播图</div>
+                <canvas id="waveCanvas" width="520" height="260"></canvas>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-line" style="background:#f85149"></div>
+                        <span>左波(实线,右移)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line" style="background:#3fb950"></div>
+                        <span>右波(实线,左移)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line" style="background:#d29922;border:1px dashed #d29922;height:0"></div>
+                        <span>叠加后原波(虚线)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line" style="background:#d29922"></div>
+                        <span>合成波(金色实线)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">质点M的振动图像 y-t</div>
+                <canvas id="ytCanvas" width="520" height="260"></canvas>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-line" style="background:#f85149;border:1px dashed #f85149;height:0"></div>
+                        <span>左波贡献 y₁(虚线)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line" style="background:#3fb950;border:1px dashed #3fb950;height:0"></div>
+                        <span>右波贡献 y₂(虚线)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line" style="background:#d29922"></div>
+                        <span>合振动 y(金色实线)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="panel full-width">
+                <div class="panel-title">质点M的实时运动分解</div>
+                <canvas id="particleCanvas" width="1060" height="180"></canvas>
+                <div class="analysis">
+                    <strong>运动过程分析：</strong><br>
+                    <span class="highlight">0 ~ 2.0s</span>：两波均未到达M点，M静止，路程 = <strong>0</strong>。<br>
+                    <span class="highlight">2.0 ~ 4.0s</span>：右波先到达M（传播2m，耗时2s）。M以振幅 <strong>6cm</strong> 振动，半个周期路程 =
+                    <strong>12cm</strong>。<br>
+                    <span class="highlight">t = 4.0s</span>：左波到达M（传播4m，耗时4s）。右波使M回到平衡位置速度向上，左波使M速度向下，两波<strong
+                        class="diminish">反相叠加，干涉减弱</strong>。<br>
+                    <span class="highlight">4.0 ~ 8.0s</span>：合振幅 = |10−6| = <strong
+                        class="diminish">4cm</strong>，一个周期路程 = <strong>16cm</strong>。<br>
+                    <strong>0~8s 总路程 = 28cm</strong>。
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 物理参数 ==========
+        const A1 = 10, A2 = 6, T = 4, v = 1, lambda = 4;
+        const xM = 8, xP = 4, xQ = 10, tMax = 8;
+        const omega = Math.PI / 2, k = Math.PI / 2;
+
+        // 左波（右行波）：y1 = A1 * sin(ωt - kx)
+        // 验证t=0：y1(x,0) = A1*sin(-kx) = -A1*sin(kx) = -10*sin(πx/2)
+        // x=1: y=-10*sin(π/2)=-10（波谷）... 但图中x=1处y<0是波谷？让我重新看图
+        // 图中x=0处y=0，x=1处y<0（向下），x=2处y=0，x=3处y>0（向上），x=4处y=0
+        // 所以x=1是波谷(y=-10)，x=3是波峰(y=10)
+        // y1(x,0) = -10*sin(πx/2)：x=1: y=-10✓，x=2: y=0✓，x=3: y=10✓，x=4: y=0✓
+        // 但等等，x=0: y=0✓，但x=0.5: y=-10*sin(π/4)=-7.07，图中应该是向下
+        // 所以左波方程正确！
+        function getWave1(x, t) {
+            if (x > xP + v * t + 0.001) return 0;
+            return A1 * Math.sin(omega * t - k * x);
+        }
+
+        // 右波（左行波）：y2 = -A2 * sin(ωt + kx)
+        // 推导：t=0时 y2(x,0) = -A2*sin(kx) = -6*sin(πx/2)
+        // x=10: y=-6*sin(5π)=0✓，x=11: y=-6*sin(11π/2)=-6*(-1)=6✓（波峰），x=12: y=0✓，x=13: y=-6*sin(13π/2)=-6*1=-6✓（波谷）
+        // 波源x=14：y2(14,t) = -6*sin(ωt + 14k) = -6*sin(ωt + 7π) = 6*sin(ωt)✓（起振向上）
+        // 传播验证：固定相位 ωt + kx = C，则 x = (C - ωt)/k，随t增加x减小，向左传播✓
+        function getWave2(x, t) {
+            if (x < xQ - v * t - 0.001) return 0;
+            return -A2 * Math.sin(omega * t + k * x);
+        }
+
+        function getMDisplacement(t) {
+            const y1 = getWave1(xM, t), y2 = getWave2(xM, t);
+            return { y1, y2, y: y1 + y2 };
+        }
+
+        // ========== Canvas ==========
+        const waveC = document.getElementById('waveCanvas'), waveCtx = waveC.getContext('2d');
+        const ytC = document.getElementById('ytCanvas'), ytCtx = ytC.getContext('2d');
+        const partC = document.getElementById('particleCanvas'), partCtx = partC.getContext('2d');
+
+        const padL = 40, padR = 20, padT = 20, padB = 30;
+        const graphW = waveC.width - padL - padR;
+        const graphH = waveC.height - padT - padB;
+        const y0 = padT + graphH / 2;
+
+        function xToPix(x) { return padL + x * graphW / 16; }
+        function yToPix(y) { return y0 - y * graphH / 24; }
+        function tToPix(t) { return padL + t * graphW / tMax; }
+
+        let currentTime = 0, isPlaying = false, animId = null, lastTs = null;
+        const pausePoints = [2.0, 4.0, 8.0];
+        let nextPauseIdx = 0;
+
+        // ========== 绘图 ==========
+        function drawAxes(ctx, w, h, xMax, yMax) {
+            ctx.strokeStyle = '#30363d'; ctx.lineWidth = 1;
+            for (let y = -yMax; y <= yMax; y += 2) {
+                const py = yToPix(y);
+                ctx.beginPath(); ctx.moveTo(padL, py); ctx.lineTo(w - padR, py); ctx.stroke();
+            }
+            for (let x = 0; x <= xMax; x += 2) {
+                const px = xToPix(x);
+                ctx.beginPath(); ctx.moveTo(px, padT); ctx.lineTo(px, h - padB); ctx.stroke();
+            }
+            ctx.strokeStyle = '#8b949e'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(padL, y0); ctx.lineTo(w - padR, y0); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, h - padB); ctx.stroke();
+            ctx.fillStyle = '#8b949e'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+            for (let x = 0; x <= xMax; x += 2) ctx.fillText(x + 'm', xToPix(x), h - 10);
+            ctx.textAlign = 'right';
+            for (let y = -10; y <= 10; y += 5) {
+                if (y === 0) continue;
+                ctx.fillText(y + 'cm', padL - 6, yToPix(y) + 4);
+            }
+            ctx.textAlign = 'left';
+        }
+
+        function drawWaveScene(t) {
+            const w = waveC.width, h = waveC.height;
+            waveCtx.clearRect(0, 0, w, h);
+            drawAxes(waveCtx, w, h, 16, 12);
+
+            // 关键点标记
+            const pts = [{ x: 0, l: 'S₁', c: '#f85149' }, { x: 14, l: 'S₂', c: '#3fb950' }, { x: 4, l: 'P', c: '#8b949e' },
+            { x: 10, l: 'Q', c: '#8b949e' }, { x: 8, l: 'M', c: '#d29922' }];
+            pts.forEach(p => {
+                const px = xToPix(p.x);
+                waveCtx.fillStyle = p.c;
+                waveCtx.beginPath(); waveCtx.arc(px, y0, 4, 0, Math.PI * 2); waveCtx.fill();
+                waveCtx.fillStyle = '#c9d1d9'; waveCtx.font = 'bold 11px sans-serif';
+                waveCtx.fillText(p.l, px - 5, y0 - 10);
+            });
+
+            // 计算各区域边界
+            const leftFront = xP + v * t;   // 左波波前（向右传播）
+            const rightFront = xQ - v * t;  // 右波波前（向左传播）
+            const overlapStart = Math.max(0, rightFront);
+            const overlapEnd = Math.min(16, leftFront);
+            const hasOverlap = overlapStart < overlapEnd;
+
+            // ========== 左波（红色）==========
+            // 左波有效范围: 0 ~ leftFront
+            // 在非叠加区（0 ~ overlapStart）用实线
+            // 在叠加区（overlapStart ~ leftFront）用虚线
+
+            if (overlapStart > 0.001) {
+                waveCtx.strokeStyle = '#f85149'; waveCtx.lineWidth = 2;
+                waveCtx.beginPath();
+                let started = false;
+                for (let x = 0; x <= Math.min(overlapStart, leftFront); x += 0.05) {
+                    const y = getWave1(x, t);
+                    const px = xToPix(x), py = yToPix(y);
+                    if (!started) { waveCtx.moveTo(px, py); started = true; }
+                    else waveCtx.lineTo(px, py);
+                }
+                waveCtx.stroke();
+            }
+
+            if (hasOverlap && leftFront > overlapStart + 0.001) {
+                waveCtx.strokeStyle = 'rgba(248,81,73,0.4)'; waveCtx.lineWidth = 1.5;
+                waveCtx.setLineDash([3, 3]);
+                waveCtx.beginPath();
+                let started = false;
+                for (let x = overlapStart; x <= leftFront; x += 0.05) {
+                    const y = getWave1(x, t);
+                    const px = xToPix(x), py = yToPix(y);
+                    if (!started) { waveCtx.moveTo(px, py); started = true; }
+                    else waveCtx.lineTo(px, py);
+                }
+                waveCtx.stroke();
+                waveCtx.setLineDash([]);
+            }
+
+            // ========== 右波（绿色）==========
+            // 右波有效范围: rightFront ~ 16
+            // 在非叠加区（overlapEnd ~ 16）用实线
+            // 在叠加区（rightFront ~ overlapEnd）用虚线
+
+            if (overlapEnd < 16 - 0.001) {
+                waveCtx.strokeStyle = '#3fb950'; waveCtx.lineWidth = 2;
+                waveCtx.beginPath();
+                let started = false;
+                for (let x = Math.max(overlapEnd, rightFront); x <= 16; x += 0.05) {
+                    const y = getWave2(x, t);
+                    if (Math.abs(y) < 0.001 && x > rightFront + 0.1) continue;
+                    const px = xToPix(x), py = yToPix(y);
+                    if (!started) { waveCtx.moveTo(px, py); started = true; }
+                    else waveCtx.lineTo(px, py);
+                }
+                waveCtx.stroke();
+            }
+
+            if (hasOverlap && overlapEnd > rightFront + 0.001) {
+                waveCtx.strokeStyle = 'rgba(63,185,80,0.4)'; waveCtx.lineWidth = 1.5;
+                waveCtx.setLineDash([3, 3]);
+                waveCtx.beginPath();
+                let started = false;
+                for (let x = rightFront; x <= overlapEnd; x += 0.05) {
+                    const y = getWave2(x, t);
+                    const px = xToPix(x), py = yToPix(y);
+                    if (!started) { waveCtx.moveTo(px, py); started = true; }
+                    else waveCtx.lineTo(px, py);
+                }
+                waveCtx.stroke();
+                waveCtx.setLineDash([]);
+            }
+
+            // ========== 合成波（金色实线，仅在叠加区）==========
+            if (hasOverlap) {
+                waveCtx.strokeStyle = '#d29922'; waveCtx.lineWidth = 2.5;
+                waveCtx.beginPath();
+                for (let x = overlapStart; x <= overlapEnd; x += 0.05) {
+                    const y = getWave1(x, t) + getWave2(x, t);
+                    const px = xToPix(x), py = yToPix(y);
+                    x === overlapStart ? waveCtx.moveTo(px, py) : waveCtx.lineTo(px, py);
+                }
+                waveCtx.stroke();
+            }
+
+            // M点高亮
+            const md = getMDisplacement(t);
+            const mpx = xToPix(xM), mpy = yToPix(md.y);
+            waveCtx.strokeStyle = 'rgba(210,153,34,0.4)'; waveCtx.lineWidth = 1;
+            waveCtx.beginPath(); waveCtx.moveTo(mpx, y0); waveCtx.lineTo(mpx, mpy); waveCtx.stroke();
+            waveCtx.fillStyle = '#d29922';
+            waveCtx.beginPath(); waveCtx.arc(mpx, mpy, 7, 0, Math.PI * 2); waveCtx.fill();
+            waveCtx.strokeStyle = '#fff'; waveCtx.lineWidth = 2; waveCtx.stroke();
+
+            // 波前位置标记
+            if (leftFront <= 16) {
+                waveCtx.fillStyle = '#f85149'; waveCtx.font = '10px sans-serif';
+                waveCtx.fillText('→', xToPix(leftFront) - 4, y0 - 55);
+            }
+            if (rightFront >= 0) {
+                waveCtx.fillStyle = '#3fb950'; waveCtx.font = '10px sans-serif';
+                waveCtx.fillText('←', xToPix(rightFront) - 4, y0 - 55);
+            }
+        }
+
+        function drawYTGraph(t) {
+            const w = ytC.width, h = ytC.height;
+            ytCtx.clearRect(0, 0, w, h);
+
+            ytCtx.strokeStyle = '#30363d'; ytCtx.lineWidth = 1;
+            for (let y = -12; y <= 12; y += 2) {
+                const py = yToPix(y);
+                ytCtx.beginPath(); ytCtx.moveTo(padL, py); ytCtx.lineTo(w - padR, py); ytCtx.stroke();
+            }
+            for (let x = 0; x <= tMax; x += 1) {
+                const px = tToPix(x);
+                ytCtx.beginPath(); ytCtx.moveTo(px, padT); ytCtx.lineTo(px, h - padB); ytCtx.stroke();
+            }
+            ytCtx.strokeStyle = '#8b949e'; ytCtx.lineWidth = 1.5;
+            ytCtx.beginPath(); ytCtx.moveTo(padL, y0); ytCtx.lineTo(w - padR, y0); ytCtx.stroke();
+            ytCtx.beginPath(); ytCtx.moveTo(padL, padT); ytCtx.lineTo(padL, h - padB); ytCtx.stroke();
+            ytCtx.fillStyle = '#8b949e'; ytCtx.font = '11px sans-serif'; ytCtx.textAlign = 'center';
+            for (let x = 0; x <= tMax; x += 1) ytCtx.fillText(x + 's', tToPix(x), h - 10);
+            ytCtx.textAlign = 'right';
+            for (let y = -10; y <= 10; y += 5) {
+                if (y === 0) continue;
+                ytCtx.fillText(y + 'cm', padL - 6, yToPix(y) + 4);
+            }
+            ytCtx.textAlign = 'left';
+
+            // y1(t) 红色虚线
+            ytCtx.strokeStyle = 'rgba(248,81,73,0.6)'; ytCtx.lineWidth = 1.5;
+            ytCtx.setLineDash([4, 3]);
+            ytCtx.beginPath();
+            for (let pt = 0; pt <= tMax; pt += 0.02) {
+                const y1 = getWave1(xM, pt);
+                const px = tToPix(pt), py = yToPix(y1);
+                pt === 0 ? ytCtx.moveTo(px, py) : ytCtx.lineTo(px, py);
+            }
+            ytCtx.stroke();
+            ytCtx.setLineDash([]);
+
+            // y2(t) 绿色虚线
+            ytCtx.strokeStyle = 'rgba(63,185,80,0.6)'; ytCtx.lineWidth = 1.5;
+            ytCtx.setLineDash([4, 3]);
+            ytCtx.beginPath();
+            for (let pt = 0; pt <= tMax; pt += 0.02) {
+                const y2 = getWave2(xM, pt);
+                const px = tToPix(pt), py = yToPix(y2);
+                pt === 0 ? ytCtx.moveTo(px, py) : ytCtx.lineTo(px, py);
+            }
+            ytCtx.stroke();
+            ytCtx.setLineDash([]);
+
+            // y(t) 金色实线
+            ytCtx.strokeStyle = '#d29922'; ytCtx.lineWidth = 2.5;
+            ytCtx.beginPath();
+            for (let pt = 0; pt <= tMax; pt += 0.02) {
+                const y = getWave1(xM, pt) + getWave2(xM, pt);
+                const px = tToPix(pt), py = yToPix(y);
+                pt === 0 ? ytCtx.moveTo(px, py) : ytCtx.lineTo(px, py);
+            }
+            ytCtx.stroke();
+
+            // 当前时间线
+            const curX = tToPix(t);
+            ytCtx.strokeStyle = '#58a6ff'; ytCtx.lineWidth = 2;
+            ytCtx.setLineDash([4, 2]);
+            ytCtx.beginPath(); ytCtx.moveTo(curX, padT); ytCtx.lineTo(curX, h - padB); ytCtx.stroke();
+            ytCtx.setLineDash([]);
+
+            const md = getMDisplacement(t);
+            ytCtx.fillStyle = '#58a6ff';
+            ytCtx.beginPath(); ytCtx.arc(curX, yToPix(md.y), 5, 0, Math.PI * 2); ytCtx.fill();
+            ytCtx.strokeStyle = '#fff'; ytCtx.lineWidth = 1.5; ytCtx.stroke();
+
+            // 暂停点标记
+            pausePoints.forEach(pt => {
+                const px = tToPix(pt);
+                ytCtx.strokeStyle = 'rgba(139,148,158,0.4)'; ytCtx.lineWidth = 1;
+                ytCtx.beginPath(); ytCtx.moveTo(px, y0 - 4); ytCtx.lineTo(px, y0 + 4); ytCtx.stroke();
+            });
+        }
+
+        function drawParticle(t) {
+            const w = partC.width, h = partC.height;
+            partCtx.clearRect(0, 0, w, h);
+            const cy = h / 2, sc = 5;
+
+            partCtx.strokeStyle = '#21262d'; partCtx.lineWidth = 1;
+            for (let y = -12; y <= 12; y += 2) {
+                const py = cy - y * sc;
+                partCtx.beginPath(); partCtx.moveTo(0, py); partCtx.lineTo(w, py); partCtx.stroke();
+                partCtx.fillStyle = '#484f58'; partCtx.font = '10px sans-serif';
+                partCtx.fillText(y + 'cm', 4, py + 3);
+            }
+            partCtx.strokeStyle = '#30363d'; partCtx.lineWidth = 1.5;
+            partCtx.setLineDash([6, 3]);
+            partCtx.beginPath(); partCtx.moveTo(0, cy); partCtx.lineTo(w, cy); partCtx.stroke();
+            partCtx.setLineDash([]);
+
+            const md = getMDisplacement(t);
+
+            // 历史轨迹
+            const hx = w * 0.32;
+            partCtx.strokeStyle = 'rgba(210,153,34,0.25)'; partCtx.lineWidth = 1.5;
+            partCtx.beginPath();
+            for (let pt = 0; pt <= t; pt += 0.03) {
+                const d = getMDisplacement(pt);
+                const px = hx + (pt - t) * 20, py = cy - d.y * sc;
+                pt === 0 ? partCtx.moveTo(px, py) : partCtx.lineTo(px, py);
+            }
+            partCtx.stroke();
+
+            // 左波贡献
+            const lx = w * 0.12;
+            partCtx.fillStyle = 'rgba(248,81,73,0.8)';
+            partCtx.beginPath(); partCtx.arc(lx, cy - md.y1 * sc, 9, 0, Math.PI * 2); partCtx.fill();
+            partCtx.strokeStyle = '#f85149'; partCtx.lineWidth = 1.5; partCtx.stroke();
+            partCtx.strokeStyle = 'rgba(248,81,73,0.3)'; partCtx.lineWidth = 1;
+            partCtx.beginPath(); partCtx.moveTo(lx, cy); partCtx.lineTo(lx, cy - md.y1 * sc); partCtx.stroke();
+            partCtx.fillStyle = '#f85149'; partCtx.font = 'bold 12px sans-serif';
+            partCtx.fillText('y₁', lx - 8, cy + 28);
+            partCtx.font = '11px monospace';
+            partCtx.fillText(md.y1.toFixed(2), lx - 14, cy + 42);
+
+            // 右波贡献
+            const mx = w * 0.26;
+            partCtx.fillStyle = 'rgba(63,185,80,0.8)';
+            partCtx.beginPath(); partCtx.arc(mx, cy - md.y2 * sc, 9, 0, Math.PI * 2); partCtx.fill();
+            partCtx.strokeStyle = '#3fb950'; partCtx.lineWidth = 1.5; partCtx.stroke();
+            partCtx.strokeStyle = 'rgba(63,185,80,0.3)'; partCtx.lineWidth = 1;
+            partCtx.beginPath(); partCtx.moveTo(mx, cy); partCtx.lineTo(mx, cy - md.y2 * sc); partCtx.stroke();
+            partCtx.fillStyle = '#3fb950'; partCtx.font = 'bold 12px sans-serif';
+            partCtx.fillText('y₂', mx - 8, cy + 28);
+            partCtx.font = '11px monospace';
+            partCtx.fillText(md.y2.toFixed(2), mx - 14, cy + 42);
+
+            // 合成
+            const rx = w * 0.48;
+            partCtx.fillStyle = '#d29922';
+            partCtx.shadowColor = '#d29922'; partCtx.shadowBlur = 15;
+            partCtx.beginPath(); partCtx.arc(rx, cy - md.y * sc, 12, 0, Math.PI * 2); partCtx.fill();
+            partCtx.shadowBlur = 0;
+            partCtx.strokeStyle = '#fff'; partCtx.lineWidth = 2; partCtx.stroke();
+            partCtx.strokeStyle = 'rgba(210,153,34,0.4)'; partCtx.lineWidth = 1.5;
+            partCtx.beginPath(); partCtx.moveTo(rx, cy); partCtx.lineTo(rx, cy - md.y * sc); partCtx.stroke();
+            partCtx.fillStyle = '#d29922'; partCtx.font = 'bold 14px sans-serif';
+            partCtx.fillText('M点', rx - 14, cy + 32);
+            partCtx.font = 'bold 12px monospace';
+            partCtx.fillText('y=' + md.y.toFixed(2) + 'cm', rx - 22, cy + 48);
+
+            // 连接符号
+            partCtx.strokeStyle = '#484f58'; partCtx.lineWidth = 1;
+            partCtx.beginPath();
+            partCtx.moveTo(lx + 12, cy - md.y1 * sc);
+            partCtx.lineTo(mx - 12, cy - md.y2 * sc);
+            partCtx.lineTo(rx - 16, cy - md.y * sc);
+            partCtx.stroke();
+            partCtx.fillStyle = '#8b949e'; partCtx.font = '14px sans-serif';
+            partCtx.fillText('+', (lx + mx) / 2 - 4, cy - 4);
+            partCtx.fillText('=', (mx + rx) / 2 - 6, cy - 4);
+
+            // 状态
+            let status = '', cls = '';
+            if (t < 2) { status = '静止（两波均未到达）'; cls = 'status-still'; }
+            else if (t < 4) { status = '仅右波到达，振幅 6cm'; cls = 'status-single'; }
+            else { status = '两波反相叠加，减弱！振幅 4cm'; cls = 'status-weaken'; }
+            const bar = document.getElementById('statusBar');
+            bar.textContent = 'M点状态：' + status;
+            bar.className = 'status-bar ' + cls;
+
+            // 相位示意
+            const dx = w * 0.72, dy = cy - 10, ds = 2;
+            partCtx.strokeStyle = '#f85149'; partCtx.lineWidth = 1.5;
+            partCtx.beginPath();
+            for (let i = 0; i < 45; i++) {
+                const py = -10 * Math.sin(i * 0.22) * ds / 10;
+                i === 0 ? partCtx.moveTo(dx + i, dy + py) : partCtx.lineTo(dx + i, dy + py);
+            }
+            partCtx.stroke();
+            partCtx.strokeStyle = '#3fb950'; partCtx.lineWidth = 1.5;
+            partCtx.beginPath();
+            for (let i = 0; i < 45; i++) {
+                const py = 6 * Math.sin(i * 0.22 + Math.PI) * ds / 10;
+                i === 0 ? partCtx.moveTo(dx + i, dy + 28 + py) : partCtx.lineTo(dx + i, dy + 28 + py);
+            }
+            partCtx.stroke();
+            partCtx.fillStyle = '#8b949e'; partCtx.font = '10px sans-serif';
+            partCtx.fillText('t≥4s 反相', dx, dy + 52);
+        }
+
+        function update() {
+            const t = currentTime, md = getMDisplacement(t);
+            document.getElementById('timeDisplay').textContent = t.toFixed(2) + 's';
+            document.getElementById('y1Display').textContent = md.y1.toFixed(2) + ' cm';
+            document.getElementById('y2Display').textContent = md.y2.toFixed(2) + ' cm';
+            document.getElementById('yDisplay').textContent = md.y.toFixed(2) + ' cm';
+            drawWaveScene(t);
+            drawYTGraph(t);
+            drawParticle(t);
+        }
+
+        // ========== 控制 ==========
+        const slider = document.getElementById('timeSlider');
+        slider.addEventListener('input', e => { currentTime = parseInt(e.target.value) / 100; update(); });
+
+        document.getElementById('playBtn').addEventListener('click', () => {
+            if (isPlaying) {
+                isPlaying = false; cancelAnimationFrame(animId);
+                document.getElementById('playBtn').textContent = '▶ 继续';
+            } else {
+                if (currentTime >= tMax) { currentTime = 0; nextPauseIdx = 0; slider.value = 0; }
+                isPlaying = true; lastTs = null;
+                document.getElementById('playBtn').textContent = '⏸ 暂停';
+                animId = requestAnimationFrame(anim);
+            }
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            isPlaying = false; cancelAnimationFrame(animId);
+            currentTime = 0; slider.value = 0; lastTs = null; nextPauseIdx = 0;
+            document.getElementById('playBtn').textContent = '▶ 播放';
+            update();
+        });
+
+        function anim(ts) {
+            if (!isPlaying) return;
+            if (lastTs === null) lastTs = ts;
+            const dt = (ts - lastTs) / 1000;
+            lastTs = ts;
+            currentTime += dt * 0.6;
+
+            if (nextPauseIdx < pausePoints.length && currentTime >= pausePoints[nextPauseIdx]) {
+                currentTime = pausePoints[nextPauseIdx];
+                isPlaying = false; nextPauseIdx++;
+                slider.value = Math.round(currentTime * 100);
+                update();
+                document.getElementById('playBtn').textContent = nextPauseIdx >= pausePoints.length ? '▶ 重新播放' : '▶ 继续';
+                return;
+            }
+            if (currentTime >= tMax) {
+                currentTime = tMax; isPlaying = false; nextPauseIdx = 0;
+                slider.value = Math.round(currentTime * 100);
+                update();
+                document.getElementById('playBtn').textContent = '▶ 重新播放';
+                return;
+            }
+            slider.value = Math.round(currentTime * 100);
+            update();
+            if (isPlaying) animId = requestAnimationFrame(anim);
+        }
+
+        update();
+    </script>
+</body>
+
+</html>
