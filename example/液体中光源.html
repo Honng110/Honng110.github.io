@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>水底光源全反射模拟 - 光线控制 | 动态直角三角形</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'SF Pro Text', 'Helvetica Neue', 'Segoe UI', 'PingFang SC', Roboto, system-ui, sans-serif;
+        }
+        
+        .ui-container {
+            position: absolute;
+            bottom: 24px;
+            left: 24px;
+            right: 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            z-index: 20;
+            pointer-events: none;
+        }
+        
+        .info-panel {
+            background: rgba(20, 25, 40, 0.9);
+            backdrop-filter: blur(16px);
+            border-radius: 28px;
+            padding: 18px 24px;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            pointer-events: none;
+            flex: 1;
+            min-width: 240px;
+        }
+        
+        .slider-panel {
+            background: rgba(20, 25, 40, 0.9);
+            backdrop-filter: blur(16px);
+            border-radius: 28px;
+            padding: 16px 24px;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            pointer-events: auto;
+            min-width: 260px;
+        }
+        
+        .info-panel h2 {
+            margin: 0 0 8px 0;
+            font-size: 1.2rem;
+        }
+        
+        .highlight {
+            color: #ffaa66;
+            font-weight: bold;
+        }
+        
+        .slider-panel input {
+            width: 100%;
+            cursor: pointer;
+            accent-color: #ffaa66;
+            margin: 8px 0;
+        }
+        
+        .depth-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ffaa66;
+            font-family: monospace;
+        }
+        
+        .status-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(12px);
+            padding: 12px 20px;
+            border-radius: 32px;
+            font-size: 0.85rem;
+            font-family: monospace;
+            color: #ffaa66;
+            pointer-events: none;
+            z-index: 20;
+            text-align: right;
+        }
+        
+        .instruction {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.7rem;
+            color: #ccc;
+            pointer-events: none;
+            z-index: 20;
+        }
+        
+        .controls-group {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 12px;
+            z-index: 30;
+            pointer-events: auto;
+            flex-wrap: wrap;
+        }
+        
+        .ctrl-btn {
+            background: rgba(30, 35, 55, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .ctrl-btn:hover {
+            background: #ffaa55;
+            color: #1a1a2e;
+        }
+        
+        .ctrl-btn.active {
+            background: #ff8844;
+            color: #1a1a2e;
+        }
+        
+        canvas {
+            display: block;
+            outline: none;
+        }
+        
+        @media (max-width: 768px) {
+            .ui-container { flex-direction: column; bottom: 16px; left: 16px; right: 16px; }
+            .controls-group { top: 16px; left: 16px; gap: 8px; }
+            .ctrl-btn { padding: 6px 14px; font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls-group">
+        <button id="pointLightBtn" class="ctrl-btn active">⚫ 点光源</button>
+        <button id="lineLightBtn" class="ctrl-btn">📏 线光源</button>
+        <button id="ringLightBtn" class="ctrl-btn">⭕ 环光源</button>
+        <button id="toggleSliceBtn" class="ctrl-btn">✂️ 中垂线切面 (OFF)</button>
+        <button id="toggleRaysBtn" class="ctrl-btn">🔆 显示光线</button>
+        <button id="toggleRedBoundaryBtn" class="ctrl-btn">🔴 显示红色边界</button>
+        <button id="toggleTriangleBtn" class="ctrl-btn" style="display:none;">📐 显示直角三角形</button>
+    </div>
+    
+    <div class="status-badge" id="statusText">
+        光源类型: 点光源<br>
+        深度: 1.60 m | 折射率 n=2.0
+    </div>
+    
+    <div class="instruction">
+        🖱️ 右键旋转视角 | 中键缩放 | 滑条控制光源深度
+    </div>
+    
+    <div class="ui-container">
+        <div class="info-panel">
+            <h2>💧 水底光源全反射模拟</h2>
+            <p>折射率 <span class="highlight">n<sub>水</sub> = 2.00</span> &nbsp;|&nbsp; <span class="highlight">n<sub>空气</sub> = 1.00</span></p>
+            <p>临界角 <span class="highlight">θ<sub>c</sub> = arcsin(1/2) = 30.00°</span> → tanθc ≈ <span class="highlight">0.577</span></p>
+            <p style="margin-top:8px; background:#00000044; padding:6px 10px; border-radius:12px; font-size:0.8rem;">
+                💡 <strong>透光区域</strong> = 所有点光源透光圆的叠加<br>
+                • 点光源：半径为 R = depth × tan30° 的圆<br>
+                • 线光源：圆角矩形 (宽 2R，长 L + 2R)<br>
+                • 环光源：圆环 (外径 R+R_ring，内径 |R-R_ring|)<br>
+                🔴 红色圆环 = 单个点光源的透光圆
+            </p>
+        </div>
+        
+        <div class="slider-panel">
+            <label>🔆 光源深度控制</label>
+            <input type="range" id="depthSlider" min="0.1" max="1.5" step="0.005" value="1.0">
+            <div style="margin-top: 12px;">
+                <span>📏 深度: </span><span id="depthValue" class="depth-value">1.600</span><span> m</span>
+            </div>
+            <div class="radius-value" style="margin-top: 8px; color:#88ccff;">
+                💧 单个点光源光圆半径: <span id="radiusValue">0.000</span> m
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+        
+        // --- 初始化
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x061a2f);
+        scene.fog = new THREE.FogExp2(0x061a2f, 0.008);
+        
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(4.2, 2.8, 5.5);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+        
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none';
+        document.body.appendChild(labelRenderer.domElement);
+        
+        // ========= 轨道控制：左键平移，中键缩放，右键旋转 =========
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.06;
+        controls.rotateSpeed = 1.2;
+        controls.zoomSpeed = 1.2;
+        controls.panSpeed = 1.2;
+        controls.enableZoom = true;
+        controls.enablePan = true;
+        controls.mouseButtons = {
+            LEFT: THREE.MOUSE.PAN,
+            MIDDLE: THREE.MOUSE.DOLLY,
+            RIGHT: THREE.MOUSE.ROTATE
+        };
+        
+        // 光照
+        const ambientLight = new THREE.AmbientLight(0x3a4a6e);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(2, 5, 3);
+        scene.add(dirLight);
+        
+        // 水面 (y=0)
+        const waterPlaneGeo = new THREE.PlaneGeometry(6.5, 6.5);
+        const waterMat = new THREE.MeshStandardMaterial({
+            color: 0x3e92cc, metalness: 0.85, roughness: 0.28,
+            transparent: true, opacity: 0.45, side: THREE.DoubleSide
+        });
+        const waterPlane = new THREE.Mesh(waterPlaneGeo, waterMat);
+        waterPlane.rotation.x = -Math.PI / 2;
+        waterPlane.position.y = 0;
+        scene.add(waterPlane);
+        
+        // 水面边框
+        const wireWater = new THREE.LineSegments(
+            new THREE.EdgesGeometry(waterPlaneGeo),
+            new THREE.LineBasicMaterial({ color: 0x7ab0ff })
+        );
+        wireWater.rotation.x = -Math.PI / 2;
+        wireWater.position.y = 0.003;
+        scene.add(wireWater);
+        
+        // 水底
+        const seabedDepth = -2.2;
+        const seabedPlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(7.5, 7.5),
+            new THREE.MeshStandardMaterial({ color: 0x2a4a6a, roughness: 0.7, transparent: true, opacity: 0.55 })
+        );
+        seabedPlane.rotation.x = -Math.PI / 2;
+        seabedPlane.position.y = seabedDepth;
+        scene.add(seabedPlane);
+        
+        const gridHelper = new THREE.GridHelper(7.5, 24, 0x88aaff, 0x446688);
+        gridHelper.position.y = seabedDepth + 0.05;
+        scene.add(gridHelper);
+        
+        // 悬浮粒子
+        const particles = new THREE.Points(
+            new THREE.BufferGeometry(),
+            new THREE.PointsMaterial({ color: 0x88ccff, size: 0.02, transparent: true, opacity: 0.4 })
+        );
+        const particlePositions = [];
+        for (let i = 0; i < 500; i++) {
+            particlePositions.push((Math.random() - 0.5) * 7);
+            particlePositions.push(Math.random() * (0 - seabedDepth) + seabedDepth);
+            particlePositions.push((Math.random() - 0.5) * 6.5);
+        }
+        particles.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(particlePositions), 3));
+        scene.add(particles);
+        
+        // ========= 物理常量：水的折射率 n=2.0 =========
+        const nWater = 2.0;
+        const nAir = 1.0;
+        const criticalRad = Math.asin(nAir / nWater);  // arcsin(0.5) = 30°
+        const tanCritical = Math.tan(criticalRad);      // tan30° = 0.57735
+        const criticalDeg = (criticalRad * 180 / Math.PI).toFixed(2);  // 30.00°
+        
+        // 光源参数
+        let currentLightType = 'point';
+        let currentDepth = 1.6;
+        
+        // 显示控制标志
+        let showRays = false;      // 光线默认不显示
+        let showTriangle = false;
+        let showRedBoundary = false; // 红色边界默认不显示
+        
+        // 实际照明光源
+        const actualLight = new THREE.PointLight(0xffaa66, 1.0, 9);
+        scene.add(actualLight);
+        
+        // 光源可视化
+        let pointVisual, lineVisual, ringVisual;
+        
+        function createPointVisual() {
+            const mesh = new THREE.Mesh(
+                new THREE.SphereGeometry(0.045, 24, 24),
+                new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0xff4422, emissiveIntensity: 1.0 })
+            );
+            const glow = new THREE.Mesh(
+                new THREE.SphereGeometry(0.08, 12, 12),
+                new THREE.MeshBasicMaterial({ color: 0xff8844, transparent: true, opacity: 0.25, side: THREE.BackSide })
+            );
+            mesh.add(glow);
+            return mesh;
+        }
+        
+        function createLineVisual() {
+            const group = new THREE.Group();
+            const points = [];
+            for (let x = -0.5; x <= 0.5; x += 0.05) points.push(new THREE.Vector3(x, 0, 0));
+            const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color: 0xffaa66 }));
+            group.add(line);
+            const endMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0xff4422 });
+            const leftEnd = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 10), endMat);
+            const rightEnd = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 10), endMat);
+            leftEnd.position.set(-0.5, 0, 0);
+            rightEnd.position.set(0.5, 0, 0);
+            group.add(leftEnd, rightEnd);
+            return group;
+        }
+        
+        function createRingVisual() {
+            const group = new THREE.Group();
+            const radius = 0.4;
+            const points = [];
+            for (let i = 0; i <= 48; i++) {
+                const angle = (i / 48) * Math.PI * 2;
+                points.push(new THREE.Vector3(radius * Math.cos(angle), 0, radius * Math.sin(angle)));
+            }
+            const ring = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color: 0xffaa66 }));
+            group.add(ring);
+            for (let i = 0; i < 16; i++) {
+                const angle = (i / 16) * Math.PI * 2;
+                const particle = new THREE.Mesh(new THREE.SphereGeometry(0.02, 6, 6), new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0xff5522 }));
+                particle.position.set(radius * Math.cos(angle), 0, radius * Math.sin(angle));
+                group.add(particle);
+            }
+            return group;
+        }
+        
+        // ========= 透光区域可视化 =========
+        let transmissiveRegion = null;
+        let overlayBoundary = null;
+        let singlePointCircle = null;
+        let rightEndCircle = null;
+        
+        function updateTransmissiveRegion() {
+            if (transmissiveRegion) scene.remove(transmissiveRegion);
+            if (overlayBoundary) scene.remove(overlayBoundary);
+            if (singlePointCircle) scene.remove(singlePointCircle);
+            if (rightEndCircle) scene.remove(rightEndCircle);
+            transmissiveRegion = null;
+            overlayBoundary = null;
+            singlePointCircle = null;
+            rightEndCircle = null;
+            
+            const R = currentDepth * tanCritical;
+            if (R <= 0.01) return;
+            
+            if (currentLightType === 'point') {
+                const shape = new THREE.Shape();
+                shape.absellipse(0, 0, R, R, 0, 2 * Math.PI, false, 0);
+                const geometry = new THREE.ShapeGeometry(shape);
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0xffaa88,
+                    emissive: 0x442200,
+                    transparent: true,
+                    opacity: 0.3,
+                    side: THREE.DoubleSide
+                });
+                transmissiveRegion = new THREE.Mesh(geometry, material);
+                transmissiveRegion.rotation.x = -Math.PI / 2;
+                transmissiveRegion.position.y = 0.01;
+                scene.add(transmissiveRegion);
+                
+                const circlePoints = [];
+                const seg = 64;
+                for (let i = 0; i <= seg; i++) {
+                    const angle = (i / seg) * Math.PI * 2;
+                    circlePoints.push(new THREE.Vector3(R * Math.cos(angle), 0.012, R * Math.sin(angle)));
+                }
+                overlayBoundary = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(circlePoints), new THREE.LineBasicMaterial({ color: 0xffaa77 }));
+                scene.add(overlayBoundary);
+                
+                // 点光源红色边界（与环光源风格一致）
+                if (showRedBoundary) {
+                    const redCirclePoints = [];
+                    for (let i = 0; i <= seg; i++) {
+                        const angle = (i / seg) * Math.PI * 2;
+                        redCirclePoints.push(new THREE.Vector3(R * Math.cos(angle), 0.015, R * Math.sin(angle)));
+                    }
+                    singlePointCircle = new THREE.LineLoop(
+                        new THREE.BufferGeometry().setFromPoints(redCirclePoints),
+                        new THREE.LineBasicMaterial({ color: 0xff4444, linewidth: 2 })
+                    );
+                    scene.add(singlePointCircle);
+                }
+            } 
+            else if (currentLightType === 'line') {
+                // 线光源：圆角矩形 - 使用ShapeGeometry确保边界线与区域完全匹配
+                const L = 1.0;
+                const rectW = L + 2 * R;
+                const rectH = 2 * R;
+                const cornerRadius = R;
+                
+                const shape = new THREE.Shape();
+                const x = -rectW/2, y = -rectH/2;
+                shape.moveTo(x + cornerRadius, y);
+                shape.lineTo(x + rectW - cornerRadius, y);
+                shape.quadraticCurveTo(x + rectW, y, x + rectW, y + cornerRadius);
+                shape.lineTo(x + rectW, y + rectH - cornerRadius);
+                shape.quadraticCurveTo(x + rectW, y + rectH, x + rectW - cornerRadius, y + rectH);
+                shape.lineTo(x + cornerRadius, y + rectH);
+                shape.quadraticCurveTo(x, y + rectH, x, y + rectH - cornerRadius);
+                shape.lineTo(x, y + cornerRadius);
+                shape.quadraticCurveTo(x, y, x + cornerRadius, y);
+                
+                // 透光区域
+                const fillGeometry = new THREE.ShapeGeometry(shape, 64);
+                const fillMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xffaa88,
+                    emissive: 0x442200,
+                    transparent: true,
+                    opacity: 0.3,
+                    side: THREE.DoubleSide
+                });
+                transmissiveRegion = new THREE.Mesh(fillGeometry, fillMaterial);
+                transmissiveRegion.rotation.x = -Math.PI / 2;
+                transmissiveRegion.position.y = 0.008;
+                scene.add(transmissiveRegion);
+                
+                // 边界线：使用EdgesGeometry从填充区域提取边界，确保完全匹配
+                const edgesGeometry = new THREE.EdgesGeometry(fillGeometry);
+                overlayBoundary = new THREE.LineSegments(edgesGeometry, new THREE.LineBasicMaterial({ color: 0xffaa77 }));
+                overlayBoundary.rotation.x = -Math.PI / 2;
+                overlayBoundary.position.y = 0.01;
+                scene.add(overlayBoundary);
+                
+                // 两端点光源的红色透光圆边界（受控制显示）
+                if (showRedBoundary) {
+                    const endPointCirclePointsLeft = [];
+                    const endPointCirclePointsRight = [];
+                    const circleSeg = 48;
+                    const leftEndX = -L/2;
+                    const rightEndX = L/2;
+                    
+                    // 左端点透光圆
+                    for (let i = 0; i <= circleSeg; i++) {
+                        const angle = (i / circleSeg) * Math.PI * 2;
+                        const px = leftEndX + R * Math.cos(angle);
+                        const pz = R * Math.sin(angle);
+                        endPointCirclePointsLeft.push(new THREE.Vector3(px, 0.015, pz));
+                    }
+                    singlePointCircle = new THREE.LineLoop(
+                        new THREE.BufferGeometry().setFromPoints(endPointCirclePointsLeft),
+                        new THREE.LineBasicMaterial({ color: 0xff4444, linewidth: 2 })
+                    );
+                    scene.add(singlePointCircle);
+                    
+                    // 右端点透光圆
+                    for (let i = 0; i <= circleSeg; i++) {
+                        const angle = (i / circleSeg) * Math.PI * 2;
+                        const px = rightEndX + R * Math.cos(angle);
+                        const pz = R * Math.sin(angle);
+                        endPointCirclePointsRight.push(new THREE.Vector3(px, 0.015, pz));
+                    }
+                    rightEndCircle = new THREE.LineLoop(
+                        new THREE.BufferGeometry().setFromPoints(endPointCirclePointsRight),
+                        new THREE.LineBasicMaterial({ color: 0xff4444, linewidth: 2 })
+                    );
+                    scene.add(rightEndCircle);
+                }
+            } 
+            else if (currentLightType === 'ring') {
+                const R_ring = 0.4;
+                const outerR = R_ring + R;
+                
+                let shape = null;
+                // 当透光圆半径 R >= 环半径 R_ring 时，所有点光源的透光圆都能覆盖圆心
+                // 此时透光区域是完整的圆，而不是圆环
+                if (R >= R_ring) {
+                    shape = new THREE.Shape();
+                    shape.absellipse(0, 0, outerR, outerR, 0, 2 * Math.PI, false, 0);
+                } else {
+                    // 当 R < R_ring 时，中心区域无法被任何点光源照亮，形成圆环
+                    const innerR = R_ring - R;
+                    const outerShape = new THREE.Shape();
+                    outerShape.absellipse(0, 0, outerR, outerR, 0, 2 * Math.PI, false, 0);
+                    const innerShape = new THREE.Shape();
+                    innerShape.absellipse(0, 0, innerR, innerR, 0, 2 * Math.PI, false, 0);
+                    shape = outerShape;
+                    shape.holes.push(innerShape);
+                }
+                
+                const geometry = new THREE.ShapeGeometry(shape);
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0xffaa88,
+                    emissive: 0x442200,
+                    transparent: true,
+                    opacity: 0.3,
+                    side: THREE.DoubleSide
+                });
+                transmissiveRegion = new THREE.Mesh(geometry, material);
+                transmissiveRegion.rotation.x = -Math.PI / 2;
+                transmissiveRegion.position.y = 0.01;
+                scene.add(transmissiveRegion);
+                
+                // 红色圆环：表示环上一点光源的透光圆（受控制显示）
+                if (showRedBoundary) {
+                    const demoPointX = R_ring;
+                    const demoPointZ = 0;
+                    const circlePoints = [];
+                    const seg = 64;
+                    for (let i = 0; i <= seg; i++) {
+                        const angle = (i / seg) * Math.PI * 2;
+                        const x = demoPointX + R * Math.cos(angle);
+                        const z = demoPointZ + R * Math.sin(angle);
+                        circlePoints.push(new THREE.Vector3(x, 0.015, z));
+                    }
+                    singlePointCircle = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(circlePoints), new THREE.LineBasicMaterial({ color: 0xff3333, linewidth: 2 }));
+                    scene.add(singlePointCircle);
+                }
+            }
+        }
+        
+        // ========= 直角三角形可视化（切面内，显示在红色圆环对应的点光源） =========
+        let triangleGroup = null;
+        let triangleAngleLabel = null;
+        
+        function updateTriangle() {
+            // 清除旧的三角形
+            if (triangleGroup) {
+                triangleGroup.forEach(item => scene.remove(item));
+                triangleGroup = null;
+            }
+            if (triangleAngleLabel) {
+                scene.remove(triangleAngleLabel);
+                triangleAngleLabel = null;
+            }
+            
+            if (!showTriangle) return;
+            if (!sliceActive) return;
+            
+            const R = currentDepth * tanCritical;
+            if (R <= 0.01) return;
+            
+            let sourceX = 0, sourceZ = 0;
+            
+            if (currentLightType === 'ring') {
+                // 环光源：使用红色圆环对应的那个点光源位置 (R_ring, 0, 0)
+                const R_ring = 0.4;
+                sourceX = R_ring;
+                sourceZ = 0;
+            }
+            // 点光源和线光源都使用中心点 (0, 0)
+            
+            const pointSource = new THREE.Vector3(sourceX, -currentDepth, sourceZ);
+            const centerOnWater = new THREE.Vector3(sourceX, 0, sourceZ);
+            
+            // 临界光线与水面交点：在XZ平面内，沿径向方向
+            // 对于环光源，径向方向是从圆心指向点光源位置的方向
+            let radialDirX = 1, radialDirZ = 0;
+            if (sourceX !== 0 || sourceZ !== 0) {
+                const len = Math.sqrt(sourceX * sourceX + sourceZ * sourceZ);
+                radialDirX = sourceX / len;
+                radialDirZ = sourceZ / len;
+            }
+            const intersectionPoint = new THREE.Vector3(
+                sourceX + radialDirX * R,
+                0,
+                sourceZ + radialDirZ * R
+            );
+            
+            const groupItems = [];
+            
+            // 三条边
+            const edges = [
+                { start: pointSource, end: centerOnWater, color: 0x44aaff },      // 垂直边（深度）
+                { start: centerOnWater, end: intersectionPoint, color: 0x44aaff }, // 水平边（半径）
+                { start: intersectionPoint, end: pointSource, color: 0xffaa44 }    // 斜边（临界光线）
+            ];
+            
+            edges.forEach(edge => {
+                const points = [edge.start.clone(), edge.end.clone()];
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const material = new THREE.LineBasicMaterial({ color: edge.color, linewidth: 2 });
+                const line = new THREE.Line(geometry, material);
+                scene.add(line);
+                groupItems.push(line);
+            });
+            
+            // 顶点标记小球
+            const markerMat = new THREE.MeshStandardMaterial({ color: 0xffaa66 });
+            const markerSource = new THREE.Mesh(new THREE.SphereGeometry(0.045, 16, 16), markerMat);
+            markerSource.position.copy(pointSource);
+            scene.add(markerSource);
+            groupItems.push(markerSource);
+            
+            const markerCenter = new THREE.Mesh(new THREE.SphereGeometry(0.04, 16, 16), new THREE.MeshStandardMaterial({ color: 0x88aaff }));
+            markerCenter.position.copy(centerOnWater);
+            scene.add(markerCenter);
+            groupItems.push(markerCenter);
+            
+            const markerIntersect = new THREE.Mesh(new THREE.SphereGeometry(0.04, 16, 16), new THREE.MeshStandardMaterial({ color: 0x88aaff }));
+            markerIntersect.position.copy(intersectionPoint);
+            scene.add(markerIntersect);
+            groupItems.push(markerIntersect);
+            
+            // 角度圆弧 (在点光源处)
+            const vecVertical = new THREE.Vector3(0, 1, 0).normalize();
+            const vecToIntersect = new THREE.Vector3(
+                intersectionPoint.x - pointSource.x,
+                intersectionPoint.y - pointSource.y,
+                intersectionPoint.z - pointSource.z
+            ).normalize();
+            const angleRad = Math.acos(Math.min(1.0, Math.max(-1.0, vecVertical.dot(vecToIntersect))));
+            const angleDegrees = (angleRad * 180 / Math.PI).toFixed(1);
+            
+            const arcRadius = 0.35;
+            const centerArc = pointSource.clone();
+            const arcPoints = [];
+            for (let i = 0; i <= 40; i++) {
+                const t = i / 40;
+                const angle = angleRad * t;
+                // 在垂直平面内插值
+                const dir = new THREE.Vector3(Math.sin(angle), Math.cos(angle), 0).normalize();
+                arcPoints.push(centerArc.clone().add(dir.multiplyScalar(arcRadius)));
+            }
+            const arcGeo = new THREE.BufferGeometry().setFromPoints(arcPoints);
+            const arcLine = new THREE.Line(arcGeo, new THREE.LineBasicMaterial({ color: 0xffaa66 }));
+            scene.add(arcLine);
+            groupItems.push(arcLine);
+            
+            // 角度标签 (CSS2D)
+            const angleDiv = document.createElement('div');
+            angleDiv.textContent = `${angleDegrees}°`;
+            angleDiv.style.cssText = 'color:#ffaa66; background:rgba(0,0,0,0.7); padding:2px 8px; border-radius:20px; font-size:11px; font-weight:bold';
+            triangleAngleLabel = new CSS2DObject(angleDiv);
+            const midDir = new THREE.Vector3(Math.sin(angleRad/2), Math.cos(angleRad/2), 0).normalize();
+            triangleAngleLabel.position.copy(centerArc.clone().add(midDir.multiplyScalar(arcRadius + 0.15)));
+            scene.add(triangleAngleLabel);
+            
+            triangleGroup = groupItems;
+        }
+        
+        // --- 光线生成（默认不显示）---
+        let rayArrows = [];
+        
+        function clearRays() {
+            rayArrows.forEach(arr => scene.remove(arr));
+            rayArrows = [];
+        }
+        
+        function addArrow(start, end, color, headLen = 0.05, headWid = 0.035) {
+            const dir = new THREE.Vector3().subVectors(end, start).normalize();
+            const len = start.distanceTo(end);
+            if (len < 0.04) return;
+            const arrow = new THREE.ArrowHelper(dir, start, len, color, headLen, headWid);
+            scene.add(arrow);
+            rayArrows.push(arrow);
+        }
+        
+        function addSingleRay(startPt, direction) {
+            if (direction.y <= 0.001) return;
+            const tHit = (0 - startPt.y) / direction.y;
+            if (tHit <= 0) return;
+            const hitPt = startPt.clone().add(direction.clone().multiplyScalar(tHit));
+            if (Math.abs(hitPt.x) > 3.5 || Math.abs(hitPt.z) > 3.5) return;
+            
+            const incidentAngle = Math.acos(Math.min(1.0, direction.y));
+            const isRefract = incidentAngle < criticalRad;
+            const lineColor = isRefract ? 0x66ccff : 0xff8866;
+            
+            addArrow(startPt, hitPt, lineColor);
+            
+            if (isRefract) {
+                const sinTheta2 = (nWater / nAir) * Math.sin(incidentAngle);
+                const theta2 = Math.asin(Math.min(1.0, sinTheta2));
+                const horizDir = new THREE.Vector3(direction.x, 0, direction.z).normalize();
+                const refractDir = new THREE.Vector3(
+                    horizDir.x * Math.sin(theta2), Math.cos(theta2), horizDir.z * Math.sin(theta2)
+                ).normalize();
+                const airEnd = hitPt.clone().add(refractDir.multiplyScalar(0.7));
+                addArrow(hitPt, airEnd, 0xaaddff);
+            } else {
+                const reflectDir = direction.clone().reflect(new THREE.Vector3(0, 1, 0));
+                const reflectEnd = hitPt.clone().add(reflectDir.multiplyScalar(0.9));
+                addArrow(hitPt, reflectEnd, 0xffaa66);
+            }
+        }
+        
+        function generateRays() {
+            clearRays();
+            if (!showRays) return;
+            
+            const sourceY = -currentDepth;
+            
+            if (currentLightType === 'point') {
+                const startPt = new THREE.Vector3(0, sourceY, 0);
+                for (let i = 0; i <= 24; i++) {
+                    const t = i / 24;
+                    const angleDeg = -75 + t * 150;
+                    const angleRad = angleDeg * Math.PI / 180;
+                    const dirY = Math.cos(angleRad);
+                    const horizMag = Math.sin(angleRad);
+                    const azimuth = (i / 24) * Math.PI * 2;
+                    const dir = new THREE.Vector3(horizMag * Math.cos(azimuth), dirY, horizMag * Math.sin(azimuth)).normalize();
+                    addSingleRay(startPt, dir);
+                }
+            } 
+            else if (currentLightType === 'line') {
+                const L = 1.0;
+                const sampleCount = 5;
+                for (let s = 0; s < sampleCount; s++) {
+                    const xOffset = -L/2 + (s / (sampleCount-1)) * L;
+                    const startPt = new THREE.Vector3(xOffset, sourceY, 0);
+                    for (let i = 0; i <= 10; i++) {
+                        const t = i / 10;
+                        const angleDeg = -70 + t * 140;
+                        const angleRad = angleDeg * Math.PI / 180;
+                        const dirY = Math.cos(angleRad);
+                        const horizMag = Math.sin(angleRad);
+                        const azimuth = (i / 10) * Math.PI * 2;
+                        const dir = new THREE.Vector3(horizMag * Math.cos(azimuth), dirY, horizMag * Math.sin(azimuth)).normalize();
+                        addSingleRay(startPt, dir);
+                    }
+                }
+            } 
+            else if (currentLightType === 'ring') {
+                const R_ring = 0.4;
+                const pointCount = 8;
+                for (let p = 0; p < pointCount; p++) {
+                    const angle = (p / pointCount) * Math.PI * 2;
+                    const startPt = new THREE.Vector3(R_ring * Math.cos(angle), sourceY, R_ring * Math.sin(angle));
+                    for (let i = 0; i <= 8; i++) {
+                        const t = i / 8;
+                        const angleDeg = -65 + t * 130;
+                        const angleRad = angleDeg * Math.PI / 180;
+                        const dirY = Math.cos(angleRad);
+                        const horizMag = Math.sin(angleRad);
+                        const azimuth = (i / 8) * Math.PI * 2;
+                        const dir = new THREE.Vector3(horizMag * Math.cos(azimuth), dirY, horizMag * Math.sin(azimuth)).normalize();
+                        addSingleRay(startPt, dir);
+                    }
+                }
+            }
+        }
+        
+        // --- 切面模式
+        let sliceActive = false;
+        let slicePlane = null;
+        const toggleTriangleBtn = document.getElementById('toggleTriangleBtn');
+        
+        function toggleSliceMode() {
+            sliceActive = !sliceActive;
+            if (sliceActive) {
+                if (!slicePlane) {
+                    const geometry = new THREE.PlaneGeometry(5.2, 4.2);
+                    const material = new THREE.MeshPhongMaterial({ color: 0x66aaff, side: THREE.DoubleSide, transparent: true, opacity: 0.2 });
+                    slicePlane = new THREE.Mesh(geometry, material);
+                    slicePlane.rotation.y = Math.PI / 2;
+                    slicePlane.position.set(0, -0.7, 0);
+                    scene.add(slicePlane);
+                } else {
+                    slicePlane.visible = true;
+                }
+                toggleSliceBtn.textContent = "✂️ 切面 (ON)";
+                toggleSliceBtn.classList.add('active');
+                // 切面显示后，显示直角三角形按钮
+                toggleTriangleBtn.style.display = 'inline-block';
+                camera.position.set(2.2, 1.5, 3.2);
+                controls.target.set(0, -0.7, 0);
+                controls.update();
+            } else {
+                if (slicePlane) slicePlane.visible = false;
+                toggleSliceBtn.textContent = "✂️ 切面 (OFF)";
+                toggleSliceBtn.classList.remove('active');
+                // 切面关闭时，隐藏直角三角形按钮并清除三角形
+                toggleTriangleBtn.style.display = 'none';
+                if (showTriangle) {
+                    showTriangle = false;
+                    toggleTriangleBtn.textContent = "📐 显示直角三角形";
+                }
+                if (triangleGroup) {
+                    triangleGroup.forEach(item => scene.remove(item));
+                    triangleGroup = null;
+                }
+                if (triangleAngleLabel) {
+                    scene.remove(triangleAngleLabel);
+                    triangleAngleLabel = null;
+                }
+                camera.position.set(4.2, 2.8, 5.5);
+                controls.target.set(0, -0.6, 0);
+                controls.update();
+            }
+            generateRays();
+        }
+        
+        // --- 光线显示切换
+        function toggleRays() {
+            showRays = !showRays;
+            toggleRaysBtn.textContent = showRays ? "🔆 隐藏光线" : "🔆 显示光线";
+            generateRays();
+        }
+        
+        // --- 三角形显示切换
+        function toggleTriangleDisplay() {
+            showTriangle = !showTriangle;
+            toggleTriangleBtn.textContent = showTriangle ? "📐 隐藏直角三角形" : "📐 显示直角三角形";
+            updateTriangle();
+        }
+        
+        // --- 红色边界显示切换
+        function toggleRedBoundary() {
+            showRedBoundary = !showRedBoundary;
+            toggleRedBoundaryBtn.textContent = showRedBoundary ? "🔴 隐藏红色边界" : "🔴 显示红色边界";
+            toggleRedBoundaryBtn.classList.toggle('active', showRedBoundary);
+            updateTransmissiveRegion();
+        }
+        
+        // --- 深度控制
+        function setLightDepth(depth) {
+            currentDepth = Math.min(1.5, Math.max(0.1, depth));
+            const yPos = -currentDepth;
+            
+            if (pointVisual) pointVisual.position.set(0, yPos, 0);
+            if (lineVisual) lineVisual.position.set(0, yPos, 0);
+            if (ringVisual) ringVisual.position.set(0, yPos, 0);
+            actualLight.position.set(0, yPos, 0);
+            actualLight.intensity = Math.min(1.4, 0.8 + currentDepth * 0.2);
+            
+            const R = currentDepth * tanCritical;
+            document.getElementById('depthValue').textContent = currentDepth.toFixed(3);
+            document.getElementById('radiusValue').textContent = R.toFixed(3);
+            
+            updateTransmissiveRegion();
+            generateRays();
+            updateTriangle();
+            
+            const typeName = { point: '点光源', line: '线光源', ring: '环光源' }[currentLightType];
+            document.getElementById('statusText').innerHTML = `光源类型: ${typeName}<br>深度: ${currentDepth.toFixed(3)} m<br>折射率 n=2.0 | 临界角 30.00°<br>光圆半径 R = ${R.toFixed(3)} m`;
+        }
+        
+        function switchLightType(type) {
+            currentLightType = type;
+            
+            if (pointVisual) pointVisual.visible = false;
+            if (lineVisual) lineVisual.visible = false;
+            if (ringVisual) ringVisual.visible = false;
+            
+            if (type === 'point') {
+                if (!pointVisual) { pointVisual = createPointVisual(); scene.add(pointVisual); }
+                pointVisual.visible = true;
+            } else if (type === 'line') {
+                if (!lineVisual) { lineVisual = createLineVisual(); scene.add(lineVisual); }
+                lineVisual.visible = true;
+            } else if (type === 'ring') {
+                if (!ringVisual) { ringVisual = createRingVisual(); scene.add(ringVisual); }
+                ringVisual.visible = true;
+            }
+            
+            setLightDepth(currentDepth);
+        }
+        
+        // 按钮事件
+        const pointBtn = document.getElementById('pointLightBtn');
+        const lineBtn = document.getElementById('lineLightBtn');
+        const ringBtn = document.getElementById('ringLightBtn');
+        const toggleSliceBtn = document.getElementById('toggleSliceBtn');
+        const toggleRaysBtn = document.getElementById('toggleRaysBtn');
+        const toggleRedBoundaryBtn = document.getElementById('toggleRedBoundaryBtn');
+        const depthSlider = document.getElementById('depthSlider');
+        
+        pointBtn.addEventListener('click', () => {
+            pointBtn.classList.add('active');
+            lineBtn.classList.remove('active');
+            ringBtn.classList.remove('active');
+            switchLightType('point');
+        });
+        lineBtn.addEventListener('click', () => {
+            lineBtn.classList.add('active');
+            pointBtn.classList.remove('active');
+            ringBtn.classList.remove('active');
+            switchLightType('line');
+        });
+        ringBtn.addEventListener('click', () => {
+            ringBtn.classList.add('active');
+            pointBtn.classList.remove('active');
+            lineBtn.classList.remove('active');
+            switchLightType('ring');
+        });
+        toggleSliceBtn.addEventListener('click', toggleSliceMode);
+        toggleRaysBtn.addEventListener('click', toggleRays);
+        toggleRedBoundaryBtn.addEventListener('click', toggleRedBoundary);
+        toggleTriangleBtn.addEventListener('click', toggleTriangleDisplay);
+        depthSlider.addEventListener('input', (e) => setLightDepth(parseFloat(e.target.value)));
+        
+        // 初始化
+        switchLightType('point');
+        
+        // 动画循环
+        let time = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.012;
+            if (pointVisual && pointVisual.children[0]) {
+                pointVisual.children[0].scale.setScalar(1 + Math.sin(time * 8) * 0.06);
+            }
+            particles.rotation.y = time * 0.02;
+            controls.update();
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+        }
+        animate();
+        
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
