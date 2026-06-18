@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>两物块运动学交互演示</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        body { font-family: 'Noto Sans SC', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 28px rgba(0,0,0,0.06);
+        }
+
+        .input-group label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 3px;
+            display: block;
+            letter-spacing: 0.02em;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.84rem;
+            background: #f8fafc;
+            transition: all 0.2s;
+            color: #334155;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+        }
+
+        .input-group input.block-a { border-left: 3.5px solid #ef4444; }
+        .input-group input.block-b { border-left: 3.5px solid #3b82f6; }
+
+        .btn {
+            padding: 9px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.86rem;
+            transition: all 0.18s;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(59, 130, 246, 0.45); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1.5px solid #e2e8f0;
+        }
+        .btn-secondary:hover { background: #e2e8f0; border-color: #cbd5e1; }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.35);
+        }
+        .btn-warning:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(245, 158, 11, 0.45); }
+
+        .btn-toggle {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
+            padding: 8px 16px;
+            font-size: 0.78rem;
+        }
+        .btn-toggle:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4); }
+        .btn-toggle.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.74rem;
+            font-weight: 700;
+        }
+
+        .status-running { background: #dcfce7; color: #166534; }
+        .status-paused { background: #fef3c7; color: #92400e; }
+        .status-stopped { background: #f1f5f9; color: #64748b; }
+        .status-collision { background: #dbeafe; color: #1e40af; }
+        .status-finished { background: #f1f5f9; color: #64748b; }
+
+        .info-card {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border: 1.5px solid #bae6fd;
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .info-card-warn {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border: 1.5px solid #fde68a;
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .speed-slider {
+            -webkit-appearance: none;
+            width: 110px;
+            height: 6px;
+            border-radius: 3px;
+            background: #e2e8f0;
+            outline: none;
+        }
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+        }
+
+        .collision-flash {
+            animation: flash 0.5s ease-in-out 3;
+        }
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.25; }
+        }
+
+        .panel-header {
+            font-size: 0.76rem;
+            font-weight: 800;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 10px;
+        }
+
+        .data-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 7px 11px;
+            border-radius: 10px;
+        }
+
+        canvas { border-radius: 14px; }
+
+        .preset-btn {
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid #e2e8f0;
+            background: #f8fafc;
+            color: #475569;
+            transition: all 0.15s;
+            text-align: center;
+        }
+        .preset-btn:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1d4ed8;
+        }
+        .preset-btn.active {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1e40af;
+        }
+
+        .brake-check {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            background: #fef2f2;
+            border: 1.5px solid #fecaca;
+            transition: all 0.15s;
+        }
+        .brake-check:hover { background: #fee2e2; }
+        .brake-check input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #ef4444;
+            cursor: pointer;
+        }
+        .brake-check span {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #dc2626;
+        }
+
+        .brake-check-b {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+        .brake-check-b:hover { background: #dbeafe; }
+        .brake-check-b span { color: #2563eb; }
+        .brake-check-b input[type="checkbox"] { accent-color: #3b82f6; }
+    </style>
+<base target="_blank">
+<base target="_blank">
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <div class="max-w-[1200px] mx-auto p-4">
+        <div class="flex items-center justify-between mb-5">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">两物块运动学交互演示</h1>
+                <p class="text-sm text-slate-500 mt-1">设定初速度、加速度与初始位置，观察运动过程与图像</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="statusBadge" class="status-badge status-stopped">
+                    <span class="w-2 h-2 rounded-full bg-current"></span>
+                    <span id="statusText">就绪</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="lg:col-span-2 space-y-4">
+                <div class="glass-panel rounded-2xl p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="panel-header">运动动画</div>
+                        <div class="flex items-center gap-3">
+                            <button id="btnLayout" class="btn btn-toggle" onclick="toggleLayout()">
+                                <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3zm0 5a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V8zm0 5a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-2z"/></svg>
+                                <span id="layoutText">共线</span>
+                            </button>
+                            <div class="flex items-center gap-4 text-xs text-slate-500">
+                                <span class="flex items-center gap-1.5"><span class="legend-dot bg-red-500"></span> A</span>
+                                <span class="flex items-center gap-1.5"><span class="legend-dot bg-blue-500"></span> B</span>
+                            </div>
+                        </div>
+                    </div>
+                    <canvas id="animCanvas" width="720" height="380" class="w-full bg-white shadow-inner border border-slate-100"></canvas>
+
+                    <div class="flex items-center justify-between mt-4">
+                        <div class="flex items-center gap-3">
+                            <button id="btnStart" class="btn btn-primary">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M4 2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v11a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-11z"/></svg>
+                                <span id="btnStartText">开始</span>
+                            </button>
+                            <button id="btnPause" class="btn btn-secondary hidden">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/></svg>
+                                暂停
+                            </button>
+                            <button id="btnReset" class="btn btn-warning">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>
+                                复位
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-slate-500 font-medium">速度</span>
+                                <input type="range" id="speedSlider" class="speed-slider" min="0.2" max="3" step="0.1" value="1">
+                                <span id="speedValue" class="text-xs text-slate-600 mono w-10">1.0x</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="glass-panel rounded-2xl p-4">
+                        <div class="panel-header">位移-时间图像 (x-t)</div>
+                        <canvas id="xtCanvas" width="340" height="240" class="w-full bg-white shadow-inner border border-slate-100"></canvas>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-4">
+                        <div class="panel-header">速度-时间图像 (v-t)</div>
+                        <canvas id="vtCanvas" width="340" height="240" class="w-full bg-white shadow-inner border border-slate-100"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="glass-panel rounded-2xl p-4 border-l-[3.5px] border-l-red-500">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-3 h-3 rounded-full bg-red-500 shadow-sm"></div>
+                        <h3 class="font-bold text-slate-700 text-sm">物块 A 参数</h3>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="input-group">
+                            <label>初速度 v0 (m/s)</label>
+                            <input type="number" id="v0a" class="block-a" value="2" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>加速度 a (m/s2)</label>
+                            <input type="number" id="a0a" class="block-a" value="0" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>初始位置 x0 (m)</label>
+                            <input type="number" id="x0a" class="block-a" value="0" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>初始时刻 t0 (s)</label>
+                            <input type="number" id="t0a" class="block-a" value="0" step="0.1" min="0">
+                        </div>
+                    </div>
+                    <div class="mt-2 flex justify-end">
+                        <label id="brakeCheckA" class="brake-check hidden">
+                            <input type="checkbox" id="brakeA">
+                            <span>刹车</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-4 border-l-[3.5px] border-l-blue-500">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-3 h-3 rounded-full bg-blue-500 shadow-sm"></div>
+                        <h3 class="font-bold text-slate-700 text-sm">物块 B 参数</h3>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="input-group">
+                            <label>初速度 v0 (m/s)</label>
+                            <input type="number" id="v0b" class="block-b" value="-1" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>加速度 a (m/s2)</label>
+                            <input type="number" id="a0b" class="block-b" value="0.5" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>初始位置 x0 (m)</label>
+                            <input type="number" id="x0b" class="block-b" value="10" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>初始时刻 t0 (s)</label>
+                            <input type="number" id="t0b" class="block-b" value="0" step="0.1" min="0">
+                        </div>
+                    </div>
+                    <div class="mt-2 flex justify-end">
+                        <label id="brakeCheckB" class="brake-check brake-check-b hidden">
+                            <input type="checkbox" id="brakeB">
+                            <span>刹车</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-4">
+                    <div class="panel-header">全局参数</div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="input-group">
+                            <label>终止时刻 t_max (s)</label>
+                            <input type="number" id="tMaxInput" value="30" step="1" min="1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-4">
+                    <div class="panel-header">实时数据</div>
+                    <div class="space-y-2">
+                        <div class="data-row bg-red-50">
+                            <span class="text-xs font-semibold text-red-700">物块 A 位置</span>
+                            <span id="posA" class="text-sm font-bold text-red-600 mono">0.00 m</span>
+                        </div>
+                        <div class="data-row bg-blue-50">
+                            <span class="text-xs font-semibold text-blue-700">物块 B 位置</span>
+                            <span id="posB" class="text-sm font-bold text-blue-600 mono">10.00 m</span>
+                        </div>
+                        <div class="data-row bg-slate-50">
+                            <span class="text-xs font-semibold text-slate-700">当前时间</span>
+                            <span id="currTime" class="text-sm font-bold text-slate-600 mono">0.00 s</span>
+                        </div>
+                        <div class="data-row bg-amber-50">
+                            <span class="text-xs font-semibold text-amber-700">间距</span>
+                            <span id="distance" class="text-sm font-bold text-amber-600 mono">10.00 m</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-4">
+                    <div class="panel-header">预设场景</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="loadPreset(0)" class="preset-btn" data-preset="0">相向运动</button>
+                        <button onclick="loadPreset(1)" class="preset-btn" data-preset="1">追及问题</button>
+                        <button onclick="loadPreset(2)" class="preset-btn" data-preset="2">刹车问题</button>
+                        <button onclick="loadPreset(3)" class="preset-btn" data-preset="3">不同时出发</button>
+                    </div>
+                </div>
+
+                <div id="collisionInfo" class="info-card hidden">
+                    <div class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-sky-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <div>
+                            <div class="text-sm font-bold text-sky-800">位置对齐！</div>
+                            <div class="text-xs text-sky-600 mt-1">两物块在 <span id="collisionTime" class="font-bold mono">--</span> 时位置对齐</div>
+                            <div class="text-xs text-sky-600">对齐位置: <span id="collisionPos" class="font-bold mono">--</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="nearestInfo" class="info-card-warn hidden">
+                    <div class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <div>
+                            <div class="text-sm font-bold text-amber-800">未相遇</div>
+                            <div class="text-xs text-amber-700 mt-1">最近时刻: <span id="nearestTime" class="font-bold mono">--</span></div>
+                            <div class="text-xs text-amber-700">最近距离: <span id="nearestDist" class="font-bold mono">--</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        const GRAPH_LOOKAHEAD = 1.2;
+        const ANIM_PADDING = 60;
+
+        let state = {
+            running: false, paused: false, t: 0, speedMultiplier: 1,
+            collisionDetected: false, collisionTime: null, collisionPos: null,
+            nearestInfo: null, parallelMode: false, animFrame: null
+        };
+
+        const animCanvas = document.getElementById('animCanvas');
+        const xtCanvas = document.getElementById('xtCanvas');
+        const vtCanvas = document.getElementById('vtCanvas');
+        const ctxAnim = animCanvas.getContext('2d');
+        const ctxXt = xtCanvas.getContext('2d');
+        const ctxVt = vtCanvas.getContext('2d');
+
+        const btnStart = document.getElementById('btnStart');
+        const btnStartText = document.getElementById('btnStartText');
+        const btnPause = document.getElementById('btnPause');
+        const btnReset = document.getElementById('btnReset');
+        const btnLayout = document.getElementById('btnLayout');
+        const layoutText = document.getElementById('layoutText');
+        const speedSlider = document.getElementById('speedSlider');
+        const speedValue = document.getElementById('speedValue');
+        const statusBadge = document.getElementById('statusBadge');
+        const statusText = document.getElementById('statusText');
+        const collisionInfo = document.getElementById('collisionInfo');
+        const nearestInfo = document.getElementById('nearestInfo');
+        const brakeA = document.getElementById('brakeA');
+        const brakeB = document.getElementById('brakeB');
+        const brakeCheckA = document.getElementById('brakeCheckA');
+        const brakeCheckB = document.getElementById('brakeCheckB');
+        const tMaxInput = document.getElementById('tMaxInput');
+
+        function getMaxTime() {
+            const val = parseFloat(tMaxInput.value);
+            return isNaN(val) || val < 1 ? 30 : val;
+        }
+
+        function formatExact(val) {
+            return { exact: val.toFixed(2), decimal: val.toFixed(2) };
+        }
+
+        function formatValue(val, unit) {
+            const f = formatExact(val);
+            return f.exact + ' ' + unit;
+        }
+
+        function formatValueNoUnit(val) {
+            const f = formatExact(val);
+            return f.exact;
+        }
+
+        function getParams() {
+            return {
+                A: { v0: parseFloat(document.getElementById('v0a').value) || 0, a: parseFloat(document.getElementById('a0a').value) || 0, x0: parseFloat(document.getElementById('x0a').value) || 0, t0: parseFloat(document.getElementById('t0a').value) || 0, brake: brakeA.checked },
+                B: { v0: parseFloat(document.getElementById('v0b').value) || 0, a: parseFloat(document.getElementById('a0b').value) || 0, x0: parseFloat(document.getElementById('x0b').value) || 0, t0: parseFloat(document.getElementById('t0b').value) || 0, brake: brakeB.checked }
+            };
+        }
+
+        function updateBrakeVisibility() {
+            const p = getParams();
+            // Show brake checkbox only when acceleration opposes velocity
+            const opposeA = (p.A.v0 > 0 && p.A.a < 0) || (p.A.v0 < 0 && p.A.a > 0);
+            const opposeB = (p.B.v0 > 0 && p.B.a < 0) || (p.B.v0 < 0 && p.B.a > 0);
+
+            if (opposeA) {
+                brakeCheckA.classList.remove('hidden');
+            } else {
+                brakeCheckA.classList.add('hidden');
+                brakeA.checked = false;
+            }
+
+            if (opposeB) {
+                brakeCheckB.classList.remove('hidden');
+            } else {
+                brakeCheckB.classList.add('hidden');
+                brakeB.checked = false;
+            }
+        }
+
+        function computeState(t, params) {
+            let dtA = Math.max(0, t - params.A.t0);
+            let dtB = Math.max(0, t - params.B.t0);
+
+            let vA = params.A.v0 + params.A.a * dtA;
+            let xA = params.A.x0 + params.A.v0 * dtA + 0.5 * params.A.a * dtA * dtA;
+            let dxA = params.A.v0 * dtA + 0.5 * params.A.a * dtA * dtA;
+            let stoppedA = false;
+
+            if (params.A.brake && params.A.a !== 0) {
+                const oppose = (params.A.v0 > 0 && params.A.a < 0) || (params.A.v0 < 0 && params.A.a > 0);
+                if (oppose) {
+                    const tStop = -params.A.v0 / params.A.a;
+                    if (tStop >= 0 && dtA >= tStop) {
+                        dtA = tStop; vA = 0;
+                        xA = params.A.x0 + params.A.v0 * dtA + 0.5 * params.A.a * dtA * dtA;
+                        dxA = params.A.v0 * dtA + 0.5 * params.A.a * dtA * dtA;
+                        stoppedA = true;
+                    }
+                }
+            }
+
+            let vB = params.B.v0 + params.B.a * dtB;
+            let xB = params.B.x0 + params.B.v0 * dtB + 0.5 * params.B.a * dtB * dtB;
+            let dxB = params.B.v0 * dtB + 0.5 * params.B.a * dtB * dtB;
+            let stoppedB = false;
+
+            if (params.B.brake && params.B.a !== 0) {
+                const oppose = (params.B.v0 > 0 && params.B.a < 0) || (params.B.v0 < 0 && params.B.a > 0);
+                if (oppose) {
+                    const tStop = -params.B.v0 / params.B.a;
+                    if (tStop >= 0 && dtB >= tStop) {
+                        dtB = tStop; vB = 0;
+                        xB = params.B.x0 + params.B.v0 * dtB + 0.5 * params.B.a * dtB * dtB;
+                        dxB = params.B.v0 * dtB + 0.5 * params.B.a * dtB * dtB;
+                        stoppedB = true;
+                    }
+                }
+            }
+
+            return { xA, vA, activeA: t >= params.A.t0, dxA, stoppedA, xB, vB, activeB: t >= params.B.t0, dxB, stoppedB };
+        }
+
+        function findCollisionOrNearest(params) {
+            const maxTime = getMaxTime();
+            let minDist = Infinity, nearestTime = null, collisionTime = null, collisionPos = null;
+            const tStart = Math.max(params.A.t0, params.B.t0);
+            const step = 0.002;
+            let prevDiff = null;
+
+            for (let t = tStart; t <= maxTime; t += step) {
+                const s = computeState(t, params);
+                const diff = s.xA - s.xB;
+                const dist = Math.abs(diff);
+                if (dist < minDist) { minDist = dist; nearestTime = t; }
+                if (Math.abs(diff) < 0.005) { collisionTime = t; collisionPos = s.xA; break; }
+                if (prevDiff !== null && diff * prevDiff < 0) {
+                    let lo = t - step, hi = t;
+                    for (let j = 0; j < 25; j++) {
+                        const mid = (lo + hi) / 2;
+                        const sm = computeState(mid, params);
+                        const dm = sm.xA - sm.xB;
+                        if (Math.abs(dm) < 0.0001) { collisionTime = mid; collisionPos = sm.xA; break; }
+                        const slo = computeState(lo, params);
+                        if ((slo.xA - slo.xB) * dm < 0) hi = mid; else lo = mid;
+                    }
+                    if (!collisionTime) { const sf = computeState((lo+hi)/2, params); collisionTime = (lo+hi)/2; collisionPos = sf.xA; }
+                    break;
+                }
+                prevDiff = diff;
+            }
+            return { collisionTime, collisionPos, nearestTime, minDist };
+        }
+
+        function getAnimRange(params, t) {
+            let minX = Infinity, maxX = -Infinity;
+            const maxTime = getMaxTime();
+            const tEnd = Math.max(t, 5);
+            for (let i = 0; i <= 200; i++) {
+                const tt = (i / 200) * tEnd;
+                const s = computeState(tt, params);
+                if (s.activeA) { minX = Math.min(minX, s.xA); maxX = Math.max(maxX, s.xA); }
+                if (s.activeB) { minX = Math.min(minX, s.xB); maxX = Math.max(maxX, s.xB); }
+            }
+            const range = maxX - minX;
+            if (range < 2) { minX -= 1; maxX += 1; }
+            else { minX -= range * 0.08; maxX += range * 0.08; }
+            return { minX, maxX };
+        }
+
+        function getXtRange(params, t) {
+            let minX = Infinity, maxX = -Infinity;
+            const maxTime = getMaxTime();
+            const tEnd = Math.max(t * GRAPH_LOOKAHEAD, 5);
+            for (let i = 0; i <= 300; i++) {
+                const tt = (i / 300) * tEnd;
+                const s = computeState(tt, params);
+                if (s.activeA) { minX = Math.min(minX, s.xA); maxX = Math.max(maxX, s.xA); }
+                if (s.activeB) { minX = Math.min(minX, s.xB); maxX = Math.max(maxX, s.xB); }
+            }
+            const range = maxX - minX;
+            if (range < 1) { minX -= 0.5; maxX += 0.5; }
+            else { minX -= range * 0.05; maxX += range * 0.05; }
+            return { minX, maxX, tMax: tEnd };
+        }
+
+        function getVtRange(params, t) {
+            let minV = Infinity, maxV = -Infinity;
+            const maxTime = getMaxTime();
+            const tEnd = Math.max(t * GRAPH_LOOKAHEAD, 5);
+            for (let i = 0; i <= 300; i++) {
+                const tt = (i / 300) * tEnd;
+                const s = computeState(tt, params);
+                if (s.activeA) { minV = Math.min(minV, s.vA); maxV = Math.max(maxV, s.vA); }
+                if (s.activeB) { minV = Math.min(minV, s.vB); maxV = Math.max(maxV, s.vB); }
+            }
+            const range = maxV - minV;
+            if (range < 1) { minV -= 0.5; maxV += 0.5; }
+            else { minV -= range * 0.05; maxV += range * 0.05; }
+            return { minV, maxV, tMax: tEnd };
+        }
+
+        function niceNumber(x) {
+            const exp = Math.floor(Math.log10(Math.abs(x)));
+            const f = x / Math.pow(10, exp);
+            let nf;
+            if (f <= 1) nf = 1;
+            else if (f <= 2) nf = 2;
+            else if (f <= 5) nf = 5;
+            else nf = 10;
+            return nf * Math.pow(10, exp);
+        }
+
+        function niceTicks(min, max, count) {
+            const range = niceNumber((max - min) / count);
+            const niceMin = Math.floor(min / range) * range;
+            const niceMax = Math.ceil(max / range) * range;
+            const ticks = [];
+            for (let v = niceMin; v <= niceMax + range * 0.001; v += range) {
+                ticks.push(Math.round(v * 1000) / 1000);
+            }
+            return { ticks, step: range };
+        }
+
+        function drawAnimation() {
+            const w = animCanvas.width, h = animCanvas.height;
+            const params = getParams();
+            const s = computeState(state.t, params);
+            const range = getAnimRange(params, state.t);
+
+            ctxAnim.clearRect(0, 0, w, h);
+
+            const grad = ctxAnim.createLinearGradient(0, 0, 0, h);
+            grad.addColorStop(0, '#fafbfc');
+            grad.addColorStop(1, '#f1f5f9');
+            ctxAnim.fillStyle = grad;
+            ctxAnim.fillRect(0, 0, w, h);
+
+            const plotW = w - ANIM_PADDING * 2;
+            const scaleX = plotW / (range.maxX - range.minX);
+            const toPx = (x) => ANIM_PADDING + (x - range.minX) * scaleX;
+
+            let trackYA, trackYB;
+            if (state.parallelMode) { trackYA = h * 0.30; trackYB = h * 0.72; }
+            else { trackYA = h * 0.50; trackYB = h * 0.50; }
+
+            const xTicks = niceTicks(range.minX, range.maxX, 8);
+            ctxAnim.strokeStyle = '#e2e8f0';
+            ctxAnim.lineWidth = 1;
+            ctxAnim.font = '10px "JetBrains Mono", monospace';
+            ctxAnim.textAlign = 'center';
+            ctxAnim.fillStyle = '#94a3b8';
+
+            xTicks.ticks.forEach(x => {
+                const px = toPx(x);
+                ctxAnim.beginPath();
+                ctxAnim.moveTo(px, 10);
+                ctxAnim.lineTo(px, h - 10);
+                ctxAnim.stroke();
+                ctxAnim.fillText(x.toFixed(1), px, h - 3);
+            });
+
+            ctxAnim.strokeStyle = '#94a3b8';
+            ctxAnim.lineWidth = 2;
+            ctxAnim.beginPath();
+            ctxAnim.moveTo(ANIM_PADDING - 10, trackYA);
+            ctxAnim.lineTo(w - ANIM_PADDING + 10, trackYA);
+            ctxAnim.stroke();
+
+            if (state.parallelMode) {
+                ctxAnim.beginPath();
+                ctxAnim.moveTo(ANIM_PADDING - 10, trackYB);
+                ctxAnim.lineTo(w - ANIM_PADDING + 10, trackYB);
+                ctxAnim.stroke();
+            }
+
+            const originPx = toPx(0);
+            if (originPx >= ANIM_PADDING && originPx <= w - ANIM_PADDING) {
+                ctxAnim.fillStyle = '#64748b';
+                ctxAnim.beginPath();
+                ctxAnim.arc(originPx, trackYA, 3.5, 0, Math.PI*2);
+                ctxAnim.fill();
+                if (state.parallelMode) {
+                    ctxAnim.beginPath();
+                    ctxAnim.arc(originPx, trackYB, 3.5, 0, Math.PI*2);
+                    ctxAnim.fill();
+                }
+                ctxAnim.fillText('O', originPx, trackYA + 18);
+            }
+
+            const blockW = 32, blockH = 40;
+
+            // Block A
+            const pxA = toPx(s.xA);
+            const inViewA = pxA >= -30 && pxA <= w + 30;
+            const isActiveA = s.activeA;
+
+            if (inViewA) {
+                ctxAnim.globalAlpha = isActiveA ? 1 : 0.35;
+                ctxAnim.shadowColor = 'rgba(239, 68, 68, 0.25)';
+                ctxAnim.shadowBlur = isActiveA ? 14 : 6;
+                ctxAnim.shadowOffsetY = isActiveA ? 4 : 2;
+                ctxAnim.fillStyle = isActiveA ? '#ef4444' : '#fca5a5';
+                roundRect(ctxAnim, pxA - blockW/2, trackYA - blockH - 6, blockW, blockH, 8);
+                ctxAnim.fill();
+                ctxAnim.shadowBlur = 0;
+                ctxAnim.shadowOffsetY = 0;
+
+                ctxAnim.fillStyle = isActiveA ? '#fff' : '#7f1d1d';
+                ctxAnim.font = 'bold 13px "Noto Sans SC", sans-serif';
+                ctxAnim.textAlign = 'center';
+                ctxAnim.fillText('A', pxA, trackYA - blockH/2 - 2);
+
+                if (isActiveA && Math.abs(s.vA) > 0.05) {
+                    drawArrow(ctxAnim, pxA, trackYA - blockH - 22, s.vA * scaleX * 0.25, '#ef4444');
+                }
+
+                ctxAnim.fillStyle = isActiveA ? '#dc2626' : '#b91c1c';
+                ctxAnim.font = '10px "JetBrains Mono", monospace';
+                ctxAnim.fillText(s.xA.toFixed(2) + 'm', pxA, trackYA + 16);
+
+                if (isActiveA) {
+                    const pxStart = toPx(params.A.x0);
+                    const pxEnd = toPx(s.xA);
+                    const midX = (pxStart + pxEnd) / 2;
+                    const dispY = trackYA - blockH - 55;
+
+                    ctxAnim.strokeStyle = '#f87171';
+                    ctxAnim.lineWidth = 1.5;
+                    ctxAnim.setLineDash([3, 2]);
+                    ctxAnim.beginPath();
+                    ctxAnim.moveTo(pxStart, dispY + 5);
+                    ctxAnim.lineTo(pxEnd, dispY + 5);
+                    ctxAnim.stroke();
+                    ctxAnim.setLineDash([]);
+
+                    ctxAnim.fillStyle = '#fca5a5';
+                    ctxAnim.beginPath();
+                    ctxAnim.arc(pxStart, dispY + 5, 3, 0, Math.PI*2);
+                    ctxAnim.fill();
+                    ctxAnim.strokeStyle = '#ef4444';
+                    ctxAnim.lineWidth = 1;
+                    ctxAnim.stroke();
+
+                    ctxAnim.fillStyle = '#ef4444';
+                    ctxAnim.beginPath();
+                    const dirA = pxEnd > pxStart ? 1 : -1;
+                    ctxAnim.moveTo(pxEnd, dispY + 5);
+                    ctxAnim.lineTo(pxEnd - dirA * 5, dispY + 2);
+                    ctxAnim.lineTo(pxEnd - dirA * 5, dispY + 8);
+                    ctxAnim.closePath();
+                    ctxAnim.fill();
+
+                    ctxAnim.fillStyle = '#fef2f2';
+                    const labelW = 64, labelH = 18;
+                    ctxAnim.fillRect(midX - labelW/2, dispY - 6, labelW, labelH);
+                    ctxAnim.strokeStyle = '#ef4444';
+                    ctxAnim.lineWidth = 1;
+                    roundRect(ctxAnim, midX - labelW/2, dispY - 6, labelW, labelH, 4);
+                    ctxAnim.stroke();
+                    ctxAnim.fillStyle = '#dc2626';
+                    ctxAnim.font = 'bold 9px "JetBrains Mono", monospace';
+                    ctxAnim.textAlign = 'center';
+                    const signA = s.dxA >= 0 ? '+' : '';
+                    ctxAnim.fillText('\u0394x=' + signA + s.dxA.toFixed(2) + 'm', midX, dispY + 6);
+                } else {
+                    const dispY = trackYA - blockH - 55;
+                    ctxAnim.fillStyle = '#fecaca';
+                    ctxAnim.fillRect(pxA - 26, dispY - 6, 52, 18);
+                    ctxAnim.strokeStyle = '#f87171';
+                    ctxAnim.lineWidth = 1;
+                    roundRect(ctxAnim, pxA - 26, dispY - 6, 52, 18, 4);
+                    ctxAnim.stroke();
+                    ctxAnim.fillStyle = '#991b1b';
+                    ctxAnim.font = 'bold 9px "Noto Sans SC", sans-serif';
+                    ctxAnim.textAlign = 'center';
+                    ctxAnim.fillText('未启动', pxA, dispY + 6);
+                }
+
+                ctxAnim.globalAlpha = 1;
+            }
+
+            // Block B
+            const pxB = toPx(s.xB);
+            const inViewB = pxB >= -30 && pxB <= w + 30;
+            const isActiveB = s.activeB;
+
+            if (inViewB) {
+                ctxAnim.globalAlpha = isActiveB ? 1 : 0.35;
+                ctxAnim.shadowColor = 'rgba(59, 130, 246, 0.25)';
+                ctxAnim.shadowBlur = isActiveB ? 14 : 6;
+                ctxAnim.shadowOffsetY = isActiveB ? 4 : 2;
+                ctxAnim.fillStyle = isActiveB ? '#3b82f6' : '#93c5fd';
+                roundRect(ctxAnim, pxB - blockW/2, trackYB - blockH - 6, blockW, blockH, 8);
+                ctxAnim.fill();
+                ctxAnim.shadowBlur = 0;
+                ctxAnim.shadowOffsetY = 0;
+
+                ctxAnim.fillStyle = isActiveB ? '#fff' : '#1e3a8a';
+                ctxAnim.font = 'bold 13px "Noto Sans SC", sans-serif';
+                ctxAnim.textAlign = 'center';
+                ctxAnim.fillText('B', pxB, trackYB - blockH/2 - 2);
+
+                if (isActiveB && Math.abs(s.vB) > 0.05) {
+                    drawArrow(ctxAnim, pxB, trackYB - blockH - 22, s.vB * scaleX * 0.25, '#3b82f6');
+                }
+
+                ctxAnim.fillStyle = isActiveB ? '#2563eb' : '#1d4ed8';
+                ctxAnim.font = '10px "JetBrains Mono", monospace';
+                ctxAnim.fillText(s.xB.toFixed(2) + 'm', pxB, trackYB + 16);
+
+                if (isActiveB) {
+                    const pxStart = toPx(params.B.x0);
+                    const pxEnd = toPx(s.xB);
+                    const midX = (pxStart + pxEnd) / 2;
+                    const dispY = trackYB + 28;
+
+                    ctxAnim.strokeStyle = '#60a5fa';
+                    ctxAnim.lineWidth = 1.5;
+                    ctxAnim.setLineDash([3, 2]);
+                    ctxAnim.beginPath();
+                    ctxAnim.moveTo(pxStart, dispY + 5);
+                    ctxAnim.lineTo(pxEnd, dispY + 5);
+                    ctxAnim.stroke();
+                    ctxAnim.setLineDash([]);
+
+                    ctxAnim.fillStyle = '#bfdbfe';
+                    ctxAnim.beginPath();
+                    ctxAnim.arc(pxStart, dispY + 5, 3, 0, Math.PI*2);
+                    ctxAnim.fill();
+                    ctxAnim.strokeStyle = '#3b82f6';
+                    ctxAnim.lineWidth = 1;
+                    ctxAnim.stroke();
+
+                    ctxAnim.fillStyle = '#3b82f6';
+                    ctxAnim.beginPath();
+                    const dirB = pxEnd > pxStart ? 1 : -1;
+                    ctxAnim.moveTo(pxEnd, dispY + 5);
+                    ctxAnim.lineTo(pxEnd - dirB * 5, dispY + 2);
+                    ctxAnim.lineTo(pxEnd - dirB * 5, dispY + 8);
+                    ctxAnim.closePath();
+                    ctxAnim.fill();
+
+                    ctxAnim.fillStyle = '#eff6ff';
+                    const labelW = 64, labelH = 18;
+                    ctxAnim.fillRect(midX - labelW/2, dispY - 6, labelW, labelH);
+                    ctxAnim.strokeStyle = '#3b82f6';
+                    ctxAnim.lineWidth = 1;
+                    roundRect(ctxAnim, midX - labelW/2, dispY - 6, labelW, labelH, 4);
+                    ctxAnim.stroke();
+                    ctxAnim.fillStyle = '#2563eb';
+                    ctxAnim.font = 'bold 9px "JetBrains Mono", monospace';
+                    ctxAnim.textAlign = 'center';
+                    const signB = s.dxB >= 0 ? '+' : '';
+                    ctxAnim.fillText('\u0394x=' + signB + s.dxB.toFixed(2) + 'm', midX, dispY + 6);
+                } else {
+                    const dispY = trackYB + 28;
+                    ctxAnim.fillStyle = '#bfdbfe';
+                    ctxAnim.fillRect(pxB - 26, dispY - 6, 52, 18);
+                    ctxAnim.strokeStyle = '#60a5fa';
+                    ctxAnim.lineWidth = 1;
+                    roundRect(ctxAnim, pxB - 26, dispY - 6, 52, 18, 4);
+                    ctxAnim.stroke();
+                    ctxAnim.fillStyle = '#1e3a8a';
+                    ctxAnim.font = 'bold 9px "Noto Sans SC", sans-serif';
+                    ctxAnim.textAlign = 'center';
+                    ctxAnim.fillText('未启动', pxB, dispY + 6);
+                }
+
+                ctxAnim.globalAlpha = 1;
+            }
+
+            if (state.collisionDetected && Math.abs(state.t - state.collisionTime) < 0.15) {
+                const cx = toPx(state.collisionPos);
+                const cy = state.parallelMode ? (trackYA + trackYB) / 2 : trackYA;
+                ctxAnim.strokeStyle = '#f59e0b';
+                ctxAnim.lineWidth = 3;
+                ctxAnim.setLineDash([6, 4]);
+                ctxAnim.beginPath();
+                ctxAnim.arc(cx, cy - blockH/2 - 6, 38, 0, Math.PI*2);
+                ctxAnim.stroke();
+                ctxAnim.setLineDash([]);
+                ctxAnim.fillStyle = '#f59e0b';
+                ctxAnim.font = 'bold 14px "Noto Sans SC", sans-serif';
+                ctxAnim.textAlign = 'center';
+                ctxAnim.fillText('位置对齐!', cx, cy - blockH - 55);
+            }
+
+            ctxAnim.fillStyle = '#94a3b8';
+            ctxAnim.font = '10px "JetBrains Mono", monospace';
+            ctxAnim.textAlign = 'right';
+            ctxAnim.fillText('比例: ' + (1/scaleX).toFixed(2) + ' m/px', w - 10, 18);
+            ctxAnim.textAlign = 'left';
+        }
+
+        function drawArrow(ctx, x, y, len, color) {
+            if (Math.abs(len) < 3) return;
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + len, y);
+            ctx.stroke();
+            const headSize = 6;
+            const dir = len >= 0 ? 1 : -1;
+            ctx.beginPath();
+            ctx.moveTo(x + len, y);
+            ctx.lineTo(x + len - dir * headSize, y - headSize/2);
+            ctx.lineTo(x + len - dir * headSize, y + headSize/2);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
+
+        function drawGraph(canvas, ctx, type) {
+            const w = canvas.width, h = canvas.height;
+            const params = getParams();
+            const padding = { top: 12, right: 12, bottom: 32, left: 50 };
+            const gw = w - padding.left - padding.right;
+            const gh = h - padding.top - padding.bottom;
+
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = '#fafbfc';
+            ctx.fillRect(0, 0, w, h);
+
+            let range, tMax;
+            if (type === 'xt') { range = getXtRange(params, state.t); tMax = range.tMax; }
+            else { range = getVtRange(params, state.t); tMax = range.tMax; }
+
+            const minVal = type === 'xt' ? range.minX : range.minV;
+            const maxVal = type === 'xt' ? range.maxX : range.maxV;
+
+            const scaleX = gw / tMax;
+            const scaleY = gh / (maxVal - minVal);
+            const toGx = (t) => padding.left + t * scaleX;
+            const toGy = (v) => padding.top + (maxVal - v) * scaleY;
+
+            const tTicks = niceTicks(0, tMax, 6);
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            ctx.font = '9px "JetBrains Mono", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#94a3b8';
+
+            tTicks.ticks.forEach(t => {
+                const x = toGx(t);
+                ctx.beginPath();
+                ctx.moveTo(x, padding.top);
+                ctx.lineTo(x, h - padding.bottom);
+                ctx.stroke();
+                ctx.fillText(t.toFixed(1) + 's', x, h - 12);
+            });
+
+            const vTicks = niceTicks(minVal, maxVal, 5);
+            vTicks.ticks.forEach(v => {
+                const y = toGy(v);
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(w - padding.right, y);
+                ctx.stroke();
+                ctx.fillStyle = '#94a3b8';
+                ctx.textAlign = 'right';
+                ctx.fillText(v.toFixed(1), padding.left - 6, y + 3);
+            });
+
+            // Draw zero line if 0 is in range
+            if (minVal <= 0 && maxVal >= 0) {
+                const y0 = toGy(0);
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y0);
+                ctx.lineTo(w - padding.right, y0);
+                ctx.stroke();
+            }
+
+            // Draw axes - ensure they align at the origin
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 1.5;
+
+            // Y-axis at x = padding.left (t=0)
+            ctx.beginPath();
+            ctx.moveTo(padding.left, padding.top);
+            ctx.lineTo(padding.left, h - padding.bottom);
+            ctx.stroke();
+
+            // X-axis at y = h - padding.bottom (this is the bottom of plot area)
+            // But if 0 is in range, the x-axis should be at y0 to align with 0
+            // Actually, the x-axis is always at the bottom of the plot area for the time axis
+            // The y=0 line is drawn above if needed
+            ctx.beginPath();
+            ctx.moveTo(padding.left, h - padding.bottom);
+            ctx.lineTo(w - padding.right, h - padding.bottom);
+            ctx.stroke();
+
+            ctx.fillStyle = '#64748b';
+            ctx.font = 'bold 10px "Noto Sans SC", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('t / s', w/2 + padding.left/2, h - 2);
+            ctx.save();
+            ctx.translate(14, h/2);
+            ctx.rotate(-Math.PI/2);
+            ctx.fillText(type === 'xt' ? 'x / m' : 'v / (m/s)', 0, 0);
+            ctx.restore();
+
+            const steps = 400;
+
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            let startedA = false;
+            for (let i = 0; i <= steps; i++) {
+                const t = (i / steps) * tMax;
+                const s = computeState(t, params);
+                if (!s.activeA) continue;
+                const x = toGx(t);
+                const val = type === 'xt' ? s.xA : s.vA;
+                const y = toGy(val);
+                if (!startedA) { ctx.moveTo(x, y); startedA = true; }
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 2.5;
+            ctx.setLineDash([7, 4]);
+            ctx.beginPath();
+            let startedB = false;
+            for (let i = 0; i <= steps; i++) {
+                const t = (i / steps) * tMax;
+                const s = computeState(t, params);
+                if (!s.activeB) continue;
+                const x = toGx(t);
+                const val = type === 'xt' ? s.xB : s.vB;
+                const y = toGy(val);
+                if (!startedB) { ctx.moveTo(x, y); startedB = true; }
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            const currX = toGx(state.t);
+            if (currX >= padding.left && currX <= w - padding.right) {
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(currX, padding.top);
+                ctx.lineTo(currX, h - padding.bottom);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            const currS = computeState(state.t, params);
+            if (currS.activeA) {
+                const x = toGx(state.t);
+                const val = type === 'xt' ? currS.xA : currS.vA;
+                const y = toGy(val);
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath(); ctx.arc(x, y, 5.5, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke();
+            }
+            if (currS.activeB) {
+                const x = toGx(state.t);
+                const val = type === 'xt' ? currS.xB : currS.vB;
+                const y = toGy(val);
+                ctx.fillStyle = '#3b82f6';
+                ctx.beginPath(); ctx.arc(x, y, 5.5, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke();
+            }
+
+            if (state.collisionTime !== null && state.collisionTime <= tMax) {
+                const cx = toGx(state.collisionTime);
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(cx, padding.top);
+                ctx.lineTo(cx, h - padding.bottom);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+
+        function updateUI() {
+            const params = getParams();
+            const s = computeState(state.t, params);
+            document.getElementById('posA').textContent = s.xA.toFixed(2) + ' m';
+            document.getElementById('posB').textContent = s.xB.toFixed(2) + ' m';
+            document.getElementById('currTime').textContent = state.t.toFixed(2) + ' s';
+            document.getElementById('distance').textContent = Math.abs(s.xA - s.xB).toFixed(2) + ' m';
+            drawAnimation();
+            drawGraph(xtCanvas, ctxXt, 'xt');
+            drawGraph(vtCanvas, ctxVt, 'vt');
+        }
+
+        function setStatus(status) {
+            statusBadge.className = 'status-badge';
+            if (status === 'running') { statusBadge.classList.add('status-running'); statusText.textContent = '运行中'; }
+            else if (status === 'paused') { statusBadge.classList.add('status-paused'); statusText.textContent = '已暂停'; }
+            else if (status === 'collision') { statusBadge.classList.add('status-collision'); statusText.textContent = '可继续'; }
+            else if (status === 'finished') { statusBadge.classList.add('status-finished'); statusText.textContent = '已结束'; }
+            else { statusBadge.classList.add('status-stopped'); statusText.textContent = '就绪'; }
+        }
+
+        function toggleLayout() {
+            state.parallelMode = !state.parallelMode;
+            if (state.parallelMode) { btnLayout.classList.add('active'); layoutText.textContent = '平行'; }
+            else { btnLayout.classList.remove('active'); layoutText.textContent = '共线'; }
+            updateUI();
+        }
+
+        let lastTime = 0;
+        function loop(timestamp) {
+            if (!state.running) return;
+            if (lastTime === 0) lastTime = timestamp;
+            const delta = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
+            state.t += delta * state.speedMultiplier;
+
+            const params = getParams();
+            const s = computeState(state.t, params);
+            const maxTime = getMaxTime();
+
+            if (!state.collisionDetected && s.activeA && s.activeB) {
+                if (Math.abs(s.xA - s.xB) < 0.05) {
+                    state.collisionDetected = true;
+                    state.collisionTime = state.t;
+                    state.collisionPos = (s.xA + s.xB) / 2;
+                    state.running = false;
+                    state.paused = true;
+                    btnStart.classList.remove('hidden');
+                    btnPause.classList.add('hidden');
+                    btnStartText.textContent = '继续';
+                    setStatus('collision');
+                    collisionInfo.classList.remove('hidden');
+                    nearestInfo.classList.add('hidden');
+                    document.getElementById('collisionTime').textContent = formatValue(state.collisionTime, 's');
+                    document.getElementById('collisionPos').textContent = formatValue(state.collisionPos, 'm');
+                    animCanvas.classList.add('collision-flash');
+                    setTimeout(() => animCanvas.classList.remove('collision-flash'), 1500);
+                }
+            }
+
+            if (state.t >= maxTime) {
+                state.running = false;
+                state.paused = true;
+                btnStart.classList.remove('hidden');
+                btnPause.classList.add('hidden');
+                setStatus('finished');
+            }
+
+            updateUI();
+            if (state.running) state.animFrame = requestAnimationFrame(loop);
+        }
+
+        btnStart.addEventListener('click', () => {
+            if (state.paused) {
+                state.running = true;
+                state.paused = false;
+                lastTime = 0;
+                btnStart.classList.add('hidden');
+                btnPause.classList.remove('hidden');
+                setStatus('running');
+                state.animFrame = requestAnimationFrame(loop);
+            } else if (!state.running) {
+                state.t = 0;
+                state.collisionDetected = false;
+                state.collisionTime = null;
+                state.collisionPos = null;
+                collisionInfo.classList.add('hidden');
+                nearestInfo.classList.add('hidden');
+                state.running = true;
+                state.paused = false;
+                lastTime = 0;
+                btnStart.classList.add('hidden');
+                btnPause.classList.remove('hidden');
+                btnStartText.textContent = '开始';
+                setStatus('running');
+                state.animFrame = requestAnimationFrame(loop);
+            }
+        });
+
+        btnPause.addEventListener('click', () => {
+            state.running = false;
+            state.paused = true;
+            btnStart.classList.remove('hidden');
+            btnPause.classList.add('hidden');
+            btnStartText.textContent = state.collisionDetected ? '继续' : '开始';
+            setStatus('paused');
+            if (state.animFrame) cancelAnimationFrame(state.animFrame);
+        });
+
+        btnReset.addEventListener('click', () => {
+            state.running = false;
+            state.paused = false;
+            state.t = 0;
+            state.collisionDetected = false;
+            state.collisionTime = null;
+            state.collisionPos = null;
+            collisionInfo.classList.add('hidden');
+            nearestInfo.classList.add('hidden');
+            btnStart.classList.remove('hidden');
+            btnPause.classList.add('hidden');
+            btnStartText.textContent = '开始';
+            setStatus('stopped');
+            if (state.animFrame) cancelAnimationFrame(state.animFrame);
+            updateUI();
+        });
+
+        speedSlider.addEventListener('input', (e) => {
+            state.speedMultiplier = parseFloat(e.target.value);
+            speedValue.textContent = state.speedMultiplier.toFixed(1) + 'x';
+        });
+
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('change', () => {
+                if (!state.running) {
+                    updateBrakeVisibility();
+                    analyzeMotion();
+                    updateUI();
+                }
+            });
+        });
+
+        brakeA.addEventListener('change', () => { if (!state.running) { analyzeMotion(); updateUI(); } });
+        brakeB.addEventListener('change', () => { if (!state.running) { analyzeMotion(); updateUI(); } });
+        tMaxInput.addEventListener('change', () => { if (!state.running) { analyzeMotion(); updateUI(); } });
+
+        function analyzeMotion() {
+            const params = getParams();
+            const result = findCollisionOrNearest(params);
+
+            if (result.collisionTime !== null) {
+                state.collisionTime = result.collisionTime;
+                state.collisionPos = result.collisionPos;
+                state.nearestInfo = null;
+            } else {
+                state.collisionTime = null;
+                state.collisionPos = null;
+                state.nearestInfo = { time: result.nearestTime, distance: result.minDist };
+            }
+
+            if (!state.running && state.t === 0) {
+                if (result.collisionTime !== null) {
+                    collisionInfo.classList.remove('hidden');
+                    nearestInfo.classList.add('hidden');
+                    document.getElementById('collisionTime').textContent = formatValue(result.collisionTime, 's');
+                    document.getElementById('collisionPos').textContent = formatValue(result.collisionPos, 'm');
+                } else {
+                    collisionInfo.classList.add('hidden');
+                    nearestInfo.classList.remove('hidden');
+                    document.getElementById('nearestTime').textContent = formatValue(result.nearestTime, 's');
+                    document.getElementById('nearestDist').textContent = formatValue(result.minDist, 'm');
+                }
+            }
+        }
+
+        const presets = [
+            { name: '相向运动', A: {v0:3, a:0, x0:-8, t0:0}, B: {v0:-2, a:0, x0:10, t0:0} },
+            { name: '追及问题', A: {v0:2, a:1, x0:-12, t0:0}, B: {v0:5, a:0, x0:0, t0:0} },
+            { name: '刹车问题', A: {v0:6, a:-1, x0:-8, t0:0}, B: {v0:0, a:0.5, x0:8, t0:0}, brakeA: true },
+            { name: '不同时出发', A: {v0:4, a:0, x0:-15, t0:0}, B: {v0:-3, a:0, x0:12, t0:2} }
+        ];
+
+        function loadPreset(idx) {
+            const p = presets[idx];
+            document.getElementById('v0a').value = p.A.v0;
+            document.getElementById('a0a').value = p.A.a;
+            document.getElementById('x0a').value = p.A.x0;
+            document.getElementById('t0a').value = p.A.t0;
+            document.getElementById('v0b').value = p.B.v0;
+            document.getElementById('a0b').value = p.B.a;
+            document.getElementById('x0b').value = p.B.x0;
+            document.getElementById('t0b').value = p.B.t0;
+            brakeA.checked = p.brakeA || false;
+            brakeB.checked = p.brakeB || false;
+
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('[data-preset="' + idx + '"]').classList.add('active');
+
+            updateBrakeVisibility();
+            btnReset.click();
+        }
+
+        window.addEventListener('load', () => {
+            updateBrakeVisibility();
+            analyzeMotion();
+            updateUI();
+        });
+    </script>
+</body>
+</html>
