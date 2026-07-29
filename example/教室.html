@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>智慧教室 · 触屏主页</title>
-    <!-- Font Awesome 6 (免费) -->
+    <!-- Supabase 客户端 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
@@ -139,7 +141,44 @@
             font-size: 1.4rem;
         }
 
-        /* 悬浮导航 (右下角) */
+        /* 通知预览卡片（在主页显示最新通知） */
+        .notice-preview {
+            margin-top: 30px;
+            padding: 20px 30px;
+            background: rgba(255,255,255,0.35);
+            backdrop-filter: blur(4px);
+            border-radius: 40px;
+            border-left: 6px solid #b45309;
+            max-width: 90%;
+            width: 100%;
+            text-align: left;
+            transition: all 0.3s ease;
+        }
+        .notice-preview .label {
+            font-size: 0.85rem;
+            color: #2a4b6e;
+            opacity: 0.7;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .notice-preview .label i { color: #b45309; }
+        #previewContent {
+            font-size: 1.4rem;
+            color: #0a1e32;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+        .notice-preview .time {
+            font-size: 0.8rem;
+            color: #2a4b6e;
+            opacity: 0.5;
+            margin-top: 6px;
+            text-align: right;
+        }
+
+        /* 悬浮导航 */
         .fab-container {
             position: fixed;
             bottom: 40px;
@@ -151,9 +190,7 @@
             gap: 12px;
             pointer-events: none;
         }
-        .fab-container > * {
-            pointer-events: auto;
-        }
+        .fab-container > * { pointer-events: auto; }
 
         .fab-main {
             width: 72px;
@@ -186,9 +223,7 @@
             margin-bottom: 8px;
             transition: all 0.2s ease;
         }
-        .fab-menu.hidden {
-            display: none;
-        }
+        .fab-menu.hidden { display: none; }
 
         .fab-item {
             background: rgba(20, 40, 65, 0.85);
@@ -222,7 +257,33 @@
             background: rgba(40, 70, 110, 0.9);
         }
 
-        /* 响应式 */
+        /* 同步状态 */
+        .sync-status {
+            position: fixed;
+            bottom: 130px;
+            right: 40px;
+            z-index: 999;
+            font-size: 0.8rem;
+            color: #2a4b6e;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(4px);
+            padding: 5px 14px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.5);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .sync-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .sync-status .dot.online { background: #22c55e; }
+        .sync-status .dot.offline { background: #ef4444; }
+
         @media (max-width: 800px) {
             .dashboard { padding: 28px 20px; border-radius: 36px; }
             #clock { font-size: 5.2rem; letter-spacing: 4px; }
@@ -232,8 +293,10 @@
             #motto { font-size: 1.2rem; padding: 10px 18px; white-space: normal; }
             .fab-main { width: 64px; height: 64px; font-size: 1.8rem; }
             .fab-item { padding: 8px 16px; font-size: 1rem; }
+            .notice-preview { padding: 14px 18px; }
+            #previewContent { font-size: 1.1rem; }
+            .sync-status { bottom: 110px; right: 20px; font-size: 0.7rem; padding: 4px 10px; }
         }
-
         @media (max-width: 500px) {
             #clock { font-size: 3.8rem; letter-spacing: 2px; }
             .info-row { flex-direction: column; gap: 16px; }
@@ -245,24 +308,29 @@
 
 <div class="dashboard">
     <div class="page-container">
-        <!-- 主页：时间居中放大，天气 & 励志 -->
         <div id="page-home" class="page active">
             <div class="home-center">
                 <div id="clock">--:--:--</div>
                 <div id="date">----年--月--日</div>
 
                 <div class="info-row">
-                    <!-- 天气 -->
                     <div class="weather-box" id="weatherBox">
                         <i class="fas fa-cloud-sun"></i>
                         <span class="weather-temp" id="temp">--°</span>
                         <span class="weather-desc" id="weatherDesc">加载中</span>
                         <span class="weather-location" id="weatherLocation">📍 安庆·宿松</span>
                     </div>
-                    <!-- 励志 -->
                     <div id="motto"><i class="fas fa-quote-left"></i> <span id="mottoText">日日行，不怕千万里</span></div>
                 </div>
-                <div style="margin-top: 32px; font-size: 0.9rem; color: #46648b; opacity: 0.6;">
+
+                <!-- 通知预览 -->
+                <div class="notice-preview" id="noticePreview">
+                    <div class="label"><i class="fas fa-bullhorn"></i> 最新通报</div>
+                    <div id="previewContent">📢 加载中...</div>
+                    <div class="time" id="previewTime">--</div>
+                </div>
+
+                <div style="margin-top: 16px; font-size: 0.9rem; color: #46648b; opacity: 0.6;">
                     <i class="fas fa-chevron-circle-right"></i> 点击右下角菜单切换页面
                 </div>
             </div>
@@ -270,7 +338,13 @@
     </div>
 </div>
 
-<!-- 悬浮导航 (右下角) -->
+<!-- 同步状态 -->
+<div class="sync-status" id="syncStatus">
+    <span class="dot offline" id="syncDot"></span>
+    <span id="syncText">连接中...</span>
+</div>
+
+<!-- 悬浮导航 -->
 <div class="fab-container">
     <div class="fab-menu hidden" id="fabMenu">
         <div class="fab-item" data-page="blank1"><i class="fas fa-1"></i> 空白页1</div>
@@ -286,6 +360,14 @@
     (function() {
         "use strict";
 
+        // ============================================================
+        //  ⚠️ 重要：请替换为你的 Supabase 配置
+        //  在 https://supabase.com 注册后，在项目 Settings → API 中获取
+        // ============================================================
+        const SUPABASE_URL = 'https://你的项目ID.supabase.co';
+        const SUPABASE_ANON_KEY = '你的anon公钥';
+        // ============================================================
+
         // DOM 引用
         const clockEl = document.getElementById('clock');
         const dateEl = document.getElementById('date');
@@ -293,14 +375,16 @@
         const weatherDescEl = document.getElementById('weatherDesc');
         const weatherLocation = document.getElementById('weatherLocation');
         const mottoTextEl = document.getElementById('mottoText');
-
-        // 悬浮菜单
+        const previewContent = document.getElementById('previewContent');
+        const previewTime = document.getElementById('previewTime');
         const fabMenu = document.getElementById('fabMenu');
         const fabToggle = document.getElementById('fabToggle');
         const fabIcon = document.getElementById('fabIcon');
         const menuItems = document.querySelectorAll('.fab-item');
+        const syncDot = document.getElementById('syncDot');
+        const syncText = document.getElementById('syncText');
 
-        // ---------- 1. 时钟 ----------
+        // ---------- 时钟 ----------
         function updateClock() {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
@@ -317,22 +401,16 @@
         updateClock();
         setInterval(updateClock, 1000);
 
-        // ---------- 2. 天气 ----------
+        // ---------- 天气 ----------
         function fetchRealWeather() {
             const url = 'https://wttr.in/Anqing-Susong?format=j1&lang=zh';
             fetch(url)
-                .then(response => {
-                    if (!response.ok) throw new Error('天气API响应错误');
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
                     try {
                         const current = data.current_condition[0];
-                        const temp = current.temp_C;
-                        const desc = current.weatherDesc[0].value;
-                        const weatherCode = current.weatherCode;
-                        tempEl.textContent = `${temp}°`;
-                        weatherDescEl.textContent = desc;
+                        tempEl.textContent = `${current.temp_C}°`;
+                        weatherDescEl.textContent = current.weatherDesc[0].value;
                         const iconMap = {
                             '113': 'fa-sun', '116': 'fa-cloud-sun', '119': 'fa-cloud', '122': 'fa-cloud',
                             '143': 'fa-smog', '176': 'fa-cloud-rain', '179': 'fa-cloud-snow',
@@ -353,125 +431,61 @@
                             '386': 'fa-cloud-bolt', '389': 'fa-cloud-bolt', '392': 'fa-cloud-bolt',
                             '395': 'fa-cloud-snow'
                         };
-                        const iconClass = iconMap[weatherCode] || 'fa-cloud';
-                        const weatherBox = document.getElementById('weatherBox');
-                        const iconEl = weatherBox.querySelector('i');
-                        iconEl.className = `fas ${iconClass}`;
+                        const iconClass = iconMap[current.weatherCode] || 'fa-cloud';
+                        document.querySelector('.weather-box i').className = `fas ${iconClass}`;
                         weatherLocation.textContent = '📍 安庆·宿松';
-                    } catch (e) {
-                        console.warn('解析天气数据出错', e);
-                        fallbackWeather();
-                    }
+                    } catch (e) { fallbackWeather(); }
                 })
-                .catch(err => {
-                    console.warn('天气API请求失败，使用模拟数据', err);
-                    fallbackWeather();
-                });
+                .catch(() => fallbackWeather());
         }
-
         function fallbackWeather() {
-            const weathers = [
+            const w = [
                 { desc: '晴朗', icon: 'fa-sun', temp: 26 },
                 { desc: '多云', icon: 'fa-cloud', temp: 22 },
-                { desc: '小雨', icon: 'fa-cloud-rain', temp: 18 },
-                { desc: '阴天', icon: 'fa-cloud', temp: 20 },
-                { desc: '晴间多云', icon: 'fa-cloud-sun', temp: 24 }
-            ];
-            const w = weathers[Math.floor(Math.random() * weathers.length)];
+                { desc: '小雨', icon: 'fa-cloud-rain', temp: 18 }
+            ][Math.floor(Math.random() * 3)];
             tempEl.textContent = `${w.temp}°`;
             weatherDescEl.textContent = w.desc;
-            const weatherBox = document.getElementById('weatherBox');
-            const iconEl = weatherBox.querySelector('i');
-            iconEl.className = `fas ${w.icon}`;
+            document.querySelector('.weather-box i').className = `fas ${w.icon}`;
             weatherLocation.textContent = '📍 安庆·宿松';
         }
-
         fetchRealWeather();
         setInterval(fetchRealWeather, 1800000);
 
-        // ---------- 3. 励志 ----------
-        function fetchDailyMotto() {
-            const url = 'https://api.quotable.io/random?tags=inspirational|motivational';
-            fetch(url)
-                .then(res => {
-                    if (!res.ok) throw new Error('励志API错误');
-                    return res.json();
-                })
+        // ---------- 励志 ----------
+        function fetchMotto() {
+            fetch('https://api.quotable.io/random?tags=inspirational|motivational')
+                .then(res => res.json())
                 .then(data => {
-                    if (data && data.content) {
-                        const text = data.content;
-                        mottoTextEl.textContent = text;
-                        localStorage.setItem('mottoText', text);
+                    if (data?.content) {
+                        mottoTextEl.textContent = data.content;
+                        localStorage.setItem('mottoText', data.content);
                         localStorage.setItem('mottoDate', new Date().toLocaleDateString('zh-CN'));
-                    } else {
-                        fallbackMotto();
                     }
                 })
                 .catch(() => {
-                    fetch('https://v1.jinrishici.com/all.json')
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data && data.content) {
-                                mottoTextEl.textContent = data.content;
-                                localStorage.setItem('mottoText', data.content);
-                                localStorage.setItem('mottoDate', new Date().toLocaleDateString('zh-CN'));
-                            } else {
-                                fallbackMotto();
-                            }
-                        })
-                        .catch(() => fallbackMotto());
+                    const local = ['日日行，不怕千万里', '博学之，审问之，慎思之', '天道酬勤，力耕不欺'];
+                    mottoTextEl.textContent = local[Math.floor(Math.random() * local.length)];
                 });
         }
+        fetchMotto();
 
-        function fallbackMotto() {
-            const local = [
-                '日日行，不怕千万里', '博学之，审问之，慎思之',
-                '学而不思则罔，思而不学则殆', '天道酬勤，力耕不欺',
-                '少年易老学难成，一寸光阴不可轻', '读书破万卷，下笔如有神',
-                '志不强者智不达'
-            ];
-            const randomIdx = Math.floor(Math.random() * local.length);
-            mottoTextEl.textContent = local[randomIdx];
-        }
-
-        function checkAndUpdateMotto() {
-            const today = new Date().toLocaleDateString('zh-CN');
-            const storedDate = localStorage.getItem('mottoDate');
-            const storedMotto = localStorage.getItem('mottoText');
-            if (storedDate === today && storedMotto) {
-                mottoTextEl.textContent = storedMotto;
-            } else {
-                fetchDailyMotto();
-            }
-        }
-
-        checkAndUpdateMotto();
-        setInterval(checkAndUpdateMotto, 21600000);
-
-        // ---------- 4. 导航 ----------
+        // ---------- 导航 ----------
         menuItems.forEach(item => {
             item.addEventListener('click', function(e) {
                 e.stopPropagation();
                 const page = this.dataset.page;
                 let targetUrl = '';
-                if (page === 'blank1') {
-                    targetUrl = 'page1.html';
-                } else if (page === 'blank2') {
-                    targetUrl = 'page2.html';
-                } else if (page === 'notice') {
-                    targetUrl = 'notice.html';
-                }
-                if (targetUrl) {
-                    window.location.href = targetUrl;
-                } else {
-                    alert('页面未创建，请创建对应的HTML文件');
-                }
+                if (page === 'blank1') targetUrl = 'page1.html';
+                else if (page === 'blank2') targetUrl = 'page2.html';
+                else if (page === 'notice') targetUrl = 'notice.html';
+                if (targetUrl) window.location.href = targetUrl;
+                else alert('页面未创建');
                 fabMenu.classList.add('hidden');
                 fabIcon.className = 'fas fa-ellipsis-h';
             });
         });
 
-        // ---------- 5. 悬浮按钮 ----------
         fabToggle.addEventListener('click', function(e) {
             e.stopPropagation();
             e.preventDefault();
@@ -484,20 +498,114 @@
                 fabIcon.className = 'fas fa-ellipsis-h';
             }
         });
-
         document.addEventListener('click', function(e) {
-            const container = document.querySelector('.fab-container');
-            if (!container.contains(e.target)) {
+            if (!document.querySelector('.fab-container').contains(e.target)) {
                 fabMenu.classList.add('hidden');
                 fabIcon.className = 'fas fa-ellipsis-h';
             }
         });
+        fabMenu.addEventListener('click', function(e) { e.stopPropagation(); });
 
-        fabMenu.addEventListener('click', function(e) {
-            e.stopPropagation();
+        // ============================================================
+        //  Supabase 实时同步
+        // ============================================================
+        let supabaseClient = null;
+
+        function initSupabase() {
+            try {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                syncDot.className = 'dot online';
+                syncText.textContent = '已连接';
+                subscribeToNotices();
+                loadLatestNotice();
+            } catch (e) {
+                console.error('Supabase 初始化失败:', e);
+                syncDot.className = 'dot offline';
+                syncText.textContent = '连接失败，请检查配置';
+                // 降级：从 localStorage 读取
+                const saved = localStorage.getItem('noticeText');
+                if (saved) {
+                    previewContent.textContent = saved;
+                    previewTime.textContent = '来自缓存';
+                }
+            }
+        }
+
+        async function loadLatestNotice() {
+            if (!supabaseClient) return;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('notices')
+                    .select('content, updated_at')
+                    .order('id', { ascending: false })
+                    .limit(1);
+
+                if (error) throw error;
+                if (data && data.length > 0) {
+                    previewContent.textContent = data[0].content;
+                    const time = new Date(data[0].updated_at).toLocaleString('zh-CN', { hour12: false });
+                    previewTime.textContent = '🕐 ' + time;
+                    // 同时保存到 localStorage 作为备份
+                    localStorage.setItem('noticeText', data[0].content);
+                }
+            } catch (e) {
+                console.warn('加载通知失败:', e);
+                const saved = localStorage.getItem('noticeText');
+                if (saved) {
+                    previewContent.textContent = saved;
+                    previewTime.textContent = '来自缓存';
+                }
+            }
+        }
+
+        function subscribeToNotices() {
+            if (!supabaseClient) return;
+            supabaseClient
+                .channel('notices-channel')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'notices'
+                    },
+                    (payload) => {
+                        const newNotice = payload.new;
+                        if (newNotice && newNotice.content) {
+                            previewContent.textContent = newNotice.content;
+                            const time = new Date(newNotice.updated_at).toLocaleString('zh-CN', { hour12: false });
+                            previewTime.textContent = '🕐 ' + time + ' (实时)';
+                            localStorage.setItem('noticeText', newNotice.content);
+                            // 触发通知页同步
+                            localStorage.setItem('_notice_trigger', Date.now().toString());
+                        }
+                    }
+                )
+                .subscribe((status) => {
+                    console.log('Supabase 订阅状态:', status);
+                });
+        }
+
+        // 监听同源其他标签页的更新 (作为备用同步方式)
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'noticeText' && e.newValue) {
+                previewContent.textContent = e.newValue;
+            }
+            if (e.key === '_notice_trigger') {
+                loadLatestNotice();
+            }
         });
 
-        console.log('✅ 智慧教室主页已启动');
+        // 启动 Supabase
+        if (SUPABASE_URL !== 'https://你的项目ID.supabase.co' && SUPABASE_ANON_KEY !== '你的anon公钥') {
+            initSupabase();
+        } else {
+            syncDot.className = 'dot offline';
+            syncText.textContent = '⚠️ 请配置 Supabase';
+            console.warn('⚠️ 请先在代码中配置 SUPABASE_URL 和 SUPABASE_ANON_KEY');
+        }
+
+        console.log('✅ 智慧教室主页已启动 (Supabase 实时同步)');
     })();
 </script>
 
