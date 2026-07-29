@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <title>重要信息通报</title>
+    <title>重要信息通报 · 手机编辑</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
@@ -98,7 +98,7 @@
         }
         .back-home:active { transform: scale(0.94); }
 
-        /* ===== 手机编辑面板 (仅手机端显示) ===== */
+        /* ===== 手机编辑面板 ===== */
         .mobile-editor {
             display: none;
             margin-top: 30px;
@@ -183,17 +183,58 @@
         .dot.online { background: #22c55e; }
         .dot.offline { background: #ef4444; }
 
+        /* ===== 二维码显示区域 ===== */
+        .qr-section {
+            margin-top: 28px;
+            padding-top: 28px;
+            border-top: 2px dashed rgba(0,0,0,0.08);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+        }
+        .qr-section .qr-box {
+            background: white;
+            padding: 16px;
+            border-radius: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        .qr-section .qr-box img {
+            width: 150px;
+            height: 150px;
+            display: block;
+            border-radius: 8px;
+        }
+        .qr-section .qr-box .qr-label {
+            font-size: 13px;
+            color: #1a3552;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+        .qr-section .qr-box .qr-label i { color: #059669; margin-right: 4px; }
+        .qr-section .qr-hint {
+            color: #3d5e7c;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            max-width: 280px;
+        }
+        .qr-section .qr-hint i { color: #1a2e4a; margin-right: 6px; }
+
         @media (max-width: 700px) {
             .notice-card { padding: 25px 18px; border-radius: 32px; }
             .notice-header h1 { font-size: 1.8rem; }
             #noticeContent { font-size: 1.6rem; }
             .mobile-editor textarea { font-size: 1rem; }
+            .qr-section .qr-box img { width: 110px; height: 110px; }
         }
         @media (max-width: 480px) {
             .notice-header { flex-direction: column; align-items: flex-start; }
             .notice-footer { flex-direction: column; align-items: stretch; }
             .back-home { justify-content: center; }
             .mobile-editor .btn-row button { flex: 1; justify-content: center; }
+            .qr-section { flex-direction: column; align-items: center; text-align: center; }
         }
     </style>
 </head>
@@ -220,7 +261,7 @@
             <i class="fas fa-edit"></i>
             <span id="updateInfo">最后更新：刚刚</span>
         </div>
-        <a href="教室.html" class="back-home">
+        <a href="index.html" class="back-home">
             <i class="fas fa-arrow-left"></i> 返回主页
         </a>
     </div>
@@ -236,6 +277,21 @@
         <div class="sync-status">
             <span class="dot online" id="syncDot"></span>
             <span id="syncText">已同步 · 所有设备将自动更新</span>
+        </div>
+    </div>
+
+    <!-- ===== 二维码区域 ===== -->
+    <div class="qr-section">
+        <div class="qr-box">
+            <!-- ⚠️ 请将下面的 data 链接替换为你实际的 notice.html 地址 -->
+            <img id="qrCodeImg" 
+                 src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://honng110.github.io/example/notice.html" 
+                 alt="扫码编辑通知">
+            <div class="qr-label"><i class="fas fa-qrcode"></i> 扫码手机编辑</div>
+        </div>
+        <div class="qr-hint">
+            <i class="fas fa-info-circle"></i> 手机扫描二维码即可编辑通知<br>
+            <span style="font-size:0.85rem; opacity:0.7;">或直接访问本页面，手机端自动显示编辑面板</span>
         </div>
     </div>
 </div>
@@ -258,19 +314,29 @@
                 || window.innerWidth < 768;
         }
 
+        // ===== 获取当前页面完整URL（用于生成二维码） =====
+        function getCurrentPageUrl() {
+            return window.location.href.split('?')[0].split('#')[0];
+        }
+
         // ===== 更新通知 =====
         function updateNotice(text, time) {
             if (!text || text.trim() === '') return;
-            noticeContent.textContent = text.trim();
+            const trimmed = text.trim();
+            noticeContent.textContent = trimmed;
             const now = time || new Date().toLocaleString('zh-CN', { hour12: false });
             updateInfo.textContent = '最后更新：' + now;
             // 保存到 localStorage (跨设备同步)
-            localStorage.setItem('noticeText', text.trim());
+            localStorage.setItem('noticeText', trimmed);
             localStorage.setItem('noticeTime', now);
-            // 同步到其他标签页
+            // 触发其他标签页同步
             try {
                 localStorage.setItem('_notice_trigger', Date.now().toString());
             } catch(e) {}
+            // 同步到编辑器
+            if (editorTextarea) {
+                editorTextarea.value = trimmed;
+            }
         }
 
         // ===== 加载已保存的通知 =====
@@ -280,19 +346,21 @@
             if (saved) {
                 noticeContent.textContent = saved;
                 updateInfo.textContent = savedTime ? '最后更新：' + savedTime : '最后更新：已加载';
+                if (editorTextarea) {
+                    editorTextarea.value = saved;
+                }
             } else {
                 const defaultMsg = '📢 欢迎使用智慧教室通报系统。手机编辑实时更新。';
                 noticeContent.textContent = defaultMsg;
                 localStorage.setItem('noticeText', defaultMsg);
                 updateInfo.textContent = '最后更新：' + new Date().toLocaleString('zh-CN', { hour12: false });
-            }
-            // 同步到编辑器
-            if (editorTextarea) {
-                editorTextarea.value = noticeContent.textContent;
+                if (editorTextarea) {
+                    editorTextarea.value = defaultMsg;
+                }
             }
         }
 
-        // ===== 处理 URL 参数 (扫码链接) =====
+        // ===== 处理 URL 参数 (扫码链接带参数) =====
         function handleUrlParams() {
             const params = new URLSearchParams(window.location.search);
             const msg = params.get('msg');
@@ -315,7 +383,6 @@
                 updateInfo.textContent = '最后更新：' + time;
             }
             if (e.key === '_notice_trigger') {
-                // 重新加载最新
                 const saved = localStorage.getItem('noticeText');
                 if (saved) {
                     noticeContent.textContent = saved;
@@ -326,16 +393,14 @@
 
         // ===== 手机编辑功能 =====
         function initMobileEditor() {
-            if (!isMobile()) {
-                // 电脑端隐藏编辑器，只显示提示
+            const mobile = isMobile();
+            if (mobile) {
+                mobileEditor.classList.add('visible');
+                deviceLabel.textContent = '📱 手机控制端';
+            } else {
                 mobileEditor.classList.remove('visible');
                 deviceLabel.textContent = '📺 大屏端';
-                return;
             }
-            // 手机端显示编辑器
-            mobileEditor.classList.add('visible');
-            deviceLabel.textContent = '📱 手机控制端';
-            editorTextarea.value = noticeContent.textContent;
 
             // 保存按钮
             saveBtn.addEventListener('click', function() {
@@ -345,39 +410,28 @@
                     return;
                 }
                 updateNotice(text);
-                // 触发同步
-                try {
-                    localStorage.setItem('_notice_trigger', Date.now().toString());
-                } catch(e) {}
                 // 震动反馈 (手机)
                 if (navigator.vibrate) navigator.vibrate(20);
-                // 提示
                 const btn = this;
                 const originalText = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-check-circle"></i> 已发布！';
                 setTimeout(() => { btn.innerHTML = originalText; }, 1500);
             });
 
-            // 清空/恢复默认
+            // 恢复默认
             clearBtn.addEventListener('click', function() {
                 if (confirm('恢复默认通知内容？')) {
                     const defaultMsg = '📢 今日正常教学，请同学们保持专注。';
                     editorTextarea.value = defaultMsg;
                     updateNotice(defaultMsg);
-                    try {
-                        localStorage.setItem('_notice_trigger', Date.now().toString());
-                    } catch(e) {}
                 }
             });
 
-            // 自动保存 (失去焦点时)
+            // 失去焦点自动保存
             editorTextarea.addEventListener('blur', function() {
                 const text = this.value.trim();
                 if (text && text !== noticeContent.textContent) {
                     updateNotice(text);
-                    try {
-                        localStorage.setItem('_notice_trigger', Date.now().toString());
-                    } catch(e) {}
                 }
             });
 
@@ -389,15 +443,31 @@
             }, { passive: true });
         }
 
+        // ===== 更新二维码链接（自动使用当前页面地址） =====
+        function updateQrCode() {
+            const qrImg = document.getElementById('qrCodeImg');
+            const currentUrl = getCurrentPageUrl();
+            // 如果当前地址是 localhost 或 IP，保留原样；否则使用当前地址
+            if (currentUrl.includes('localhost') || currentUrl.match(/\d+\.\d+\.\d+\.\d+/)) {
+                // 如果是本地地址，提示用户替换
+                console.log('📌 当前地址为本地地址，请将二维码中的链接替换为公网地址');
+            } else {
+                // 自动使用当前页面地址生成二维码
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(currentUrl)}`;
+            }
+        }
+
         // ===== 初始化 =====
         loadSavedNotice();
         handleUrlParams();
         initMobileEditor();
+        updateQrCode();
 
         console.log('📌 重要通报页已加载');
         console.log('📱 ' + (isMobile() ? '手机模式 - 可编辑通知' : '大屏模式 - 只读显示'));
+        console.log('🔗 当前页面地址：', getCurrentPageUrl());
 
-        // 暴露更新方法给外部 (iframe 通信)
+        // 暴露更新方法给外部
         window.updateNoticeAPI = updateNotice;
 
     })();
