@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>智慧教室 · 触屏主页</title>
+    <!-- Font Awesome 6 (免费) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* 全局重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f0f5fe 0%, #dce6f2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            touch-action: pan-y;
+        }
+
+        /* 主卡片 — 触屏优化，毛玻璃 */
+        .dashboard {
+            max-width: 1100px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.50);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-radius: 60px;
+            padding: 40px 45px 50px;
+            box-shadow: 0 30px 60px -12px rgba(0, 20, 40, 0.30), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: all 0.2s;
+        }
+
+        /* ---- 主页：时间居中放大 ---- */
+        .home-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px 0 20px;
+        }
+
+        #clock {
+            font-size: 7.5rem;
+            font-weight: 600;
+            letter-spacing: 8px;
+            color: #0a1e33;
+            line-height: 1.1;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            margin-bottom: 8px;
+        }
+
+        #date {
+            font-size: 1.8rem;
+            font-weight: 400;
+            color: #1f3a5a;
+            letter-spacing: 2px;
+            margin-bottom: 28px;
+        }
+
+        /* 天气 + 励志 两行布局 */
+        .info-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 30px 50px;
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .weather-box {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            padding: 10px 32px 10px 28px;
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            box-shadow: 0 6px 16px rgba(0, 10, 30, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+        }
+
+        .weather-box i {
+            font-size: 2.6rem;
+            color: #f59e0b;
+        }
+
+        .weather-temp {
+            font-weight: 600;
+            font-size: 2.0rem;
+            color: #0b2a44;
+        }
+
+        .weather-desc {
+            color: #1e3a5f;
+            font-weight: 400;
+            text-transform: capitalize;
+        }
+
+        .weather-location {
+            font-size: 1.0rem;
+            color: #2a4b6e;
+            background: rgba(255,255,255,0.3);
+            padding: 4px 18px;
+            border-radius: 40px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        #motto {
+            font-size: 1.6rem;
+            font-weight: 300;
+            color: #1d3a5c;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            padding: 12px 30px;
+            border-radius: 80px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            letter-spacing: 0.4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            white-space: nowrap;
+        }
+
+        #motto i {
+            color: #b45309;
+            opacity: 0.8;
+            font-size: 1.4rem;
+        }
+
+        /* 悬浮导航 (右下角) */
+        .fab-container {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 12px;
+            pointer-events: none;
+        }
+        .fab-container > * {
+            pointer-events: auto;
+        }
+
+        .fab-main {
+            width: 72px;
+            height: 72px;
+            border-radius: 40px;
+            background: rgba(22, 48, 78, 0.85);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.25);
+            box-shadow: 0 12px 28px -4px rgba(0, 20, 40, 0.4);
+            font-size: 2.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1);
+            touch-action: manipulation;
+        }
+        .fab-main:active {
+            transform: scale(0.92);
+            background: #0f2640;
+        }
+
+        .fab-menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+        .fab-menu.hidden {
+            display: none;
+        }
+
+        .fab-item {
+            background: rgba(20, 40, 65, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 40px;
+            padding: 10px 22px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            touch-action: manipulation;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            text-decoration: none;
+            user-select: none;
+        }
+        .fab-item i {
+            font-size: 1.3rem;
+            width: 24px;
+            text-align: center;
+        }
+        .fab-item:active {
+            transform: scale(0.94);
+            background: rgba(40, 70, 110, 0.9);
+        }
+
+        /* 响应式 */
+        @media (max-width: 800px) {
+            .dashboard { padding: 28px 20px; border-radius: 36px; }
+            #clock { font-size: 5.2rem; letter-spacing: 4px; }
+            #date { font-size: 1.4rem; }
+            .weather-box { padding: 8px 18px; font-size: 1rem; flex-wrap: wrap; }
+            .weather-temp { font-size: 1.6rem; }
+            #motto { font-size: 1.2rem; padding: 10px 18px; white-space: normal; }
+            .fab-main { width: 64px; height: 64px; font-size: 1.8rem; }
+            .fab-item { padding: 8px 16px; font-size: 1rem; }
+        }
+
+        @media (max-width: 500px) {
+            #clock { font-size: 3.8rem; letter-spacing: 2px; }
+            .info-row { flex-direction: column; gap: 16px; }
+            .weather-box { width: 100%; justify-content: center; }
+        }
+
+        .external-hint {
+            font-size: 0.9rem;
+            color: #3e5f7e;
+            background: rgba(255,255,255,0.3);
+            padding: 6px 18px;
+            border-radius: 40px;
+            margin-top: 10px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <div class="page-container">
+        <!-- 主页：时间居中放大，天气 & 励志 -->
+        <div id="page-home" class="page active">
+            <div class="home-center">
+                <div id="clock">--:--:--</div>
+                <div id="date">----年--月--日</div>
+
+                <div class="info-row">
+                    <!-- 天气 -->
+                    <div class="weather-box" id="weatherBox">
+                        <i class="fas fa-cloud-sun"></i>
+                        <span class="weather-temp" id="temp">--°</span>
+                        <span class="weather-desc" id="weatherDesc">加载中</span>
+                        <span class="weather-location" id="weatherLocation">📍 安庆·宿松</span>
+                    </div>
+                    <!-- 励志 -->
+                    <div id="motto"><i class="fas fa-quote-left"></i> <span id="mottoText">日日行，不怕千万里</span></div>
+                </div>
+                <div style="margin-top: 32px; font-size: 0.9rem; color: #46648b; opacity: 0.6;">
+                    <i class="fas fa-chevron-circle-right"></i> 点击右下角菜单切换页面
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 悬浮导航 (右下角) -->
+<div class="fab-container">
+    <div class="fab-menu hidden" id="fabMenu">
+        <div class="fab-item" data-page="blank1"><i class="fas fa-1"></i> 空白页1</div>
+        <div class="fab-item" data-page="blank2"><i class="fas fa-2"></i> 空白页2</div>
+        <div class="fab-item" data-page="notice"><i class="fas fa-exclamation-triangle"></i> 重要通报</div>
+    </div>
+    <button class="fab-main" id="fabToggle" aria-label="导航菜单">
+        <i class="fas fa-ellipsis-h" id="fabIcon"></i>
+    </button>
+</div>
+
+<script>
+    (function() {
+        "use strict";
+
+        // DOM 引用
+        const clockEl = document.getElementById('clock');
+        const dateEl = document.getElementById('date');
+        const tempEl = document.getElementById('temp');
+        const weatherDescEl = document.getElementById('weatherDesc');
+        const weatherLocation = document.getElementById('weatherLocation');
+        const mottoTextEl = document.getElementById('mottoText');
+
+        // 悬浮菜单
+        const fabMenu = document.getElementById('fabMenu');
+        const fabToggle = document.getElementById('fabToggle');
+        const fabIcon = document.getElementById('fabIcon');
+        const menuItems = document.querySelectorAll('.fab-item');
+
+        // ---------- 1. 时钟 (居中放大) ----------
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            clockEl.textContent = `${hours}:${minutes}:${seconds}`;
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            const wd = weekdays[now.getDay()];
+            dateEl.textContent = `${year}年${month}月${day}日 ${wd}`;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // ---------- 2. 天气 — 接入真实API (wttr.in) ----------
+        function fetchRealWeather() {
+            const url = 'https://wttr.in/Anqing-Susong?format=j1&lang=zh';
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error('天气API响应错误');
+                    return response.json();
+                })
+                .then(data => {
+                    try {
+                        const current = data.current_condition[0];
+                        const temp = current.temp_C;
+                        const desc = current.weatherDesc[0].value;
+                        const weatherCode = current.weatherCode;
+                        tempEl.textContent = `${temp}°`;
+                        weatherDescEl.textContent = desc;
+                        const iconMap = {
+                            '113': 'fa-sun', '116': 'fa-cloud-sun', '119': 'fa-cloud', '122': 'fa-cloud',
+                            '143': 'fa-smog', '176': 'fa-cloud-rain', '179': 'fa-cloud-snow',
+                            '182': 'fa-cloud-rain', '185': 'fa-cloud-rain', '200': 'fa-cloud-bolt',
+                            '227': 'fa-snowflake', '230': 'fa-snowflake', '248': 'fa-smog',
+                            '260': 'fa-smog', '263': 'fa-cloud-rain', '266': 'fa-cloud-rain',
+                            '281': 'fa-cloud-rain', '284': 'fa-cloud-rain', '293': 'fa-cloud-rain',
+                            '296': 'fa-cloud-rain', '299': 'fa-cloud-showers-heavy',
+                            '302': 'fa-cloud-showers-heavy', '305': 'fa-cloud-showers-heavy',
+                            '308': 'fa-cloud-showers-heavy', '311': 'fa-cloud-rain',
+                            '314': 'fa-cloud-showers-heavy', '317': 'fa-cloud-showers-heavy',
+                            '320': 'fa-cloud-snow', '323': 'fa-cloud-snow', '326': 'fa-cloud-snow',
+                            '329': 'fa-cloud-snow', '332': 'fa-cloud-snow', '335': 'fa-cloud-snow',
+                            '338': 'fa-cloud-snow', '350': 'fa-cloud-snow', '353': 'fa-cloud-rain',
+                            '356': 'fa-cloud-showers-heavy', '359': 'fa-cloud-showers-heavy',
+                            '362': 'fa-cloud-snow', '365': 'fa-cloud-snow', '368': 'fa-cloud-snow',
+                            '371': 'fa-cloud-snow', '374': 'fa-cloud-snow', '377': 'fa-cloud-snow',
+                            '386': 'fa-cloud-bolt', '389': 'fa-cloud-bolt', '392': 'fa-cloud-bolt',
+                            '395': 'fa-cloud-snow'
+                        };
+                        const iconClass = iconMap[weatherCode] || 'fa-cloud';
+                        const weatherBox = document.getElementById('weatherBox');
+                        const iconEl = weatherBox.querySelector('i');
+                        iconEl.className = `fas ${iconClass}`;
+                        weatherLocation.textContent = '📍 安庆·宿松';
+                    } catch (e) {
+                        console.warn('解析天气数据出错', e);
+                        fallbackWeather();
+                    }
+                })
+                .catch(err => {
+                    console.warn('天气API请求失败，使用模拟数据', err);
+                    fallbackWeather();
+                });
+        }
+
+        function fallbackWeather() {
+            const weathers = [
+                { desc: '晴朗', icon: 'fa-sun', temp: 26 },
+                { desc: '多云', icon: 'fa-cloud', temp: 22 },
+                { desc: '小雨', icon: 'fa-cloud-rain', temp: 18 },
+                { desc: '阴天', icon: 'fa-cloud', temp: 20 },
+                { desc: '晴间多云', icon: 'fa-cloud-sun', temp: 24 }
+            ];
+            const w = weathers[Math.floor(Math.random() * weathers.length)];
+            tempEl.textContent = `${w.temp}°`;
+            weatherDescEl.textContent = w.desc;
+            const weatherBox = document.getElementById('weatherBox');
+            const iconEl = weatherBox.querySelector('i');
+            iconEl.className = `fas ${w.icon}`;
+            weatherLocation.textContent = '📍 安庆·宿松';
+        }
+
+        fetchRealWeather();
+        setInterval(fetchRealWeather, 1800000);
+
+        // ---------- 3. 励志语录 — 接入API (每日一换) ----------
+        function fetchDailyMotto() {
+            const url = 'https://api.quotable.io/random?tags=inspirational|motivational';
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error('励志API错误');
+                    return res.json();
+                })
+                .then(data => {
+                    if (data && data.content) {
+                        const text = data.content;
+                        mottoTextEl.textContent = text;
+                        localStorage.setItem('mottoText', text);
+                        localStorage.setItem('mottoDate', new Date().toLocaleDateString('zh-CN'));
+                    } else {
+                        fallbackMotto();
+                    }
+                })
+                .catch(() => {
+                    fetch('https://v1.jinrishici.com/all.json')
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data && data.content) {
+                                mottoTextEl.textContent = data.content;
+                                localStorage.setItem('mottoText', data.content);
+                                localStorage.setItem('mottoDate', new Date().toLocaleDateString('zh-CN'));
+                            } else {
+                                fallbackMotto();
+                            }
+                        })
+                        .catch(() => fallbackMotto());
+                });
+        }
+
+        function fallbackMotto() {
+            const local = [
+                '日日行，不怕千万里', '博学之，审问之，慎思之',
+                '学而不思则罔，思而不学则殆', '天道酬勤，力耕不欺',
+                '少年易老学难成，一寸光阴不可轻', '读书破万卷，下笔如有神',
+                '志不强者智不达'
+            ];
+            const randomIdx = Math.floor(Math.random() * local.length);
+            mottoTextEl.textContent = local[randomIdx];
+        }
+
+        function checkAndUpdateMotto() {
+            const today = new Date().toLocaleDateString('zh-CN');
+            const storedDate = localStorage.getItem('mottoDate');
+            const storedMotto = localStorage.getItem('mottoText');
+            if (storedDate === today && storedMotto) {
+                mottoTextEl.textContent = storedMotto;
+            } else {
+                fetchDailyMotto();
+            }
+        }
+
+        checkAndUpdateMotto();
+        setInterval(checkAndUpdateMotto, 21600000);
+
+        // ---------- 4. 导航：跳转到其他页面 (外链) ----------
+        // 使用 div 替代 a 标签，避免默认行为干扰
+        menuItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const page = this.dataset.page;
+                let targetUrl = '';
+                if (page === 'blank1') {
+                    targetUrl = 'page1.html';
+                } else if (page === 'blank2') {
+                    targetUrl = 'page2.html';
+                } else if (page === 'notice') {
+                    targetUrl = 'notice.html';
+                }
+                if (targetUrl) {
+                    window.location.href = targetUrl;
+                } else {
+                    alert('页面未创建，请创建对应的HTML文件');
+                }
+                // 关闭菜单
+                fabMenu.classList.add('hidden');
+                fabIcon.className = 'fas fa-ellipsis-h';
+            });
+        });
+
+        // ---------- 5. 悬浮按钮 toggle (修复核心问题) ----------
+        fabToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            const isHidden = fabMenu.classList.contains('hidden');
+            if (isHidden) {
+                fabMenu.classList.remove('hidden');
+                fabIcon.className = 'fas fa-times';
+            } else {
+                fabMenu.classList.add('hidden');
+                fabIcon.className = 'fas fa-ellipsis-h';
+            }
+        });
+
+        // 点击其他区域关闭菜单
+        document.addEventListener('click', function(e) {
+            const container = document.querySelector('.fab-container');
+            if (!container.contains(e.target)) {
+                fabMenu.classList.add('hidden');
+                fabIcon.className = 'fas fa-ellipsis-h';
+            }
+        });
+
+        // 防止菜单项点击事件冒泡到 document
+        fabMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        console.log('✅ 智慧教室主页已启动 | 右下角菜单已修复');
+    })();
+</script>
+<div style="position: fixed; bottom: 140px; right: 40px; background: white; padding: 12px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=http://你的IP/notice.html" alt="扫码编辑通知">
+    <div style="font-size: 10px; text-align: center; color: #666;">扫码编辑通知</div>
+</div>
+</body>
+</html>

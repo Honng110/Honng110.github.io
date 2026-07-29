@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>重要信息通报</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body {
+            background: linear-gradient(145deg, #f0f5fe 0%, #dce6f2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .notice-card {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(255,255,255,0.60);
+            backdrop-filter: blur(16px);
+            border-radius: 56px;
+            padding: 45px 50px 50px;
+            box-shadow: 0 30px 60px -12px rgba(0,20,40,0.30);
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+        .notice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .notice-header h1 {
+            font-size: 2.6rem;
+            font-weight: 500;
+            color: #0b1f34;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .notice-header h1 i { color: #b45309; }
+        .status-badge {
+            background: rgba(20,45,75,0.85);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 60px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-badge i { font-size: 1.2rem; }
+        .notice-body {
+            background: rgba(255,255,255,0.35);
+            border-radius: 40px;
+            padding: 30px;
+            border-left: 8px solid #b45309;
+            min-height: 150px;
+            margin-bottom: 28px;
+        }
+        #noticeContent {
+            font-size: 2.2rem;
+            line-height: 1.6;
+            color: #0a1e32;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .notice-footer {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            padding-top: 28px;
+        }
+        .notice-tip {
+            color: #2a4b6e;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .notice-tip i { color: #1e6b3b; }
+        .back-home {
+            background: rgba(255,255,255,0.5);
+            color: #1a3552;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 10px 24px;
+            border-radius: 60px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .back-home:active { transform: scale(0.94); }
+
+        /* ===== 手机编辑面板 (仅手机端显示) ===== */
+        .mobile-editor {
+            display: none;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px dashed rgba(0,0,0,0.1);
+        }
+        .mobile-editor.visible {
+            display: block;
+        }
+        .mobile-editor h3 {
+            font-size: 1.2rem;
+            color: #0b1f34;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .mobile-editor h3 i { color: #059669; }
+        .mobile-editor textarea {
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 1.2rem;
+            border-radius: 20px;
+            border: 2px solid rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(4px);
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .mobile-editor textarea:focus {
+            outline: none;
+            border-color: #1a2e4a;
+        }
+        .mobile-editor .btn-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+        .mobile-editor .btn-row button {
+            padding: 12px 32px;
+            border-radius: 60px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            touch-action: manipulation;
+        }
+        .mobile-editor .btn-row button:active { transform: scale(0.94); }
+        .btn-save {
+            background: #1a2e4a;
+            color: white;
+        }
+        .btn-save:active { background: #0f2640; }
+        .btn-clear {
+            background: rgba(200,50,50,0.15);
+            color: #8b1a1a;
+        }
+        .btn-clear:active { background: rgba(200,50,50,0.25); }
+
+        .sync-status {
+            font-size: 0.9rem;
+            color: #2a4b6e;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0.7;
+        }
+        .sync-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dot.online { background: #22c55e; }
+        .dot.offline { background: #ef4444; }
+
+        @media (max-width: 700px) {
+            .notice-card { padding: 25px 18px; border-radius: 32px; }
+            .notice-header h1 { font-size: 1.8rem; }
+            #noticeContent { font-size: 1.6rem; }
+            .mobile-editor textarea { font-size: 1rem; }
+        }
+        @media (max-width: 480px) {
+            .notice-header { flex-direction: column; align-items: flex-start; }
+            .notice-footer { flex-direction: column; align-items: stretch; }
+            .back-home { justify-content: center; }
+            .mobile-editor .btn-row button { flex: 1; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="notice-card">
+    <!-- 头部 -->
+    <div class="notice-header">
+        <h1><i class="fas fa-bullhorn"></i> 重要通报</h1>
+        <div class="status-badge">
+            <i class="fas fa-mobile-alt"></i>
+            <span id="deviceLabel">📺 大屏端</span>
+        </div>
+    </div>
+
+    <!-- 通知内容 -->
+    <div class="notice-body">
+        <div id="noticeContent">📢 今日正常教学，请同学们保持专注。</div>
+    </div>
+
+    <!-- 底部 -->
+    <div class="notice-footer">
+        <div class="notice-tip">
+            <i class="fas fa-edit"></i>
+            <span id="updateInfo">最后更新：刚刚</span>
+        </div>
+        <a href="index.html" class="back-home">
+            <i class="fas fa-arrow-left"></i> 返回主页
+        </a>
+    </div>
+
+    <!-- ===== 手机编辑面板 ===== -->
+    <div class="mobile-editor" id="mobileEditor">
+        <h3><i class="fas fa-pen-fancy"></i> 📱 手机编辑通知</h3>
+        <textarea id="editorTextarea" placeholder="输入新的通知内容..."></textarea>
+        <div class="btn-row">
+            <button class="btn-save" id="saveBtn"><i class="fas fa-check"></i> 发布通知</button>
+            <button class="btn-clear" id="clearBtn"><i class="fas fa-undo"></i> 恢复默认</button>
+        </div>
+        <div class="sync-status">
+            <span class="dot online" id="syncDot"></span>
+            <span id="syncText">已同步 · 所有设备将自动更新</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        "use strict";
+
+        const noticeContent = document.getElementById('noticeContent');
+        const updateInfo = document.getElementById('updateInfo');
+        const mobileEditor = document.getElementById('mobileEditor');
+        const editorTextarea = document.getElementById('editorTextarea');
+        const saveBtn = document.getElementById('saveBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const deviceLabel = document.getElementById('deviceLabel');
+
+        // ===== 检测是否手机端 =====
+        function isMobile() {
+            return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+                || window.innerWidth < 768;
+        }
+
+        // ===== 更新通知 =====
+        function updateNotice(text, time) {
+            if (!text || text.trim() === '') return;
+            noticeContent.textContent = text.trim();
+            const now = time || new Date().toLocaleString('zh-CN', { hour12: false });
+            updateInfo.textContent = '最后更新：' + now;
+            // 保存到 localStorage (跨设备同步)
+            localStorage.setItem('noticeText', text.trim());
+            localStorage.setItem('noticeTime', now);
+            // 同步到其他标签页
+            try {
+                localStorage.setItem('_notice_trigger', Date.now().toString());
+            } catch(e) {}
+        }
+
+        // ===== 加载已保存的通知 =====
+        function loadSavedNotice() {
+            const saved = localStorage.getItem('noticeText');
+            const savedTime = localStorage.getItem('noticeTime');
+            if (saved) {
+                noticeContent.textContent = saved;
+                updateInfo.textContent = savedTime ? '最后更新：' + savedTime : '最后更新：已加载';
+            } else {
+                const defaultMsg = '📢 欢迎使用智慧教室通报系统。手机编辑实时更新。';
+                noticeContent.textContent = defaultMsg;
+                localStorage.setItem('noticeText', defaultMsg);
+                updateInfo.textContent = '最后更新：' + new Date().toLocaleString('zh-CN', { hour12: false });
+            }
+            // 同步到编辑器
+            if (editorTextarea) {
+                editorTextarea.value = noticeContent.textContent;
+            }
+        }
+
+        // ===== 处理 URL 参数 (扫码链接) =====
+        function handleUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const msg = params.get('msg');
+            if (msg) {
+                const decoded = decodeURIComponent(msg);
+                updateNotice(decoded);
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
+            }
+        }
+
+        // ===== 跨标签页/设备同步 =====
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'noticeText' && e.newValue) {
+                noticeContent.textContent = e.newValue;
+                if (editorTextarea) {
+                    editorTextarea.value = e.newValue;
+                }
+                const time = localStorage.getItem('noticeTime') || new Date().toLocaleString('zh-CN', { hour12: false });
+                updateInfo.textContent = '最后更新：' + time;
+            }
+            if (e.key === '_notice_trigger') {
+                // 重新加载最新
+                const saved = localStorage.getItem('noticeText');
+                if (saved) {
+                    noticeContent.textContent = saved;
+                    if (editorTextarea) editorTextarea.value = saved;
+                }
+            }
+        });
+
+        // ===== 手机编辑功能 =====
+        function initMobileEditor() {
+            if (!isMobile()) {
+                // 电脑端隐藏编辑器，只显示提示
+                mobileEditor.classList.remove('visible');
+                deviceLabel.textContent = '📺 大屏端';
+                return;
+            }
+            // 手机端显示编辑器
+            mobileEditor.classList.add('visible');
+            deviceLabel.textContent = '📱 手机控制端';
+            editorTextarea.value = noticeContent.textContent;
+
+            // 保存按钮
+            saveBtn.addEventListener('click', function() {
+                const text = editorTextarea.value.trim();
+                if (text === '') {
+                    alert('请输入通知内容');
+                    return;
+                }
+                updateNotice(text);
+                // 触发同步
+                try {
+                    localStorage.setItem('_notice_trigger', Date.now().toString());
+                } catch(e) {}
+                // 震动反馈 (手机)
+                if (navigator.vibrate) navigator.vibrate(20);
+                // 提示
+                const btn = this;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> 已发布！';
+                setTimeout(() => { btn.innerHTML = originalText; }, 1500);
+            });
+
+            // 清空/恢复默认
+            clearBtn.addEventListener('click', function() {
+                if (confirm('恢复默认通知内容？')) {
+                    const defaultMsg = '📢 今日正常教学，请同学们保持专注。';
+                    editorTextarea.value = defaultMsg;
+                    updateNotice(defaultMsg);
+                    try {
+                        localStorage.setItem('_notice_trigger', Date.now().toString());
+                    } catch(e) {}
+                }
+            });
+
+            // 自动保存 (失去焦点时)
+            editorTextarea.addEventListener('blur', function() {
+                const text = this.value.trim();
+                if (text && text !== noticeContent.textContent) {
+                    updateNotice(text);
+                    try {
+                        localStorage.setItem('_notice_trigger', Date.now().toString());
+                    } catch(e) {}
+                }
+            });
+
+            // 触屏优化：点击空白区域收起键盘
+            document.addEventListener('touchstart', function(e) {
+                if (e.target.tagName !== 'TEXTAREA' && !e.target.closest('.btn-row')) {
+                    editorTextarea.blur();
+                }
+            }, { passive: true });
+        }
+
+        // ===== 初始化 =====
+        loadSavedNotice();
+        handleUrlParams();
+        initMobileEditor();
+
+        console.log('📌 重要通报页已加载');
+        console.log('📱 ' + (isMobile() ? '手机模式 - 可编辑通知' : '大屏模式 - 只读显示'));
+
+        // 暴露更新方法给外部 (iframe 通信)
+        window.updateNoticeAPI = updateNotice;
+
+    })();
+</script>
+
+</body>
+</html>
