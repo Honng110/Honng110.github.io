@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>智慧教室 · 触屏主页</title>
-    <!-- Font Awesome 6 (免费) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* 全局重置 */
         * {
             margin: 0;
             padding: 0;
@@ -25,7 +23,6 @@
             touch-action: pan-y;
         }
 
-        /* 主卡片 — 触屏优化，毛玻璃 */
         .dashboard {
             max-width: 1100px;
             width: 100%;
@@ -36,10 +33,8 @@
             padding: 40px 45px 50px;
             box-shadow: 0 30px 60px -12px rgba(0, 20, 40, 0.30), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.25);
-            transition: all 0.2s;
         }
 
-        /* ---- 主页：时间居中放大 ---- */
         .home-center {
             display: flex;
             flex-direction: column;
@@ -67,7 +62,6 @@
             margin-bottom: 28px;
         }
 
-        /* 天气 + 励志 两行布局 */
         .info-row {
             display: flex;
             flex-wrap: wrap;
@@ -227,7 +221,44 @@
             background: rgba(40, 70, 110, 0.9);
         }
 
-        /* 响应式 */
+        /* 二维码浮窗 - 扫码编辑 */
+        .qr-float {
+            position: fixed;
+            bottom: 150px;
+            right: 40px;
+            background: white;
+            padding: 14px 14px 10px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            border: 1px solid rgba(255,255,255,0.5);
+            z-index: 999;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .qr-float img {
+            display: block;
+            width: 110px;
+            height: 110px;
+            border-radius: 8px;
+        }
+        .qr-float .qr-label {
+            font-size: 11px;
+            color: #1a3552;
+            margin-top: 6px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        .qr-float .qr-label i {
+            color: #059669;
+            margin-right: 4px;
+        }
+        /* 点击二维码放大 */
+        .qr-float .qr-hint {
+            font-size: 9px;
+            color: #888;
+            margin-top: 2px;
+        }
+
         @media (max-width: 800px) {
             .dashboard { padding: 28px 20px; border-radius: 36px; }
             #clock { font-size: 5.2rem; letter-spacing: 4px; }
@@ -237,22 +268,17 @@
             #motto { font-size: 1.2rem; padding: 10px 18px; white-space: normal; }
             .fab-main { width: 64px; height: 64px; font-size: 1.8rem; }
             .fab-item { padding: 8px 16px; font-size: 1rem; }
+            .qr-float { bottom: 130px; right: 20px; padding: 10px; }
+            .qr-float img { width: 80px; height: 80px; }
         }
 
         @media (max-width: 500px) {
             #clock { font-size: 3.8rem; letter-spacing: 2px; }
             .info-row { flex-direction: column; gap: 16px; }
             .weather-box { width: 100%; justify-content: center; }
-        }
-
-        .external-hint {
-            font-size: 0.9rem;
-            color: #3e5f7e;
-            background: rgba(255,255,255,0.3);
-            padding: 6px 18px;
-            border-radius: 40px;
-            margin-top: 10px;
-            display: inline-block;
+            .qr-float { bottom: 120px; right: 10px; padding: 8px; }
+            .qr-float img { width: 65px; height: 65px; }
+            .qr-float .qr-label { font-size: 9px; }
         }
     </style>
 </head>
@@ -260,21 +286,18 @@
 
 <div class="dashboard">
     <div class="page-container">
-        <!-- 主页：时间居中放大，天气 & 励志 -->
         <div id="page-home" class="page active">
             <div class="home-center">
                 <div id="clock">--:--:--</div>
                 <div id="date">----年--月--日</div>
 
                 <div class="info-row">
-                    <!-- 天气 -->
                     <div class="weather-box" id="weatherBox">
                         <i class="fas fa-cloud-sun"></i>
                         <span class="weather-temp" id="temp">--°</span>
                         <span class="weather-desc" id="weatherDesc">加载中</span>
                         <span class="weather-location" id="weatherLocation">📍 安庆·宿松</span>
                     </div>
-                    <!-- 励志 -->
                     <div id="motto"><i class="fas fa-quote-left"></i> <span id="mottoText">日日行，不怕千万里</span></div>
                 </div>
                 <div style="margin-top: 32px; font-size: 0.9rem; color: #46648b; opacity: 0.6;">
@@ -285,7 +308,18 @@
     </div>
 </div>
 
-<!-- 悬浮导航 (右下角) -->
+<!-- ===== 二维码浮窗：扫码编辑通知 ===== -->
+<!-- ⚠️ 请把下面 data 链接中的 "你的用户名" 和 "仓库名" 替换成你自己的 GitHub 地址 -->
+<div class="qr-float" id="qrFloat">
+    <img id="qrCodeImg" 
+         src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://honng110.github.io/example/notice.html" 
+         alt="扫码编辑通知"
+         onclick="window.open('https://honng110.github.io/example/notice.html', '_blank')">
+    <div class="qr-label"><i class="fas fa-qrcode"></i> 扫码编辑</div>
+    <div class="qr-hint">👆 点击直接打开</div>
+</div>
+
+<!-- 悬浮导航 -->
 <div class="fab-container">
     <div class="fab-menu hidden" id="fabMenu">
         <div class="fab-item" data-page="blank1"><i class="fas fa-1"></i> 空白页1</div>
@@ -301,7 +335,6 @@
     (function() {
         "use strict";
 
-        // DOM 引用
         const clockEl = document.getElementById('clock');
         const dateEl = document.getElementById('date');
         const tempEl = document.getElementById('temp');
@@ -309,13 +342,12 @@
         const weatherLocation = document.getElementById('weatherLocation');
         const mottoTextEl = document.getElementById('mottoText');
 
-        // 悬浮菜单
         const fabMenu = document.getElementById('fabMenu');
         const fabToggle = document.getElementById('fabToggle');
         const fabIcon = document.getElementById('fabIcon');
         const menuItems = document.querySelectorAll('.fab-item');
 
-        // ---------- 1. 时钟 (居中放大) ----------
+        // ---------- 1. 时钟 ----------
         function updateClock() {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
@@ -332,7 +364,7 @@
         updateClock();
         setInterval(updateClock, 1000);
 
-        // ---------- 2. 天气 — 接入真实API (wttr.in) ----------
+        // ---------- 2. 天气 ----------
         function fetchRealWeather() {
             const url = 'https://wttr.in/Anqing-Susong?format=j1&lang=zh';
             fetch(url)
@@ -404,7 +436,7 @@
         fetchRealWeather();
         setInterval(fetchRealWeather, 1800000);
 
-        // ---------- 3. 励志语录 — 接入API (每日一换) ----------
+        // ---------- 3. 励志 ----------
         function fetchDailyMotto() {
             const url = 'https://api.quotable.io/random?tags=inspirational|motivational';
             fetch(url)
@@ -463,8 +495,7 @@
         checkAndUpdateMotto();
         setInterval(checkAndUpdateMotto, 21600000);
 
-        // ---------- 4. 导航：跳转到其他页面 (外链) ----------
-        // 使用 div 替代 a 标签，避免默认行为干扰
+        // ---------- 4. 导航 ----------
         menuItems.forEach(item => {
             item.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -482,13 +513,12 @@
                 } else {
                     alert('页面未创建，请创建对应的HTML文件');
                 }
-                // 关闭菜单
                 fabMenu.classList.add('hidden');
                 fabIcon.className = 'fas fa-ellipsis-h';
             });
         });
 
-        // ---------- 5. 悬浮按钮 toggle (修复核心问题) ----------
+        // ---------- 5. 悬浮按钮 ----------
         fabToggle.addEventListener('click', function(e) {
             e.stopPropagation();
             e.preventDefault();
@@ -502,7 +532,6 @@
             }
         });
 
-        // 点击其他区域关闭菜单
         document.addEventListener('click', function(e) {
             const container = document.querySelector('.fab-container');
             if (!container.contains(e.target)) {
@@ -511,17 +540,13 @@
             }
         });
 
-        // 防止菜单项点击事件冒泡到 document
         fabMenu.addEventListener('click', function(e) {
             e.stopPropagation();
         });
 
-        console.log('✅ 智慧教室主页已启动 | 右下角菜单已修复');
+        console.log('✅ 智慧教室主页已启动');
     })();
 </script>
-<div style="position: fixed; bottom: 140px; right: 40px; background: white; padding: 12px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
-    <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=http://你的IP/notice.html" alt="扫码编辑通知">
-    <div style="font-size: 10px; text-align: center; color: #666;">扫码编辑通知</div>
-</div>
+
 </body>
 </html>
