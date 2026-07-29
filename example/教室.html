@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>智慧教室 · 触屏主页</title>
+    <!-- Font Awesome 6 (免费) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
@@ -221,44 +222,7 @@
             background: rgba(40, 70, 110, 0.9);
         }
 
-        /* 二维码浮窗 - 扫码编辑 */
-        .qr-float {
-            position: fixed;
-            bottom: 150px;
-            right: 40px;
-            background: white;
-            padding: 14px 14px 10px;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-            border: 1px solid rgba(255,255,255,0.5);
-            z-index: 999;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        .qr-float img {
-            display: block;
-            width: 110px;
-            height: 110px;
-            border-radius: 8px;
-        }
-        .qr-float .qr-label {
-            font-size: 11px;
-            color: #1a3552;
-            margin-top: 6px;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-        }
-        .qr-float .qr-label i {
-            color: #059669;
-            margin-right: 4px;
-        }
-        /* 点击二维码放大 */
-        .qr-float .qr-hint {
-            font-size: 9px;
-            color: #888;
-            margin-top: 2px;
-        }
-
+        /* 响应式 */
         @media (max-width: 800px) {
             .dashboard { padding: 28px 20px; border-radius: 36px; }
             #clock { font-size: 5.2rem; letter-spacing: 4px; }
@@ -268,17 +232,12 @@
             #motto { font-size: 1.2rem; padding: 10px 18px; white-space: normal; }
             .fab-main { width: 64px; height: 64px; font-size: 1.8rem; }
             .fab-item { padding: 8px 16px; font-size: 1rem; }
-            .qr-float { bottom: 130px; right: 20px; padding: 10px; }
-            .qr-float img { width: 80px; height: 80px; }
         }
 
         @media (max-width: 500px) {
             #clock { font-size: 3.8rem; letter-spacing: 2px; }
             .info-row { flex-direction: column; gap: 16px; }
             .weather-box { width: 100%; justify-content: center; }
-            .qr-float { bottom: 120px; right: 10px; padding: 8px; }
-            .qr-float img { width: 65px; height: 65px; }
-            .qr-float .qr-label { font-size: 9px; }
         }
     </style>
 </head>
@@ -286,18 +245,21 @@
 
 <div class="dashboard">
     <div class="page-container">
+        <!-- 主页：时间居中放大，天气 & 励志 -->
         <div id="page-home" class="page active">
             <div class="home-center">
                 <div id="clock">--:--:--</div>
                 <div id="date">----年--月--日</div>
 
                 <div class="info-row">
+                    <!-- 天气 -->
                     <div class="weather-box" id="weatherBox">
                         <i class="fas fa-cloud-sun"></i>
                         <span class="weather-temp" id="temp">--°</span>
                         <span class="weather-desc" id="weatherDesc">加载中</span>
                         <span class="weather-location" id="weatherLocation">📍 安庆·宿松</span>
                     </div>
+                    <!-- 励志 -->
                     <div id="motto"><i class="fas fa-quote-left"></i> <span id="mottoText">日日行，不怕千万里</span></div>
                 </div>
                 <div style="margin-top: 32px; font-size: 0.9rem; color: #46648b; opacity: 0.6;">
@@ -308,18 +270,7 @@
     </div>
 </div>
 
-<!-- ===== 二维码浮窗：扫码编辑通知 ===== -->
-<!-- ⚠️ 请把下面 data 链接中的 "你的用户名" 和 "仓库名" 替换成你自己的 GitHub 地址 -->
-<div class="qr-float" id="qrFloat">
-    <img id="qrCodeImg" 
-         src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://honng110.github.io/example/notice.html" 
-         alt="扫码编辑通知"
-         onclick="window.open('https://honng110.github.io/example/notice.html', '_blank')">
-    <div class="qr-label"><i class="fas fa-qrcode"></i> 扫码编辑</div>
-    <div class="qr-hint">👆 点击直接打开</div>
-</div>
-
-<!-- 悬浮导航 -->
+<!-- 悬浮导航 (右下角) -->
 <div class="fab-container">
     <div class="fab-menu hidden" id="fabMenu">
         <div class="fab-item" data-page="blank1"><i class="fas fa-1"></i> 空白页1</div>
@@ -335,6 +286,7 @@
     (function() {
         "use strict";
 
+        // DOM 引用
         const clockEl = document.getElementById('clock');
         const dateEl = document.getElementById('date');
         const tempEl = document.getElementById('temp');
@@ -342,6 +294,7 @@
         const weatherLocation = document.getElementById('weatherLocation');
         const mottoTextEl = document.getElementById('mottoText');
 
+        // 悬浮菜单
         const fabMenu = document.getElementById('fabMenu');
         const fabToggle = document.getElementById('fabToggle');
         const fabIcon = document.getElementById('fabIcon');
