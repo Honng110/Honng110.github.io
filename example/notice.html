@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>重要信息通报 · 手机编辑</title>
+    <!-- Supabase 客户端 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
@@ -98,16 +101,14 @@
         }
         .back-home:active { transform: scale(0.94); }
 
-        /* ===== 手机编辑面板 ===== */
+        /* 手机编辑面板 */
         .mobile-editor {
             display: none;
             margin-top: 30px;
             padding-top: 30px;
             border-top: 2px dashed rgba(0,0,0,0.1);
         }
-        .mobile-editor.visible {
-            display: block;
-        }
+        .mobile-editor.visible { display: block; }
         .mobile-editor h3 {
             font-size: 1.2rem;
             color: #0b1f34;
@@ -130,10 +131,7 @@
             font-family: inherit;
             transition: border-color 0.2s;
         }
-        .mobile-editor textarea:focus {
-            outline: none;
-            border-color: #1a2e4a;
-        }
+        .mobile-editor textarea:focus { outline: none; border-color: #1a2e4a; }
         .mobile-editor .btn-row {
             display: flex;
             gap: 12px;
@@ -154,15 +152,9 @@
             touch-action: manipulation;
         }
         .mobile-editor .btn-row button:active { transform: scale(0.94); }
-        .btn-save {
-            background: #1a2e4a;
-            color: white;
-        }
+        .btn-save { background: #1a2e4a; color: white; }
         .btn-save:active { background: #0f2640; }
-        .btn-clear {
-            background: rgba(200,50,50,0.15);
-            color: #8b1a1a;
-        }
+        .btn-clear { background: rgba(200,50,50,0.15); color: #8b1a1a; }
         .btn-clear:active { background: rgba(200,50,50,0.25); }
 
         .sync-status {
@@ -183,7 +175,6 @@
         .dot.online { background: #22c55e; }
         .dot.offline { background: #ef4444; }
 
-        /* ===== 二维码显示区域 ===== */
         .qr-section {
             margin-top: 28px;
             padding-top: 28px;
@@ -241,7 +232,6 @@
 <body>
 
 <div class="notice-card">
-    <!-- 头部 -->
     <div class="notice-header">
         <h1><i class="fas fa-bullhorn"></i> 重要通报</h1>
         <div class="status-badge">
@@ -250,23 +240,21 @@
         </div>
     </div>
 
-    <!-- 通知内容 -->
     <div class="notice-body">
-        <div id="noticeContent">📢 今日正常教学，请同学们保持专注。</div>
+        <div id="noticeContent">📢 加载中...</div>
     </div>
 
-    <!-- 底部 -->
     <div class="notice-footer">
         <div class="notice-tip">
             <i class="fas fa-edit"></i>
-            <span id="updateInfo">最后更新：刚刚</span>
+            <span id="updateInfo">最后更新：--</span>
         </div>
         <a href="index.html" class="back-home">
             <i class="fas fa-arrow-left"></i> 返回主页
         </a>
     </div>
 
-    <!-- ===== 手机编辑面板 ===== -->
+    <!-- 手机编辑面板 -->
     <div class="mobile-editor" id="mobileEditor">
         <h3><i class="fas fa-pen-fancy"></i> 📱 手机编辑通知</h3>
         <textarea id="editorTextarea" placeholder="输入新的通知内容..."></textarea>
@@ -276,16 +264,15 @@
         </div>
         <div class="sync-status">
             <span class="dot online" id="syncDot"></span>
-            <span id="syncText">已同步 · 所有设备将自动更新</span>
+            <span id="syncText">已连接 · 所有设备将自动更新</span>
         </div>
     </div>
 
-    <!-- ===== 二维码区域 ===== -->
+    <!-- 二维码区域 -->
     <div class="qr-section">
         <div class="qr-box">
-            <!-- ⚠️ 请将下面的 data 链接替换为你实际的 notice.html 地址 -->
             <img id="qrCodeImg" 
-                 src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://honng110.github.io/example/notice.html" 
+                 src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://你的用户名.github.io/仓库名/notice.html" 
                  alt="扫码编辑通知">
             <div class="qr-label"><i class="fas fa-qrcode"></i> 扫码手机编辑</div>
         </div>
@@ -300,6 +287,15 @@
     (function() {
         "use strict";
 
+        // ============================================================
+        //  ⚠️ 重要：请替换为你的 Supabase 配置
+        //  在 https://supabase.com 注册后，在项目 Settings → API 中获取
+        // ============================================================
+        const SUPABASE_URL = 'https://你的项目ID.supabase.co';
+        const SUPABASE_ANON_KEY = '你的anon公钥';
+        // ============================================================
+
+        // DOM 引用
         const noticeContent = document.getElementById('noticeContent');
         const updateInfo = document.getElementById('updateInfo');
         const mobileEditor = document.getElementById('mobileEditor');
@@ -307,91 +303,132 @@
         const saveBtn = document.getElementById('saveBtn');
         const clearBtn = document.getElementById('clearBtn');
         const deviceLabel = document.getElementById('deviceLabel');
+        const syncDot = document.getElementById('syncDot');
+        const syncText = document.getElementById('syncText');
 
-        // ===== 检测是否手机端 =====
+        let supabaseClient = null;
+
+        // ---------- 检测是否手机端 ----------
         function isMobile() {
             return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
                 || window.innerWidth < 768;
         }
 
-        // ===== 获取当前页面完整URL（用于生成二维码） =====
+        // ---------- 获取当前页面URL ----------
         function getCurrentPageUrl() {
             return window.location.href.split('?')[0].split('#')[0];
         }
 
-        // ===== 更新通知 =====
-        function updateNotice(text, time) {
+        // ---------- 更新通知（本地显示 + 数据库存储） ----------
+        function updateNoticeDisplay(text, time) {
             if (!text || text.trim() === '') return;
             const trimmed = text.trim();
             noticeContent.textContent = trimmed;
             const now = time || new Date().toLocaleString('zh-CN', { hour12: false });
             updateInfo.textContent = '最后更新：' + now;
-            // 保存到 localStorage (跨设备同步)
-            localStorage.setItem('noticeText', trimmed);
-            localStorage.setItem('noticeTime', now);
-            // 触发其他标签页同步
-            try {
-                localStorage.setItem('_notice_trigger', Date.now().toString());
-            } catch(e) {}
-            // 同步到编辑器
             if (editorTextarea) {
                 editorTextarea.value = trimmed;
             }
+            // 本地备份
+            localStorage.setItem('noticeText', trimmed);
+            localStorage.setItem('noticeTime', now);
         }
 
-        // ===== 加载已保存的通知 =====
-        function loadSavedNotice() {
-            const saved = localStorage.getItem('noticeText');
-            const savedTime = localStorage.getItem('noticeTime');
-            if (saved) {
-                noticeContent.textContent = saved;
-                updateInfo.textContent = savedTime ? '最后更新：' + savedTime : '最后更新：已加载';
-                if (editorTextarea) {
-                    editorTextarea.value = saved;
-                }
-            } else {
-                const defaultMsg = '📢 欢迎使用智慧教室通报系统。手机编辑实时更新。';
-                noticeContent.textContent = defaultMsg;
-                localStorage.setItem('noticeText', defaultMsg);
-                updateInfo.textContent = '最后更新：' + new Date().toLocaleString('zh-CN', { hour12: false });
-                if (editorTextarea) {
-                    editorTextarea.value = defaultMsg;
-                }
+        // ---------- 发布到 Supabase ----------
+        async function publishToSupabase(text) {
+            if (!supabaseClient) {
+                throw new Error('Supabase 未初始化');
             }
+            const { error } = await supabaseClient
+                .from('notices')
+                .insert({ content: text });
+            if (error) throw error;
         }
 
-        // ===== 处理 URL 参数 (扫码链接带参数) =====
-        function handleUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            const msg = params.get('msg');
-            if (msg) {
-                const decoded = decodeURIComponent(msg);
-                updateNotice(decoded);
-                const newUrl = window.location.pathname;
-                window.history.replaceState({}, document.title, newUrl);
-            }
-        }
-
-        // ===== 跨标签页/设备同步 =====
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'noticeText' && e.newValue) {
-                noticeContent.textContent = e.newValue;
-                if (editorTextarea) {
-                    editorTextarea.value = e.newValue;
-                }
-                const time = localStorage.getItem('noticeTime') || new Date().toLocaleString('zh-CN', { hour12: false });
-                updateInfo.textContent = '最后更新：' + time;
-            }
-            if (e.key === '_notice_trigger') {
+        // ---------- 加载最新通知 ----------
+        async function loadLatestNotice() {
+            if (!supabaseClient) {
+                // 降级：从 localStorage 读取
                 const saved = localStorage.getItem('noticeText');
                 if (saved) {
                     noticeContent.textContent = saved;
+                    const time = localStorage.getItem('noticeTime') || '--';
+                    updateInfo.textContent = '最后更新：' + time;
                     if (editorTextarea) editorTextarea.value = saved;
                 }
+                return;
             }
-        });
+            try {
+                const { data, error } = await supabaseClient
+                    .from('notices')
+                    .select('content, updated_at')
+                    .order('id', { ascending: false })
+                    .limit(1);
 
-        // ===== 手机编辑功能 =====
+                if (error) throw error;
+                if (data && data.length > 0) {
+                    const time = new Date(data[0].updated_at).toLocaleString('zh-CN', { hour12: false });
+                    updateNoticeDisplay(data[0].content, time);
+                }
+            } catch (e) {
+                console.warn('加载通知失败:', e);
+                const saved = localStorage.getItem('noticeText');
+                if (saved) {
+                    noticeContent.textContent = saved;
+                    updateInfo.textContent = '最后更新：来自缓存';
+                }
+            }
+        }
+
+        // ---------- 订阅实时更新 ----------
+        function subscribeToNotices() {
+            if (!supabaseClient) return;
+            supabaseClient
+                .channel('notices-channel')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'notices'
+                    },
+                    (payload) => {
+                        const newNotice = payload.new;
+                        if (newNotice && newNotice.content) {
+                            const time = new Date(newNotice.updated_at).toLocaleString('zh-CN', { hour12: false });
+                            updateNoticeDisplay(newNotice.content, time);
+                            // 触发主页同步
+                            localStorage.setItem('_notice_trigger', Date.now().toString());
+                        }
+                    }
+                )
+                .subscribe((status) => {
+                    console.log('Supabase 订阅状态:', status);
+                });
+        }
+
+        // ---------- 初始化 Supabase ----------
+        function initSupabase() {
+            try {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                syncDot.className = 'dot online';
+                syncText.textContent = '已连接 · 所有设备将自动更新';
+                loadLatestNotice();
+                subscribeToNotices();
+            } catch (e) {
+                console.error('Supabase 初始化失败:', e);
+                syncDot.className = 'dot offline';
+                syncText.textContent = '连接失败，请检查配置';
+                // 降级使用 localStorage
+                const saved = localStorage.getItem('noticeText');
+                if (saved) {
+                    noticeContent.textContent = saved;
+                    updateInfo.textContent = '最后更新：离线模式';
+                }
+            }
+        }
+
+        // ---------- 手机编辑功能 ----------
         function initMobileEditor() {
             const mobile = isMobile();
             if (mobile) {
@@ -403,19 +440,32 @@
             }
 
             // 保存按钮
-            saveBtn.addEventListener('click', function() {
+            saveBtn.addEventListener('click', async function() {
                 const text = editorTextarea.value.trim();
                 if (text === '') {
                     alert('请输入通知内容');
                     return;
                 }
-                updateNotice(text);
-                // 震动反馈 (手机)
-                if (navigator.vibrate) navigator.vibrate(20);
-                const btn = this;
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-check-circle"></i> 已发布！';
-                setTimeout(() => { btn.innerHTML = originalText; }, 1500);
+
+                // 先更新本地显示
+                updateNoticeDisplay(text);
+
+                // 发布到 Supabase
+                try {
+                    await publishToSupabase(text);
+                    if (navigator.vibrate) navigator.vibrate(20);
+                    const btn = this;
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check-circle"></i> 已发布！';
+                    setTimeout(() => { btn.innerHTML = originalText; }, 1500);
+                    syncDot.className = 'dot online';
+                    syncText.textContent = '已同步 · 所有设备将自动更新';
+                } catch (e) {
+                    console.error('发布失败:', e);
+                    syncDot.className = 'dot offline';
+                    syncText.textContent = '发布失败，将重试';
+                    alert('发布失败，请检查网络后重试');
+                }
             });
 
             // 恢复默认
@@ -423,19 +473,22 @@
                 if (confirm('恢复默认通知内容？')) {
                     const defaultMsg = '📢 今日正常教学，请同学们保持专注。';
                     editorTextarea.value = defaultMsg;
-                    updateNotice(defaultMsg);
+                    updateNoticeDisplay(defaultMsg);
+                    // 也发布到数据库
+                    publishToSupabase(defaultMsg).catch(console.warn);
                 }
             });
 
-            // 失去焦点自动保存
+            // 失去焦点自动保存（仅手机端）
             editorTextarea.addEventListener('blur', function() {
                 const text = this.value.trim();
                 if (text && text !== noticeContent.textContent) {
-                    updateNotice(text);
+                    updateNoticeDisplay(text);
+                    publishToSupabase(text).catch(console.warn);
                 }
             });
 
-            // 触屏优化：点击空白区域收起键盘
+            // 触屏优化
             document.addEventListener('touchstart', function(e) {
                 if (e.target.tagName !== 'TEXTAREA' && !e.target.closest('.btn-row')) {
                     editorTextarea.blur();
@@ -443,33 +496,51 @@
             }, { passive: true });
         }
 
-        // ===== 更新二维码链接（自动使用当前页面地址） =====
+        // ---------- 监听其他标签页更新 ----------
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'noticeText' && e.newValue) {
+                noticeContent.textContent = e.newValue;
+                if (editorTextarea) editorTextarea.value = e.newValue;
+                const time = localStorage.getItem('noticeTime') || '--';
+                updateInfo.textContent = '最后更新：' + time;
+            }
+            if (e.key === '_notice_trigger') {
+                loadLatestNotice();
+            }
+        });
+
+        // ---------- 更新二维码 ----------
         function updateQrCode() {
             const qrImg = document.getElementById('qrCodeImg');
             const currentUrl = getCurrentPageUrl();
-            // 如果当前地址是 localhost 或 IP，保留原样；否则使用当前地址
-            if (currentUrl.includes('localhost') || currentUrl.match(/\d+\.\d+\.\d+\.\d+/)) {
-                // 如果是本地地址，提示用户替换
-                console.log('📌 当前地址为本地地址，请将二维码中的链接替换为公网地址');
-            } else {
-                // 自动使用当前页面地址生成二维码
+            if (!currentUrl.includes('localhost') && !currentUrl.match(/\d+\.\d+\.\d+\.\d+/)) {
                 qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(currentUrl)}`;
             }
         }
 
-        // ===== 初始化 =====
-        loadSavedNotice();
-        handleUrlParams();
+        // ---------- 启动 ----------
+        if (SUPABASE_URL !== 'https://你的项目ID.supabase.co' && SUPABASE_ANON_KEY !== '你的anon公钥') {
+            initSupabase();
+        } else {
+            syncDot.className = 'dot offline';
+            syncText.textContent = '⚠️ 请配置 Supabase';
+            console.warn('⚠️ 请先在代码中配置 SUPABASE_URL 和 SUPABASE_ANON_KEY');
+            // 降级使用 localStorage
+            const saved = localStorage.getItem('noticeText');
+            if (saved) {
+                noticeContent.textContent = saved;
+                updateInfo.textContent = '最后更新：本地缓存';
+            }
+        }
+
         initMobileEditor();
         updateQrCode();
 
-        console.log('📌 重要通报页已加载');
+        console.log('📌 重要通报页已加载 (Supabase 实时同步)');
         console.log('📱 ' + (isMobile() ? '手机模式 - 可编辑通知' : '大屏模式 - 只读显示'));
-        console.log('🔗 当前页面地址：', getCurrentPageUrl());
 
-        // 暴露更新方法给外部
-        window.updateNoticeAPI = updateNotice;
-
+        // 暴露方法给外部
+        window.updateNoticeAPI = updateNoticeDisplay;
     })();
 </script>
 
