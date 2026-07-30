@@ -4,18 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>智慧教室 · 触屏主页</title>
-    <!-- Supabase 客户端 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body {
             background: linear-gradient(145deg, #f0f5fe 0%, #dce6f2 100%);
             min-height: 100vh;
@@ -25,46 +17,25 @@
             padding: 20px;
             touch-action: pan-y;
         }
-
         .dashboard {
             max-width: 1100px;
             width: 100%;
-            background: rgba(255, 255, 255, 0.50);
+            background: rgba(255,255,255,0.50);
             backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
             border-radius: 60px;
             padding: 40px 45px 50px;
-            box-shadow: 0 30px 60px -12px rgba(0, 20, 40, 0.30), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 30px 60px -12px rgba(0,20,40,0.30);
+            border: 1px solid rgba(255,255,255,0.25);
         }
-
         .home-center {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             text-align: center;
             padding: 10px 0 20px;
         }
-
-        #clock {
-            font-size: 7.5rem;
-            font-weight: 600;
-            letter-spacing: 8px;
-            color: #0a1e33;
-            line-height: 1.1;
-            text-shadow: 0 4px 12px rgba(0,0,0,0.04);
-            margin-bottom: 8px;
-        }
-
-        #date {
-            font-size: 1.8rem;
-            font-weight: 400;
-            color: #1f3a5a;
-            letter-spacing: 2px;
-            margin-bottom: 28px;
-        }
-
+        #clock { font-size: 7.5rem; font-weight: 600; letter-spacing: 8px; color: #0a1e33; line-height: 1.1; margin-bottom: 8px; }
+        #date { font-size: 1.8rem; font-weight: 400; color: #1f3a5a; letter-spacing: 2px; margin-bottom: 28px; }
         .info-row {
             display: flex;
             flex-wrap: wrap;
@@ -74,111 +45,105 @@
             width: 100%;
             margin-top: 12px;
         }
-
         .weather-box {
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(255,255,255,0.5);
             backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
             padding: 10px 32px 10px 28px;
             border-radius: 60px;
             display: flex;
             align-items: center;
             gap: 18px;
-            box-shadow: 0 6px 16px rgba(0, 10, 30, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255,255,255,0.7);
             font-size: 1.2rem;
         }
-
-        .weather-box i {
-            font-size: 2.6rem;
-            color: #f59e0b;
-        }
-
-        .weather-temp {
-            font-weight: 600;
-            font-size: 2.0rem;
-            color: #0b2a44;
-        }
-
-        .weather-desc {
-            color: #1e3a5f;
-            font-weight: 400;
-            text-transform: capitalize;
-        }
-
+        .weather-box i { font-size: 2.6rem; color: #f59e0b; }
+        .weather-temp { font-weight: 600; font-size: 2.0rem; color: #0b2a44; }
+        .weather-desc { color: #1e3a5f; text-transform: capitalize; }
         .weather-location {
             font-size: 1.0rem;
             color: #2a4b6e;
             background: rgba(255,255,255,0.3);
             padding: 4px 18px;
             border-radius: 40px;
-            font-weight: 400;
-            letter-spacing: 0.3px;
             white-space: nowrap;
         }
-
         #motto {
             font-size: 1.6rem;
             font-weight: 300;
             color: #1d3a5c;
-            background: rgba(255, 255, 255, 0.4);
+            background: rgba(255,255,255,0.4);
             backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
             padding: 12px 30px;
             border-radius: 80px;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-            letter-spacing: 0.4px;
+            border: 1px solid rgba(255,255,255,0.6);
             display: inline-flex;
             align-items: center;
             gap: 14px;
             white-space: nowrap;
         }
+        #motto i { color: #b45309; opacity: 0.8; font-size: 1.4rem; }
 
-        #motto i {
-            color: #b45309;
-            opacity: 0.8;
-            font-size: 1.4rem;
-        }
-
-        /* 通知预览卡片（在主页显示最新通知） */
-        .notice-preview {
+        /* ===== 通知轮播区域 ===== */
+        .carousel-container {
             margin-top: 30px;
-            padding: 20px 30px;
-            background: rgba(255,255,255,0.35);
+            width: 100%;
+            max-width: 800px;
+            background: rgba(255,255,255,0.30);
             backdrop-filter: blur(4px);
             border-radius: 40px;
-            border-left: 6px solid #b45309;
-            max-width: 90%;
-            width: 100%;
-            text-align: left;
-            transition: all 0.3s ease;
-        }
-        .notice-preview .label {
-            font-size: 0.85rem;
-            color: #2a4b6e;
-            opacity: 0.7;
+            padding: 20px 30px;
+            min-height: 80px;
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
+            justify-content: center;
+            border: 1px solid rgba(255,255,255,0.3);
+            position: relative;
+            overflow: hidden;
         }
-        .notice-preview .label i { color: #b45309; }
-        #previewContent {
-            font-size: 1.4rem;
+        .carousel-slide {
+            width: 100%;
+            text-align: center;
+            transition: opacity 0.6s ease;
+        }
+        .carousel-slide .content {
+            font-size: 1.8rem;
             color: #0a1e32;
             line-height: 1.5;
             word-break: break-word;
         }
-        .notice-preview .time {
+        .carousel-slide .meta {
             font-size: 0.8rem;
             color: #2a4b6e;
             opacity: 0.5;
             margin-top: 6px;
-            text-align: right;
+        }
+        .carousel-indicators {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 12px;
+        }
+        .carousel-indicators .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: all 0.3s;
+            touch-action: manipulation;
+        }
+        .carousel-indicators .dot.active {
+            background: #1a2e4a;
+            transform: scale(1.2);
+        }
+        .carousel-indicators .dot:active { transform: scale(0.8); }
+        .carousel-empty {
+            color: #2a4b6e;
+            opacity: 0.5;
+            font-size: 1.2rem;
         }
 
-        /* 悬浮导航 */
+        /* ===== 悬浮导航 ===== */
         .fab-container {
             position: fixed;
             bottom: 40px;
@@ -191,30 +156,24 @@
             pointer-events: none;
         }
         .fab-container > * { pointer-events: auto; }
-
         .fab-main {
             width: 72px;
             height: 72px;
             border-radius: 40px;
-            background: rgba(22, 48, 78, 0.85);
+            background: rgba(22,48,78,0.85);
             backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
             color: white;
             border: 1px solid rgba(255,255,255,0.25);
-            box-shadow: 0 12px 28px -4px rgba(0, 20, 40, 0.4);
+            box-shadow: 0 12px 28px -4px rgba(0,20,40,0.4);
             font-size: 2.2rem;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1);
+            transition: all 0.2s;
             touch-action: manipulation;
         }
-        .fab-main:active {
-            transform: scale(0.92);
-            background: #0f2640;
-        }
-
+        .fab-main:active { transform: scale(0.92); background: #0f2640; }
         .fab-menu {
             display: flex;
             flex-direction: column;
@@ -224,11 +183,9 @@
             transition: all 0.2s ease;
         }
         .fab-menu.hidden { display: none; }
-
         .fab-item {
-            background: rgba(20, 40, 65, 0.85);
+            background: rgba(20,40,65,0.85);
             backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
             border: 1px solid rgba(255,255,255,0.2);
             color: white;
             border-radius: 40px;
@@ -240,34 +197,57 @@
             gap: 12px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.15);
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition: all 0.15s;
             touch-action: manipulation;
-            letter-spacing: 0.3px;
             white-space: nowrap;
-            text-decoration: none;
             user-select: none;
         }
-        .fab-item i {
-            font-size: 1.3rem;
-            width: 24px;
-            text-align: center;
-        }
-        .fab-item:active {
-            transform: scale(0.94);
-            background: rgba(40, 70, 110, 0.9);
-        }
+        .fab-item i { font-size: 1.3rem; width: 24px; text-align: center; }
+        .fab-item:active { transform: scale(0.94); background: rgba(40,70,110,0.9); }
 
-        /* 同步状态 */
+        /* ===== 二维码浮窗（主页右下角） ===== */
+        .qr-float {
+            position: fixed;
+            bottom: 140px;
+            right: 40px;
+            z-index: 999;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(8px);
+            padding: 12px 12px 8px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.5);
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .qr-float:active { transform: scale(0.95); }
+        .qr-float img {
+            display: block;
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+        }
+        .qr-float .qr-label {
+            font-size: 10px;
+            color: #1a3552;
+            margin-top: 4px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        .qr-float .qr-label i { color: #059669; margin-right: 3px; }
+
+        /* ===== 同步状态 ===== */
         .sync-status {
             position: fixed;
             bottom: 130px;
-            right: 40px;
-            z-index: 999;
-            font-size: 0.8rem;
+            right: 160px;
+            z-index: 998;
+            font-size: 0.75rem;
             color: #2a4b6e;
             background: rgba(255,255,255,0.85);
             backdrop-filter: blur(4px);
-            padding: 5px 14px;
+            padding: 4px 12px;
             border-radius: 30px;
             border: 1px solid rgba(255,255,255,0.5);
             display: flex;
@@ -283,6 +263,8 @@
         }
         .sync-status .dot.online { background: #22c55e; }
         .sync-status .dot.offline { background: #ef4444; }
+        .sync-status .dot.connecting { background: #f59e0b; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
         @media (max-width: 800px) {
             .dashboard { padding: 28px 20px; border-radius: 36px; }
@@ -293,14 +275,19 @@
             #motto { font-size: 1.2rem; padding: 10px 18px; white-space: normal; }
             .fab-main { width: 64px; height: 64px; font-size: 1.8rem; }
             .fab-item { padding: 8px 16px; font-size: 1rem; }
-            .notice-preview { padding: 14px 18px; }
-            #previewContent { font-size: 1.1rem; }
-            .sync-status { bottom: 110px; right: 20px; font-size: 0.7rem; padding: 4px 10px; }
+            .qr-float { bottom: 120px; right: 20px; padding: 8px; }
+            .qr-float img { width: 75px; height: 75px; }
+            .qr-float .qr-label { font-size: 9px; }
+            .carousel-container { padding: 14px 16px; min-height: 60px; }
+            .carousel-slide .content { font-size: 1.3rem; }
+            .sync-status { bottom: 110px; right: 110px; font-size: 0.65rem; padding: 3px 10px; }
         }
         @media (max-width: 500px) {
             #clock { font-size: 3.8rem; letter-spacing: 2px; }
             .info-row { flex-direction: column; gap: 16px; }
             .weather-box { width: 100%; justify-content: center; }
+            .qr-float img { width: 60px; height: 60px; }
+            .qr-float { bottom: 110px; right: 12px; padding: 6px; }
         }
     </style>
 </head>
@@ -312,7 +299,6 @@
             <div class="home-center">
                 <div id="clock">--:--:--</div>
                 <div id="date">----年--月--日</div>
-
                 <div class="info-row">
                     <div class="weather-box" id="weatherBox">
                         <i class="fas fa-cloud-sun"></i>
@@ -323,28 +309,33 @@
                     <div id="motto"><i class="fas fa-quote-left"></i> <span id="mottoText">日日行，不怕千万里</span></div>
                 </div>
 
-                <!-- 通知预览 -->
-                <div class="notice-preview" id="noticePreview">
-                    <div class="label"><i class="fas fa-bullhorn"></i> 最新通报</div>
-                    <div id="previewContent">📢 加载中...</div>
-                    <div class="time" id="previewTime">--</div>
+                <!-- ===== 通知轮播 ===== -->
+                <div class="carousel-container" id="carouselContainer">
+                    <div id="carouselContent">
+                        <div class="carousel-empty">📢 暂无通知，请添加</div>
+                    </div>
                 </div>
-
-                <div style="margin-top: 16px; font-size: 0.9rem; color: #46648b; opacity: 0.6;">
-                    <i class="fas fa-chevron-circle-right"></i> 点击右下角菜单切换页面
-                </div>
+                <div class="carousel-indicators" id="carouselIndicators"></div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- 同步状态 -->
+<!-- ===== 二维码浮窗 ===== -->
+<div class="qr-float" id="qrFloat" onclick="window.open('notice.html', '_blank')">
+    <img id="qrCodeImg" 
+         src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://你的用户名.github.io/仓库名/notice.html" 
+         alt="扫码编辑通知">
+    <div class="qr-label"><i class="fas fa-qrcode"></i> 编辑通知</div>
+</div>
+
+<!-- ===== 同步状态 ===== -->
 <div class="sync-status" id="syncStatus">
-    <span class="dot offline" id="syncDot"></span>
+    <span class="dot connecting" id="syncDot"></span>
     <span id="syncText">连接中...</span>
 </div>
 
-<!-- 悬浮导航 -->
+<!-- ===== 悬浮导航 ===== -->
 <div class="fab-container">
     <div class="fab-menu hidden" id="fabMenu">
         <div class="fab-item" data-page="blank1"><i class="fas fa-1"></i> 空白页1</div>
@@ -361,8 +352,7 @@
         "use strict";
 
         // ============================================================
-        //  ⚠️ 重要：请替换为你的 Supabase 配置
-        //  在 https://supabase.com 注册后，在项目 Settings → API 中获取
+        //  ⚠️ 请替换为你的 Supabase 配置
         // ============================================================
         const SUPABASE_URL = 'https://evxxdguokbfzczswlitv.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_Oh8S5zKzw5g0LK9grWT1yA_Oi7hvSdP';
@@ -375,14 +365,20 @@
         const weatherDescEl = document.getElementById('weatherDesc');
         const weatherLocation = document.getElementById('weatherLocation');
         const mottoTextEl = document.getElementById('mottoText');
-        const previewContent = document.getElementById('previewContent');
-        const previewTime = document.getElementById('previewTime');
+        const carouselContent = document.getElementById('carouselContent');
+        const carouselIndicators = document.getElementById('carouselIndicators');
         const fabMenu = document.getElementById('fabMenu');
         const fabToggle = document.getElementById('fabToggle');
         const fabIcon = document.getElementById('fabIcon');
         const menuItems = document.querySelectorAll('.fab-item');
         const syncDot = document.getElementById('syncDot');
         const syncText = document.getElementById('syncText');
+
+        let supabaseClient = null;
+        let notices = [];
+        let currentIndex = 0;
+        let carouselTimer = null;
+        let isSubscribed = false;
 
         // ---------- 时钟 ----------
         function updateClock() {
@@ -402,70 +398,54 @@
         setInterval(updateClock, 1000);
 
         // ---------- 天气 ----------
-        function fetchRealWeather() {
-            const url = 'https://wttr.in/Anqing-Susong?format=j1&lang=zh';
-            fetch(url)
-                .then(response => response.json())
+        function fetchWeather() {
+            fetch('https://wttr.in/Anqing-Susong?format=j1&lang=zh')
+                .then(r => r.json())
                 .then(data => {
                     try {
-                        const current = data.current_condition[0];
-                        tempEl.textContent = `${current.temp_C}°`;
-                        weatherDescEl.textContent = current.weatherDesc[0].value;
-                        const iconMap = {
+                        const c = data.current_condition[0];
+                        tempEl.textContent = `${c.temp_C}°`;
+                        weatherDescEl.textContent = c.weatherDesc[0].value;
+                        const map = {
                             '113': 'fa-sun', '116': 'fa-cloud-sun', '119': 'fa-cloud', '122': 'fa-cloud',
-                            '143': 'fa-smog', '176': 'fa-cloud-rain', '179': 'fa-cloud-snow',
-                            '182': 'fa-cloud-rain', '185': 'fa-cloud-rain', '200': 'fa-cloud-bolt',
-                            '227': 'fa-snowflake', '230': 'fa-snowflake', '248': 'fa-smog',
-                            '260': 'fa-smog', '263': 'fa-cloud-rain', '266': 'fa-cloud-rain',
-                            '281': 'fa-cloud-rain', '284': 'fa-cloud-rain', '293': 'fa-cloud-rain',
-                            '296': 'fa-cloud-rain', '299': 'fa-cloud-showers-heavy',
+                            '176': 'fa-cloud-rain', '179': 'fa-cloud-snow', '200': 'fa-cloud-bolt',
+                            '227': 'fa-snowflake', '248': 'fa-smog', '263': 'fa-cloud-rain',
+                            '293': 'fa-cloud-rain', '296': 'fa-cloud-rain', '299': 'fa-cloud-showers-heavy',
                             '302': 'fa-cloud-showers-heavy', '305': 'fa-cloud-showers-heavy',
-                            '308': 'fa-cloud-showers-heavy', '311': 'fa-cloud-rain',
-                            '314': 'fa-cloud-showers-heavy', '317': 'fa-cloud-showers-heavy',
-                            '320': 'fa-cloud-snow', '323': 'fa-cloud-snow', '326': 'fa-cloud-snow',
-                            '329': 'fa-cloud-snow', '332': 'fa-cloud-snow', '335': 'fa-cloud-snow',
-                            '338': 'fa-cloud-snow', '350': 'fa-cloud-snow', '353': 'fa-cloud-rain',
-                            '356': 'fa-cloud-showers-heavy', '359': 'fa-cloud-showers-heavy',
+                            '308': 'fa-cloud-showers-heavy', '311': 'fa-cloud-rain', '314': 'fa-cloud-showers-heavy',
+                            '317': 'fa-cloud-showers-heavy', '320': 'fa-cloud-snow', '323': 'fa-cloud-snow',
+                            '326': 'fa-cloud-snow', '329': 'fa-cloud-snow', '332': 'fa-cloud-snow',
+                            '335': 'fa-cloud-snow', '338': 'fa-cloud-snow', '350': 'fa-cloud-snow',
+                            '353': 'fa-cloud-rain', '356': 'fa-cloud-showers-heavy', '359': 'fa-cloud-showers-heavy',
                             '362': 'fa-cloud-snow', '365': 'fa-cloud-snow', '368': 'fa-cloud-snow',
                             '371': 'fa-cloud-snow', '374': 'fa-cloud-snow', '377': 'fa-cloud-snow',
                             '386': 'fa-cloud-bolt', '389': 'fa-cloud-bolt', '392': 'fa-cloud-bolt',
                             '395': 'fa-cloud-snow'
                         };
-                        const iconClass = iconMap[current.weatherCode] || 'fa-cloud';
-                        document.querySelector('.weather-box i').className = `fas ${iconClass}`;
+                        document.querySelector('.weather-box i').className = `fas ${map[c.weatherCode] || 'fa-cloud'}`;
                         weatherLocation.textContent = '📍 安庆·宿松';
-                    } catch (e) { fallbackWeather(); }
+                    } catch(e) { fallbackWeather(); }
                 })
                 .catch(() => fallbackWeather());
         }
         function fallbackWeather() {
-            const w = [
-                { desc: '晴朗', icon: 'fa-sun', temp: 26 },
-                { desc: '多云', icon: 'fa-cloud', temp: 22 },
-                { desc: '小雨', icon: 'fa-cloud-rain', temp: 18 }
-            ][Math.floor(Math.random() * 3)];
+            const w = [{desc:'晴朗',icon:'fa-sun',temp:26},{desc:'多云',icon:'fa-cloud',temp:22},{desc:'小雨',icon:'fa-cloud-rain',temp:18}][Math.floor(Math.random()*3)];
             tempEl.textContent = `${w.temp}°`;
             weatherDescEl.textContent = w.desc;
             document.querySelector('.weather-box i').className = `fas ${w.icon}`;
             weatherLocation.textContent = '📍 安庆·宿松';
         }
-        fetchRealWeather();
-        setInterval(fetchRealWeather, 1800000);
+        fetchWeather();
+        setInterval(fetchWeather, 1800000);
 
         // ---------- 励志 ----------
         function fetchMotto() {
             fetch('https://api.quotable.io/random?tags=inspirational|motivational')
-                .then(res => res.json())
-                .then(data => {
-                    if (data?.content) {
-                        mottoTextEl.textContent = data.content;
-                        localStorage.setItem('mottoText', data.content);
-                        localStorage.setItem('mottoDate', new Date().toLocaleDateString('zh-CN'));
-                    }
-                })
+                .then(r => r.json())
+                .then(d => { if(d?.content) mottoTextEl.textContent = d.content; })
                 .catch(() => {
-                    const local = ['日日行，不怕千万里', '博学之，审问之，慎思之', '天道酬勤，力耕不欺'];
-                    mottoTextEl.textContent = local[Math.floor(Math.random() * local.length)];
+                    const list = ['日日行，不怕千万里', '博学之，审问之，慎思之', '天道酬勤，力耕不欺'];
+                    mottoTextEl.textContent = list[Math.floor(Math.random() * list.length)];
                 });
         }
         fetchMotto();
@@ -475,11 +455,11 @@
             item.addEventListener('click', function(e) {
                 e.stopPropagation();
                 const page = this.dataset.page;
-                let targetUrl = '';
-                if (page === 'blank1') targetUrl = 'page1.html';
-                else if (page === 'blank2') targetUrl = 'page2.html';
-                else if (page === 'notice') targetUrl = 'notice.html';
-                if (targetUrl) window.location.href = targetUrl;
+                let target = '';
+                if (page === 'blank1') target = 'page1.html';
+                else if (page === 'blank2') target = 'page2.html';
+                else if (page === 'notice') target = 'notice.html';
+                if (target) window.location.href = target;
                 else alert('页面未创建');
                 fabMenu.classList.add('hidden');
                 fabIcon.className = 'fas fa-ellipsis-h';
@@ -489,14 +469,9 @@
         fabToggle.addEventListener('click', function(e) {
             e.stopPropagation();
             e.preventDefault();
-            const isHidden = fabMenu.classList.contains('hidden');
-            if (isHidden) {
-                fabMenu.classList.remove('hidden');
-                fabIcon.className = 'fas fa-times';
-            } else {
-                fabMenu.classList.add('hidden');
-                fabIcon.className = 'fas fa-ellipsis-h';
-            }
+            const hidden = fabMenu.classList.contains('hidden');
+            if (hidden) { fabMenu.classList.remove('hidden'); fabIcon.className = 'fas fa-times'; }
+            else { fabMenu.classList.add('hidden'); fabIcon.className = 'fas fa-ellipsis-h'; }
         });
         document.addEventListener('click', function(e) {
             if (!document.querySelector('.fab-container').contains(e.target)) {
@@ -507,105 +482,177 @@
         fabMenu.addEventListener('click', function(e) { e.stopPropagation(); });
 
         // ============================================================
-        //  Supabase 实时同步
+        //  轮播功能
         // ============================================================
-        let supabaseClient = null;
+        function renderCarousel() {
+            const active = notices.filter(n => n.is_active !== false);
+            if (active.length === 0) {
+                carouselContent.innerHTML = `<div class="carousel-empty">📢 暂无通知，请添加</div>`;
+                carouselIndicators.innerHTML = '';
+                return;
+            }
 
-        function initSupabase() {
-            try {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                syncDot.className = 'dot online';
-                syncText.textContent = '已连接';
-                subscribeToNotices();
-                loadLatestNotice();
-            } catch (e) {
-                console.error('Supabase 初始化失败:', e);
-                syncDot.className = 'dot offline';
-                syncText.textContent = '连接失败，请检查配置';
-                // 降级：从 localStorage 读取
-                const saved = localStorage.getItem('noticeText');
-                if (saved) {
-                    previewContent.textContent = saved;
-                    previewTime.textContent = '来自缓存';
-                }
+            // 构建轮播内容
+            let html = '';
+            active.forEach((n, i) => {
+                const time = new Date(n.updated_at).toLocaleString('zh-CN', { hour12: false, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                html += `
+                    <div class="carousel-slide" data-index="${i}" style="${i === currentIndex ? 'display:block;' : 'display:none;'}">
+                        <div class="content">${n.content}</div>
+                        <div class="meta">${time}</div>
+                    </div>
+                `;
+            });
+            carouselContent.innerHTML = html;
+
+            // 指示器
+            let indicatorsHtml = '';
+            active.forEach((n, i) => {
+                indicatorsHtml += `<span class="dot ${i === currentIndex ? 'active' : ''}" data-index="${i}"></span>`;
+            });
+            carouselIndicators.innerHTML = indicatorsHtml;
+
+            // 点击指示器切换
+            document.querySelectorAll('.carousel-indicators .dot').forEach(dot => {
+                dot.addEventListener('click', function() {
+                    const idx = parseInt(this.dataset.index);
+                    goToSlide(idx);
+                });
+                dot.addEventListener('touchstart', function(e) {
+                    const idx = parseInt(this.dataset.index);
+                    goToSlide(idx);
+                }, { passive: true });
+            });
+
+            // 如果没有消息，停止定时器
+            if (active.length <= 1) {
+                stopCarousel();
+            } else {
+                startCarousel();
             }
         }
 
-        async function loadLatestNotice() {
+        function goToSlide(index) {
+            const slides = document.querySelectorAll('.carousel-slide');
+            const dots = document.querySelectorAll('.carousel-indicators .dot');
+            if (slides.length === 0) return;
+            if (index >= slides.length) index = 0;
+            if (index < 0) index = slides.length - 1;
+            
+            slides.forEach((s, i) => {
+                s.style.display = i === index ? 'block' : 'none';
+            });
+            dots.forEach((d, i) => {
+                d.className = 'dot' + (i === index ? ' active' : '');
+            });
+            currentIndex = index;
+        }
+
+        function startCarousel() {
+            stopCarousel();
+            const active = notices.filter(n => n.is_active !== false);
+            if (active.length <= 1) return;
+            carouselTimer = setInterval(() => {
+                const next = (currentIndex + 1) % active.length;
+                goToSlide(next);
+            }, 5000);
+        }
+
+        function stopCarousel() {
+            if (carouselTimer) {
+                clearInterval(carouselTimer);
+                carouselTimer = null;
+            }
+        }
+
+        // ============================================================
+        //  Supabase 数据管理
+        // ============================================================
+        function initSupabase() {
+            if (SUPABASE_URL.includes('你的项目ID') || SUPABASE_ANON_KEY.includes('你的anon公钥')) {
+                syncDot.className = 'dot offline';
+                syncText.textContent = '⚠️ 请配置 Supabase';
+                return;
+            }
+            try {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                syncDot.className = 'dot connecting';
+                syncText.textContent = '🔄 连接中...';
+
+                supabaseClient.from('notices').select('count').limit(1)
+                    .then(({ error }) => {
+                        if (error) {
+                            console.error('Supabase 连接失败:', error);
+                            syncDot.className = 'dot offline';
+                            syncText.textContent = '❌ 连接失败';
+                        } else {
+                            syncDot.className = 'dot online';
+                            syncText.textContent = '✅ 已连接';
+                            loadNotices();
+                            subscribeToNotices();
+                        }
+                    });
+            } catch(e) {
+                console.error('初始化失败:', e);
+                syncDot.className = 'dot offline';
+                syncText.textContent = '❌ 初始化失败';
+            }
+        }
+
+        async function loadNotices() {
             if (!supabaseClient) return;
             try {
                 const { data, error } = await supabaseClient
                     .from('notices')
-                    .select('content, updated_at')
-                    .order('id', { ascending: false })
-                    .limit(1);
+                    .select('*')
+                    .order('display_order', { ascending: true });
 
                 if (error) throw error;
-                if (data && data.length > 0) {
-                    previewContent.textContent = data[0].content;
-                    const time = new Date(data[0].updated_at).toLocaleString('zh-CN', { hour12: false });
-                    previewTime.textContent = '🕐 ' + time;
-                    // 同时保存到 localStorage 作为备份
-                    localStorage.setItem('noticeText', data[0].content);
+                if (data) {
+                    notices = data;
+                    renderCarousel();
                 }
-            } catch (e) {
+            } catch(e) {
                 console.warn('加载通知失败:', e);
-                const saved = localStorage.getItem('noticeText');
-                if (saved) {
-                    previewContent.textContent = saved;
-                    previewTime.textContent = '来自缓存';
-                }
             }
         }
 
         function subscribeToNotices() {
-            if (!supabaseClient) return;
+            if (!supabaseClient || isSubscribed) return;
             supabaseClient
                 .channel('notices-channel')
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'notices'
-                    },
-                    (payload) => {
-                        const newNotice = payload.new;
-                        if (newNotice && newNotice.content) {
-                            previewContent.textContent = newNotice.content;
-                            const time = new Date(newNotice.updated_at).toLocaleString('zh-CN', { hour12: false });
-                            previewTime.textContent = '🕐 ' + time + ' (实时)';
-                            localStorage.setItem('noticeText', newNotice.content);
-                            // 触发通知页同步
-                            localStorage.setItem('_notice_trigger', Date.now().toString());
-                        }
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'notices' },
+                    () => {
+                        // 任何变更都重新加载
+                        loadNotices();
                     }
                 )
                 .subscribe((status) => {
-                    console.log('Supabase 订阅状态:', status);
+                    if (status === 'SUBSCRIBED') {
+                        isSubscribed = true;
+                        console.log('✅ 已订阅通知更新');
+                    }
                 });
         }
 
-        // 监听同源其他标签页的更新 (作为备用同步方式)
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'noticeText' && e.newValue) {
-                previewContent.textContent = e.newValue;
-            }
-            if (e.key === '_notice_trigger') {
-                loadLatestNotice();
-            }
-        });
-
-        // 启动 Supabase
-        if (SUPABASE_URL !== 'https://你的项目ID.supabase.co' && SUPABASE_ANON_KEY !== '你的anon公钥') {
-            initSupabase();
-        } else {
-            syncDot.className = 'dot offline';
-            syncText.textContent = '⚠️ 请配置 Supabase';
-            console.warn('⚠️ 请先在代码中配置 SUPABASE_URL 和 SUPABASE_ANON_KEY');
+        // ---------- 更新二维码 ----------
+        function updateQrCode() {
+            const qrImg = document.getElementById('qrCodeImg');
+            const url = window.location.href.split('?')[0].split('#')[0];
+            const baseUrl = url.replace(/\/[^\/]*$/, '');
+            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(baseUrl + '/notice.html')}`;
         }
 
-        console.log('✅ 智慧教室主页已启动 (Supabase 实时同步)');
+        // ---------- 启动 ----------
+        initSupabase();
+        updateQrCode();
+
+        console.log('✅ 智慧教室主页已启动 (多消息轮播)');
+
+        // 暴露给其他页面
+        window.refreshNotices = loadNotices;
+
     })();
 </script>
 
