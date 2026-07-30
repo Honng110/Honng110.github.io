@@ -83,7 +83,7 @@
         }
         #motto i { color: #b45309; opacity: 0.8; font-size: 1.4rem; }
 
-        /* ===== 通知轮播区域 ===== */
+        /* 轮播 */
         .carousel-container {
             margin-top: 30px;
             width: 100%;
@@ -111,6 +111,7 @@
             line-height: 1.5;
             word-break: break-word;
         }
+        .carousel-slide .content .icon { font-size: 2.4rem; margin-right: 12px; }
         .carousel-slide .meta {
             font-size: 0.8rem;
             color: #2a4b6e;
@@ -130,20 +131,77 @@
             background: rgba(0,0,0,0.15);
             cursor: pointer;
             transition: all 0.3s;
-            touch-action: manipulation;
         }
         .carousel-indicators .dot.active {
             background: #1a2e4a;
             transform: scale(1.2);
         }
-        .carousel-indicators .dot:active { transform: scale(0.8); }
         .carousel-empty {
             color: #2a4b6e;
             opacity: 0.5;
             font-size: 1.2rem;
         }
 
-        /* ===== 悬浮导航 ===== */
+        /* 二维码浮窗 */
+        .qr-float {
+            position: fixed;
+            bottom: 140px;
+            right: 40px;
+            z-index: 999;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(8px);
+            padding: 12px 12px 8px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.5);
+            text-align: center;
+            cursor: pointer;
+        }
+        .qr-float:active { transform: scale(0.95); }
+        .qr-float img {
+            display: block;
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+        }
+        .qr-float .qr-label {
+            font-size: 10px;
+            color: #1a3552;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        .qr-float .qr-label i { color: #059669; margin-right: 3px; }
+
+        /* 同步状态 */
+        .sync-status {
+            position: fixed;
+            bottom: 130px;
+            right: 160px;
+            z-index: 998;
+            font-size: 0.75rem;
+            color: #2a4b6e;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(4px);
+            padding: 4px 12px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.5);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .sync-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .sync-status .dot.online { background: #22c55e; }
+        .sync-status .dot.offline { background: #ef4444; }
+        .sync-status .dot.connecting { background: #f59e0b; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* 悬浮导航 */
         .fab-container {
             position: fixed;
             bottom: 40px;
@@ -173,7 +231,7 @@
             transition: all 0.2s;
             touch-action: manipulation;
         }
-        .fab-main:active { transform: scale(0.92); background: #0f2640; }
+        .fab-main:active { transform: scale(0.92); }
         .fab-menu {
             display: flex;
             flex-direction: column;
@@ -203,148 +261,73 @@
             user-select: none;
         }
         .fab-item i { font-size: 1.3rem; width: 24px; text-align: center; }
-        .fab-item:active { transform: scale(0.94); background: rgba(40,70,110,0.9); }
-
-        /* ===== 二维码浮窗（主页右下角） ===== */
-        .qr-float {
-            position: fixed;
-            bottom: 140px;
-            right: 40px;
-            z-index: 999;
-            background: rgba(255,255,255,0.92);
-            backdrop-filter: blur(8px);
-            padding: 12px 12px 8px;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-            border: 1px solid rgba(255,255,255,0.5);
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        .qr-float:active { transform: scale(0.95); }
-        .qr-float img {
-            display: block;
-            width: 100px;
-            height: 100px;
-            border-radius: 8px;
-        }
-        .qr-float .qr-label {
-            font-size: 10px;
-            color: #1a3552;
-            margin-top: 4px;
-            font-weight: 500;
-            letter-spacing: 0.3px;
-        }
-        .qr-float .qr-label i { color: #059669; margin-right: 3px; }
-
-        /* ===== 同步状态 ===== */
-        .sync-status {
-            position: fixed;
-            bottom: 130px;
-            right: 160px;
-            z-index: 998;
-            font-size: 0.75rem;
-            color: #2a4b6e;
-            background: rgba(255,255,255,0.85);
-            backdrop-filter: blur(4px);
-            padding: 4px 12px;
-            border-radius: 30px;
-            border: 1px solid rgba(255,255,255,0.5);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        }
-        .sync-status .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-        .sync-status .dot.online { background: #22c55e; }
-        .sync-status .dot.offline { background: #ef4444; }
-        .sync-status .dot.connecting { background: #f59e0b; animation: blink 1s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .fab-item:active { transform: scale(0.94); }
 
         @media (max-width: 800px) {
             .dashboard { padding: 28px 20px; border-radius: 36px; }
-            #clock { font-size: 5.2rem; letter-spacing: 4px; }
+            #clock { font-size: 5.2rem; }
             #date { font-size: 1.4rem; }
             .weather-box { padding: 8px 18px; font-size: 1rem; flex-wrap: wrap; }
-            .weather-temp { font-size: 1.6rem; }
             #motto { font-size: 1.2rem; padding: 10px 18px; white-space: normal; }
             .fab-main { width: 64px; height: 64px; font-size: 1.8rem; }
-            .fab-item { padding: 8px 16px; font-size: 1rem; }
             .qr-float { bottom: 120px; right: 20px; padding: 8px; }
             .qr-float img { width: 75px; height: 75px; }
-            .qr-float .qr-label { font-size: 9px; }
             .carousel-container { padding: 14px 16px; min-height: 60px; }
             .carousel-slide .content { font-size: 1.3rem; }
-            .sync-status { bottom: 110px; right: 110px; font-size: 0.65rem; padding: 3px 10px; }
         }
         @media (max-width: 500px) {
-            #clock { font-size: 3.8rem; letter-spacing: 2px; }
+            #clock { font-size: 3.8rem; }
             .info-row { flex-direction: column; gap: 16px; }
             .weather-box { width: 100%; justify-content: center; }
             .qr-float img { width: 60px; height: 60px; }
-            .qr-float { bottom: 110px; right: 12px; padding: 6px; }
         }
     </style>
 </head>
 <body>
 
 <div class="dashboard">
-    <div class="page-container">
-        <div id="page-home" class="page active">
-            <div class="home-center">
-                <div id="clock">--:--:--</div>
-                <div id="date">----年--月--日</div>
-                <div class="info-row">
-                    <div class="weather-box" id="weatherBox">
-                        <i class="fas fa-cloud-sun"></i>
-                        <span class="weather-temp" id="temp">--°</span>
-                        <span class="weather-desc" id="weatherDesc">加载中</span>
-                        <span class="weather-location" id="weatherLocation">📍 安庆·宿松</span>
-                    </div>
-                    <div id="motto"><i class="fas fa-quote-left"></i> <span id="mottoText">日日行，不怕千万里</span></div>
-                </div>
+    <div class="home-center">
+        <div id="clock">--:--:--</div>
+        <div id="date">----年--月--日</div>
+        <div class="info-row">
+            <div class="weather-box" id="weatherBox">
+                <i class="fas fa-cloud-sun"></i>
+                <span class="weather-temp" id="temp">--°</span>
+                <span class="weather-desc" id="weatherDesc">加载中</span>
+                <span class="weather-location" id="weatherLocation">📍 安庆·宿松</span>
+            </div>
+            <div id="motto"><i class="fas fa-quote-left"></i> <span id="mottoText">日日行，不怕千万里</span></div>
+        </div>
 
-                <!-- ===== 通知轮播 ===== -->
-                <div class="carousel-container" id="carouselContainer">
-                    <div id="carouselContent">
-                        <div class="carousel-empty">📢 暂无通知，请添加</div>
-                    </div>
-                </div>
-                <div class="carousel-indicators" id="carouselIndicators"></div>
+        <div class="carousel-container" id="carouselContainer">
+            <div id="carouselContent">
+                <div class="carousel-empty">📢 暂无通知，请添加</div>
             </div>
         </div>
+        <div class="carousel-indicators" id="carouselIndicators"></div>
     </div>
 </div>
 
-<!-- ===== 二维码浮窗 ===== -->
+<!-- 二维码 -->
 <div class="qr-float" id="qrFloat" onclick="window.open('notice.html', '_blank')">
-    <img id="qrCodeImg" 
-         src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://你的用户名.github.io/仓库名/notice.html" 
-         alt="扫码编辑通知">
+    <img id="qrCodeImg" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=请替换为你的notice.html地址" alt="扫码编辑">
     <div class="qr-label"><i class="fas fa-qrcode"></i> 编辑通知</div>
 </div>
 
-<!-- ===== 同步状态 ===== -->
+<!-- 同步状态 -->
 <div class="sync-status" id="syncStatus">
     <span class="dot connecting" id="syncDot"></span>
     <span id="syncText">连接中...</span>
 </div>
 
-<!-- ===== 悬浮导航 ===== -->
+<!-- 导航 -->
 <div class="fab-container">
     <div class="fab-menu hidden" id="fabMenu">
         <div class="fab-item" data-page="blank1"><i class="fas fa-1"></i> 空白页1</div>
         <div class="fab-item" data-page="blank2"><i class="fas fa-2"></i> 空白页2</div>
         <div class="fab-item" data-page="notice"><i class="fas fa-exclamation-triangle"></i> 重要通报</div>
     </div>
-    <button class="fab-main" id="fabToggle" aria-label="导航菜单">
-        <i class="fas fa-ellipsis-h" id="fabIcon"></i>
-    </button>
+    <button class="fab-main" id="fabToggle"><i class="fas fa-ellipsis-h" id="fabIcon"></i></button>
 </div>
 
 <script>
@@ -358,7 +341,6 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_Oh8S5zKzw5g0LK9grWT1yA_Oi7hvSdP';
         // ============================================================
 
-        // DOM 引用
         const clockEl = document.getElementById('clock');
         const dateEl = document.getElementById('date');
         const tempEl = document.getElementById('temp');
@@ -374,30 +356,25 @@
         const syncDot = document.getElementById('syncDot');
         const syncText = document.getElementById('syncText');
 
-        let supabaseClient = null;
+        let supabase = null;
         let notices = [];
         let currentIndex = 0;
         let carouselTimer = null;
-        let isSubscribed = false;
 
-        // ---------- 时钟 ----------
+        // ===== 时钟 =====
         function updateClock() {
             const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            clockEl.textContent = `${hours}:${minutes}:${seconds}`;
+            clockEl.textContent = [now.getHours(), now.getMinutes(), now.getSeconds()].map(String).map(s => s.padStart(2,'0')).join(':');
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
-            const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-            const wd = weekdays[now.getDay()];
+            const wd = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][now.getDay()];
             dateEl.textContent = `${year}年${month}月${day}日 ${wd}`;
         }
         updateClock();
         setInterval(updateClock, 1000);
 
-        // ---------- 天气 ----------
+        // ===== 天气 =====
         function fetchWeather() {
             fetch('https://wttr.in/Anqing-Susong?format=j1&lang=zh')
                 .then(r => r.json())
@@ -406,144 +383,92 @@
                         const c = data.current_condition[0];
                         tempEl.textContent = `${c.temp_C}°`;
                         weatherDescEl.textContent = c.weatherDesc[0].value;
-                        const map = {
-                            '113': 'fa-sun', '116': 'fa-cloud-sun', '119': 'fa-cloud', '122': 'fa-cloud',
-                            '176': 'fa-cloud-rain', '179': 'fa-cloud-snow', '200': 'fa-cloud-bolt',
-                            '227': 'fa-snowflake', '248': 'fa-smog', '263': 'fa-cloud-rain',
-                            '293': 'fa-cloud-rain', '296': 'fa-cloud-rain', '299': 'fa-cloud-showers-heavy',
-                            '302': 'fa-cloud-showers-heavy', '305': 'fa-cloud-showers-heavy',
-                            '308': 'fa-cloud-showers-heavy', '311': 'fa-cloud-rain', '314': 'fa-cloud-showers-heavy',
-                            '317': 'fa-cloud-showers-heavy', '320': 'fa-cloud-snow', '323': 'fa-cloud-snow',
-                            '326': 'fa-cloud-snow', '329': 'fa-cloud-snow', '332': 'fa-cloud-snow',
-                            '335': 'fa-cloud-snow', '338': 'fa-cloud-snow', '350': 'fa-cloud-snow',
-                            '353': 'fa-cloud-rain', '356': 'fa-cloud-showers-heavy', '359': 'fa-cloud-showers-heavy',
-                            '362': 'fa-cloud-snow', '365': 'fa-cloud-snow', '368': 'fa-cloud-snow',
-                            '371': 'fa-cloud-snow', '374': 'fa-cloud-snow', '377': 'fa-cloud-snow',
-                            '386': 'fa-cloud-bolt', '389': 'fa-cloud-bolt', '392': 'fa-cloud-bolt',
-                            '395': 'fa-cloud-snow'
-                        };
-                        document.querySelector('.weather-box i').className = `fas ${map[c.weatherCode] || 'fa-cloud'}`;
                         weatherLocation.textContent = '📍 安庆·宿松';
-                    } catch(e) { fallbackWeather(); }
+                    } catch(e) {}
                 })
-                .catch(() => fallbackWeather());
-        }
-        function fallbackWeather() {
-            const w = [{desc:'晴朗',icon:'fa-sun',temp:26},{desc:'多云',icon:'fa-cloud',temp:22},{desc:'小雨',icon:'fa-cloud-rain',temp:18}][Math.floor(Math.random()*3)];
-            tempEl.textContent = `${w.temp}°`;
-            weatherDescEl.textContent = w.desc;
-            document.querySelector('.weather-box i').className = `fas ${w.icon}`;
-            weatherLocation.textContent = '📍 安庆·宿松';
+                .catch(() => {});
         }
         fetchWeather();
         setInterval(fetchWeather, 1800000);
 
-        // ---------- 励志 ----------
+        // ===== 励志 =====
         function fetchMotto() {
-            fetch('https://api.quotable.io/random?tags=inspirational|motivational')
+            fetch('https://api.quotable.io/random?tags=inspirational')
                 .then(r => r.json())
                 .then(d => { if(d?.content) mottoTextEl.textContent = d.content; })
-                .catch(() => {
-                    const list = ['日日行，不怕千万里', '博学之，审问之，慎思之', '天道酬勤，力耕不欺'];
-                    mottoTextEl.textContent = list[Math.floor(Math.random() * list.length)];
-                });
+                .catch(() => {});
         }
         fetchMotto();
 
-        // ---------- 导航 ----------
+        // ===== 导航 =====
         menuItems.forEach(item => {
-            item.addEventListener('click', function(e) {
-                e.stopPropagation();
+            item.onclick = function() {
                 const page = this.dataset.page;
                 let target = '';
                 if (page === 'blank1') target = 'page1.html';
                 else if (page === 'blank2') target = 'page2.html';
                 else if (page === 'notice') target = 'notice.html';
                 if (target) window.location.href = target;
-                else alert('页面未创建');
                 fabMenu.classList.add('hidden');
                 fabIcon.className = 'fas fa-ellipsis-h';
-            });
+            };
         });
 
-        fabToggle.addEventListener('click', function(e) {
+        fabToggle.onclick = function(e) {
             e.stopPropagation();
-            e.preventDefault();
             const hidden = fabMenu.classList.contains('hidden');
             if (hidden) { fabMenu.classList.remove('hidden'); fabIcon.className = 'fas fa-times'; }
             else { fabMenu.classList.add('hidden'); fabIcon.className = 'fas fa-ellipsis-h'; }
-        });
-        document.addEventListener('click', function(e) {
-            if (!document.querySelector('.fab-container').contains(e.target)) {
-                fabMenu.classList.add('hidden');
-                fabIcon.className = 'fas fa-ellipsis-h';
-            }
-        });
-        fabMenu.addEventListener('click', function(e) { e.stopPropagation(); });
+        };
+        document.onclick = function() {
+            fabMenu.classList.add('hidden');
+            fabIcon.className = 'fas fa-ellipsis-h';
+        };
+        fabMenu.onclick = function(e) { e.stopPropagation(); };
 
-        // ============================================================
-        //  轮播功能
-        // ============================================================
+        // ===== 轮播 =====
         function renderCarousel() {
-    const active = notices.filter(n => n.is_active !== false);
-    if (active.length === 0) {
-        carouselContent.innerHTML = `<div class="carousel-empty">📢 暂无通知，请添加</div>`;
-        carouselIndicators.innerHTML = '';
-        return;
-    }
+            const active = notices.filter(n => n.is_active !== false);
+            if (active.length === 0) {
+                carouselContent.innerHTML = `<div class="carousel-empty">📢 暂无通知，请添加</div>`;
+                carouselIndicators.innerHTML = '';
+                return;
+            }
 
-    let html = '';
-    active.forEach((n, i) => {
-        const icon = n.icon || '📢';
-        const time = new Date(n.updated_at).toLocaleString('zh-CN', { hour12: false, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-        html += `
-            <div class="carousel-slide" data-index="${i}" style="${i === currentIndex ? 'display:block;' : 'display:none;'}">
-                <div class="content"><span style="font-size:2.2rem;margin-right:12px;">${icon}</span>${n.content}</div>
-                <div class="meta">${time}</div>
-            </div>
-        `;
-    });
-    carouselContent.innerHTML = html;
+            let html = '';
+            active.forEach((n, i) => {
+                const icon = n.icon || '📢';
+                const time = new Date(n.updated_at).toLocaleString('zh-CN', { hour12: false, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                html += `
+                    <div class="carousel-slide" data-index="${i}" style="${i === currentIndex ? 'display:block;' : 'display:none;'}">
+                        <div class="content"><span class="icon">${icon}</span>${n.content}</div>
+                        <div class="meta">${time}</div>
+                    </div>
+                `;
+            });
+            carouselContent.innerHTML = html;
 
-    // 指示器
-    let indicatorsHtml = '';
-    active.forEach((n, i) => {
-        indicatorsHtml += `<span class="dot ${i === currentIndex ? 'active' : ''}" data-index="${i}"></span>`;
-    });
-    carouselIndicators.innerHTML = indicatorsHtml;
+            let indicatorsHtml = '';
+            active.forEach((n, i) => {
+                indicatorsHtml += `<span class="dot ${i === currentIndex ? 'active' : ''}" data-index="${i}"></span>`;
+            });
+            carouselIndicators.innerHTML = indicatorsHtml;
 
-    // 点击指示器切换
-    document.querySelectorAll('.carousel-indicators .dot').forEach(dot => {
-        dot.addEventListener('click', function() {
-            const idx = parseInt(this.dataset.index);
-            goToSlide(idx);
-        });
-        dot.addEventListener('touchstart', function(e) {
-            const idx = parseInt(this.dataset.index);
-            goToSlide(idx);
-        }, { passive: true });
-    });
+            carouselIndicators.querySelectorAll('.dot').forEach(dot => {
+                dot.onclick = function() { goToSlide(parseInt(this.dataset.index)); };
+            });
 
-    if (active.length <= 1) {
-        stopCarousel();
-    } else {
-        startCarousel();
-    }
-}
+            if (active.length <= 1) { stopCarousel(); } else { startCarousel(); }
+        }
 
         function goToSlide(index) {
-            const slides = document.querySelectorAll('.carousel-slide');
-            const dots = document.querySelectorAll('.carousel-indicators .dot');
+            const slides = carouselContent.querySelectorAll('.carousel-slide');
+            const dots = carouselIndicators.querySelectorAll('.dot');
             if (slides.length === 0) return;
             if (index >= slides.length) index = 0;
             if (index < 0) index = slides.length - 1;
-            
-            slides.forEach((s, i) => {
-                s.style.display = i === index ? 'block' : 'none';
-            });
-            dots.forEach((d, i) => {
-                d.className = 'dot' + (i === index ? ' active' : '');
-            });
+            slides.forEach((s, i) => { s.style.display = i === index ? 'block' : 'none'; });
+            dots.forEach((d, i) => { d.className = 'dot' + (i === index ? ' active' : ''); });
             currentIndex = index;
         }
 
@@ -552,36 +477,29 @@
             const active = notices.filter(n => n.is_active !== false);
             if (active.length <= 1) return;
             carouselTimer = setInterval(() => {
-                const next = (currentIndex + 1) % active.length;
-                goToSlide(next);
+                goToSlide((currentIndex + 1) % active.length);
             }, 5000);
         }
 
         function stopCarousel() {
-            if (carouselTimer) {
-                clearInterval(carouselTimer);
-                carouselTimer = null;
-            }
+            if (carouselTimer) { clearInterval(carouselTimer); carouselTimer = null; }
         }
 
-        // ============================================================
-        //  Supabase 数据管理
-        // ============================================================
+        // ===== Supabase =====
         function initSupabase() {
-            if (SUPABASE_URL.includes('你的项目ID') || SUPABASE_ANON_KEY.includes('你的anon公钥')) {
+            if (SUPABASE_URL.includes('你的项目ID')) {
                 syncDot.className = 'dot offline';
-                syncText.textContent = '⚠️ 请配置 Supabase';
+                syncText.textContent = '⚠️ 请配置';
                 return;
             }
             try {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 syncDot.className = 'dot connecting';
                 syncText.textContent = '🔄 连接中...';
 
-                supabaseClient.from('notices').select('count').limit(1)
+                supabase.from('notices').select('count').limit(1)
                     .then(({ error }) => {
                         if (error) {
-                            console.error('Supabase 连接失败:', error);
                             syncDot.className = 'dot offline';
                             syncText.textContent = '❌ 连接失败';
                         } else {
@@ -592,64 +510,53 @@
                         }
                     });
             } catch(e) {
-                console.error('初始化失败:', e);
                 syncDot.className = 'dot offline';
                 syncText.textContent = '❌ 初始化失败';
             }
         }
 
         async function loadNotices() {
-            if (!supabaseClient) return;
+            if (!supabase) return;
             try {
-                const { data, error } = await supabaseClient
+                const { data, error } = await supabase
                     .from('notices')
                     .select('*')
                     .order('display_order', { ascending: true });
 
                 if (error) throw error;
-                if (data) {
-                    notices = data;
-                    renderCarousel();
-                }
+                notices = data || [];
+                renderCarousel();
             } catch(e) {
-                console.warn('加载通知失败:', e);
+                console.error('加载失败:', e);
             }
         }
 
         function subscribeToNotices() {
-            if (!supabaseClient || isSubscribed) return;
-            supabaseClient
+            if (!supabase) return;
+            supabase
                 .channel('notices-channel')
                 .on('postgres_changes', 
                     { event: '*', schema: 'public', table: 'notices' },
-                    () => {
-                        // 任何变更都重新加载
-                        loadNotices();
-                    }
+                    () => { loadNotices(); }
                 )
-                .subscribe((status) => {
-                    if (status === 'SUBSCRIBED') {
-                        isSubscribed = true;
-                        console.log('✅ 已订阅通知更新');
-                    }
-                });
+                .subscribe();
         }
 
-        // ---------- 更新二维码 ----------
+        // ===== 二维码 =====
         function updateQrCode() {
-            const qrImg = document.getElementById('qrCodeImg');
             const url = window.location.href.split('?')[0].split('#')[0];
             const baseUrl = url.replace(/\/[^\/]*$/, '');
+            const qrImg = document.getElementById('qrCodeImg');
             qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(baseUrl + '/notice.html')}`;
         }
 
-        // ---------- 启动 ----------
+        // ===== 启动 =====
         initSupabase();
         updateQrCode();
 
-        console.log('✅ 智慧教室主页已启动 (多消息轮播)');
+        console.log('✅ 智慧教室主页已启动 (修复版 v2)');
 
-        // 暴露给其他页面
+        // 暴露刷新方法
         window.refreshNotices = loadNotices;
 
     })();
