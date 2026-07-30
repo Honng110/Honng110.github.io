@@ -13,10 +13,8 @@
             min-height: 100vh;
             padding: 20px;
         }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
+        .container { max-width: 900px; margin: 0 auto; }
+        
         .header {
             display: flex;
             justify-content: space-between;
@@ -27,11 +25,11 @@
             background: rgba(255,255,255,0.60);
             backdrop-filter: blur(16px);
             border-radius: 40px;
-            padding: 24px 32px;
+            padding: 20px 28px;
             border: 1px solid rgba(255,255,255,0.25);
         }
         .header h1 {
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: 500;
             color: #0b1f34;
             display: flex;
@@ -49,9 +47,8 @@
             align-items: center;
             gap: 8px;
         }
-        .header .badge i { font-size: 1.1rem; }
 
-        /* ===== 添加新消息 ===== */
+        /* 添加区 */
         .add-section {
             background: rgba(255,255,255,0.60);
             backdrop-filter: blur(16px);
@@ -63,7 +60,7 @@
         .add-section h3 {
             font-size: 1.1rem;
             color: #0b1f34;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -80,26 +77,24 @@
             flex-shrink: 0;
         }
         .add-row .icon-selector .selected-icon {
-            width: 52px;
-            height: 52px;
+            width: 50px;
+            height: 50px;
             border-radius: 16px;
             border: 2px solid rgba(0,0,0,0.1);
             background: rgba(255,255,255,0.7);
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
-            touch-action: manipulation;
             user-select: none;
         }
         .add-row .icon-selector .selected-icon:active { transform: scale(0.92); }
-        .add-row .icon-selector .selected-icon:focus { border-color: #1a2e4a; }
         .add-row .icon-selector .dropdown {
             display: none;
             position: absolute;
-            top: 58px;
+            top: 56px;
             left: 0;
             background: white;
             border-radius: 20px;
@@ -107,10 +102,9 @@
             box-shadow: 0 12px 40px rgba(0,0,0,0.15);
             border: 1px solid rgba(0,0,0,0.05);
             z-index: 100;
-            width: 280px;
-            max-height: 260px;
+            width: 260px;
+            max-height: 220px;
             overflow-y: auto;
-            display: none;
             grid-template-columns: repeat(6, 1fr);
             gap: 6px;
         }
@@ -118,30 +112,28 @@
             display: grid;
         }
         .add-row .icon-selector .dropdown .icon-option {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
             border: 2px solid transparent;
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.15s;
             background: rgba(0,0,0,0.02);
-            touch-action: manipulation;
         }
         .add-row .icon-selector .dropdown .icon-option:active { transform: scale(0.85); }
-        .add-row .icon-selector .dropdown .icon-option:hover { background: rgba(0,0,0,0.05); }
         .add-row .icon-selector .dropdown .icon-option.selected {
             border-color: #1a2e4a;
             background: rgba(26,46,74,0.08);
         }
         .add-row input {
             flex: 1;
-            min-width: 200px;
-            padding: 14px 20px;
-            font-size: 1.1rem;
+            min-width: 180px;
+            padding: 14px 18px;
+            font-size: 1rem;
             border-radius: 20px;
             border: 2px solid rgba(0,0,0,0.1);
             background: rgba(255,255,255,0.7);
@@ -150,25 +142,23 @@
         }
         .add-row input:focus { outline: none; border-color: #1a2e4a; }
         .add-row button {
-            padding: 14px 32px;
+            padding: 14px 28px;
             border-radius: 20px;
             border: none;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.15s;
             display: flex;
             align-items: center;
             gap: 10px;
-            touch-action: manipulation;
             background: #1a2e4a;
             color: white;
             flex-shrink: 0;
         }
-        .add-row button:active { transform: scale(0.94); background: #0f2640; }
-        .add-row button i { font-size: 1.1rem; }
+        .add-row button:active { transform: scale(0.94); }
 
-        /* ===== 消息列表 ===== */
+        /* 列表区 */
         .list-section {
             background: rgba(255,255,255,0.60);
             backdrop-filter: blur(16px);
@@ -201,21 +191,19 @@
             background: transparent;
             border: none;
             color: #2a4b6e;
-            font-size: 1.1rem;
+            font-size: 1rem;
             cursor: pointer;
             padding: 4px 10px;
             border-radius: 30px;
             transition: all 0.2s;
-            touch-action: manipulation;
         }
         .list-header .refresh-btn:active { transform: scale(0.85); }
-        .list-header .refresh-btn:hover { background: rgba(0,0,0,0.05); }
 
         .notice-item {
             display: flex;
             align-items: center;
-            gap: 14px;
-            padding: 14px 18px;
+            gap: 12px;
+            padding: 14px 16px;
             background: rgba(255,255,255,0.40);
             border-radius: 20px;
             margin-bottom: 10px;
@@ -229,19 +217,19 @@
             border-left-color: #999;
         }
         .notice-item .item-icon {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             flex-shrink: 0;
-            width: 44px;
+            width: 40px;
             text-align: center;
         }
         .notice-item .content {
             flex: 1;
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: #0a1e32;
             word-break: break-word;
         }
         .notice-item .time {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: #2a4b6e;
             opacity: 0.5;
             white-space: nowrap;
@@ -252,8 +240,8 @@
             flex-shrink: 0;
         }
         .notice-item .actions button {
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
             border: none;
             cursor: pointer;
@@ -261,20 +249,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
-            touch-action: manipulation;
+            font-size: 0.85rem;
             background: transparent;
             color: #2a4b6e;
         }
         .notice-item .actions button:active { transform: scale(0.85); }
-        .notice-item .actions .btn-toggle {
-            color: #059669;
-        }
-        .notice-item .actions .btn-toggle:hover { background: rgba(5,150,105,0.1); }
-        .notice-item .actions .btn-delete {
-            color: #dc2626;
-        }
-        .notice-item .actions .btn-delete:hover { background: rgba(220,38,38,0.1); }
+        .notice-item .actions .btn-toggle { color: #059669; }
+        .notice-item .actions .btn-delete { color: #dc2626; }
 
         .empty-state {
             text-align: center;
@@ -284,7 +265,6 @@
         }
         .empty-state i { font-size: 3rem; margin-bottom: 12px; display: block; }
 
-        /* ===== 返回按钮 ===== */
         .back-row {
             margin-top: 20px;
             text-align: center;
@@ -303,7 +283,6 @@
         }
         .back-row a:active { transform: scale(0.94); }
 
-        /* ===== 状态 ===== */
         .sync-status {
             font-size: 0.85rem;
             color: #2a4b6e;
@@ -332,9 +311,9 @@
             transform: translateX(-50%);
             background: #1a2e4a;
             color: white;
-            padding: 12px 28px;
+            padding: 10px 24px;
             border-radius: 40px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             display: none;
             z-index: 999;
             box-shadow: 0 8px 30px rgba(0,0,0,0.2);
@@ -342,35 +321,27 @@
             text-align: center;
         }
         .toast.show { display: block; }
-        .toast.success { background: #059669; }
-        .toast.error { background: #dc2626; }
 
         @media (max-width: 700px) {
-            .header { padding: 16px 20px; border-radius: 28px; }
+            .header { padding: 16px 18px; border-radius: 28px; }
             .header h1 { font-size: 1.6rem; }
-            .add-section, .list-section { padding: 16px 18px; border-radius: 24px; }
-            .add-row input { font-size: 1rem; padding: 12px 16px; }
-            .add-row button { padding: 12px 20px; font-size: 1rem; }
-            .add-row .icon-selector .selected-icon { width: 44px; height: 44px; font-size: 1.4rem; }
-            .notice-item .content { font-size: 1rem; }
-            .notice-item .time { font-size: 0.6rem; }
-            .notice-item .actions button { width: 32px; height: 32px; font-size: 0.8rem; }
-            .notice-item .item-icon { font-size: 1.4rem; width: 36px; }
+            .add-section, .list-section { padding: 16px 16px; border-radius: 24px; }
+            .add-row input { font-size: 0.95rem; padding: 12px 14px; min-width: 120px; }
+            .add-row button { padding: 12px 18px; font-size: 0.95rem; }
+            .notice-item .content { font-size: 0.95rem; }
+            .notice-item .time { display: none; }
         }
         @media (max-width: 480px) {
             .header { flex-direction: column; align-items: flex-start; }
-            .add-row { flex-direction: row; flex-wrap: wrap; }
-            .add-row input { min-width: unset; width: calc(100% - 120px); }
-            .add-row button { justify-content: center; }
-            .notice-item { flex-wrap: wrap; }
-            .notice-item .time { width: 100%; margin-left: 0; padding-left: 58px; }
+            .add-row { flex-direction: column; }
+            .add-row input { width: 100%; min-width: unset; }
+            .add-row button { width: 100%; justify-content: center; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- 头部 -->
     <div class="header">
         <h1><i class="fas fa-bullhorn"></i> 通知管理</h1>
         <div class="badge">
@@ -379,7 +350,7 @@
         </div>
     </div>
 
-    <!-- 添加新消息 -->
+    <!-- 添加 -->
     <div class="add-section">
         <h3><i class="fas fa-plus-circle"></i> 添加新通知</h3>
         <div class="add-row">
@@ -392,11 +363,11 @@
         </div>
     </div>
 
-    <!-- 消息列表 -->
+    <!-- 列表 -->
     <div class="list-section">
         <div class="list-header">
             <h3><i class="fas fa-list"></i> 所有通知</h3>
-            <div style="display:flex; align-items:center; gap:12px;">
+            <div style="display:flex; align-items:center; gap:10px;">
                 <span class="count" id="countLabel">共 0 条</span>
                 <button class="refresh-btn" id="refreshBtn" title="手动刷新"><i class="fas fa-sync-alt"></i></button>
             </div>
@@ -409,7 +380,6 @@
         </div>
     </div>
 
-    <!-- 返回 -->
     <div class="back-row">
         <a href="index.html"><i class="fas fa-arrow-left"></i> 返回主页</a>
     </div>
@@ -420,7 +390,6 @@
     </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
@@ -434,114 +403,87 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_Oh8S5zKzw5g0LK9grWT1yA_Oi7hvSdP';
         // ============================================================
 
-        // 可用图标列表
-        const ICONS = [
-            '📢', '📌', '🔔', '⭐', '🎯', '📚', '📝', '✅',
-            '⚠️', '🚨', '🎉', '💡', '🔥', '🌟', '🎓', '📖',
-            '🏆', '💪', '🌈', '🎈', '🌸', '🌺', '🍀', '🎵',
-            '📱', '💻', '🖥️', '⌨️', '🖨️', '📷', '🎬', '🎮'
-        ];
+        const ICONS = ['📢', '📌', '🔔', '⭐', '🎯', '📚', '📝', '✅', '⚠️', '🚨', '🎉', '💡', '🔥', '🌟', '🎓', '📖', '🏆', '💪', '🌈', '🎈', '🌸', '🍀', '🎵', '📱', '💻', '🎬', '🎮', '❤️', '💯', '✨', '👏', '🙌'];
 
-        const DOM = {
-            noticeList: document.getElementById('noticeList'),
-            newMessageInput: document.getElementById('newMessageInput'),
-            addBtn: document.getElementById('addBtn'),
-            countLabel: document.getElementById('countLabel'),
-            syncDot: document.getElementById('syncDot'),
-            syncText: document.getElementById('syncText'),
-            toast: document.getElementById('toast'),
-            refreshBtn: document.getElementById('refreshBtn'),
-            iconSelector: document.getElementById('iconSelector'),
-            selectedIcon: document.getElementById('selectedIcon'),
-            iconDropdown: document.getElementById('iconDropdown'),
-            deviceLabel: document.getElementById('deviceLabel')
-        };
+        // DOM
+        const $ = id => document.getElementById(id);
+        const noticeList = $('noticeList');
+        const newInput = $('newMessageInput');
+        const addBtn = $('addBtn');
+        const countLabel = $('countLabel');
+        const syncDot = $('syncDot');
+        const syncText = $('syncText');
+        const toast = $('toast');
+        const refreshBtn = $('refreshBtn');
+        const selectedIcon = $('selectedIcon');
+        const iconDropdown = $('iconDropdown');
+        const deviceLabel = $('deviceLabel');
 
-        let supabaseClient = null;
+        let supabase = null;
         let notices = [];
-        let isSubscribed = false;
+        let currentIcon = '📢';
         let toastTimer = null;
-        let selectedIcon = '📢';
+
+        // ===== Toast =====
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.className = 'toast show';
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => { toast.className = 'toast'; }, 2500);
+        }
 
         // ===== 图标选择器 =====
         function initIconSelector() {
-            // 渲染图标列表
-            DOM.iconDropdown.innerHTML = ICONS.map(icon => 
-                `<div class="icon-option ${icon === selectedIcon ? 'selected' : ''}" data-icon="${icon}">${icon}</div>`
+            iconDropdown.innerHTML = ICONS.map(icon => 
+                `<div class="icon-option ${icon === currentIcon ? 'selected' : ''}" data-icon="${icon}">${icon}</div>`
             ).join('');
 
-            // 点击选择图标
-            DOM.iconDropdown.querySelectorAll('.icon-option').forEach(el => {
-                el.addEventListener('click', function(e) {
+            iconDropdown.querySelectorAll('.icon-option').forEach(el => {
+                el.onclick = function(e) {
                     e.stopPropagation();
-                    const icon = this.dataset.icon;
-                    selectedIcon = icon;
-                    DOM.selectedIcon.textContent = icon;
-                    DOM.iconDropdown.classList.remove('open');
-                    DOM.iconDropdown.querySelectorAll('.icon-option').forEach(opt => 
-                        opt.classList.toggle('selected', opt.dataset.icon === icon)
+                    currentIcon = this.dataset.icon;
+                    selectedIcon.textContent = currentIcon;
+                    iconDropdown.classList.remove('open');
+                    iconDropdown.querySelectorAll('.icon-option').forEach(opt => 
+                        opt.classList.toggle('selected', opt.dataset.icon === currentIcon)
                     );
-                });
-                el.addEventListener('touchstart', function(e) {
-                    const icon = this.dataset.icon;
-                    selectedIcon = icon;
-                    DOM.selectedIcon.textContent = icon;
-                    DOM.iconDropdown.classList.remove('open');
-                    DOM.iconDropdown.querySelectorAll('.icon-option').forEach(opt => 
-                        opt.classList.toggle('selected', opt.dataset.icon === icon)
-                    );
-                }, { passive: true });
+                };
             });
 
-            // 点击切换下拉
-            DOM.selectedIcon.addEventListener('click', function(e) {
+            selectedIcon.onclick = function(e) {
                 e.stopPropagation();
-                DOM.iconDropdown.classList.toggle('open');
-            });
-            DOM.selectedIcon.addEventListener('touchstart', function(e) {
-                DOM.iconDropdown.classList.toggle('open');
-            }, { passive: true });
+                iconDropdown.classList.toggle('open');
+            };
 
-            // 点击其他地方关闭
-            document.addEventListener('click', function() {
-                DOM.iconDropdown.classList.remove('open');
-            });
-        }
-
-        // ===== Toast =====
-        function showToast(msg, type = '') {
-            DOM.toast.textContent = msg;
-            DOM.toast.className = 'toast show ' + type;
-            if (toastTimer) clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => { DOM.toast.className = 'toast'; }, 2500);
+            document.onclick = function() { iconDropdown.classList.remove('open'); };
         }
 
         // ===== 渲染列表 =====
         function renderList() {
             if (notices.length === 0) {
-                DOM.noticeList.innerHTML = `
+                noticeList.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-inbox"></i>
                         暂无通知，添加一条吧
                     </div>
                 `;
-                DOM.countLabel.textContent = '共 0 条';
+                countLabel.textContent = '共 0 条';
                 return;
             }
 
             let html = '';
-            notices.forEach((n) => {
-                const isActive = n.is_active !== false;
+            notices.forEach((n, idx) => {
+                const active = n.is_active !== false;
                 const time = new Date(n.updated_at).toLocaleString('zh-CN', { hour12: false, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                 const icon = n.icon || '📢';
                 html += `
-                    <div class="notice-item ${isActive ? '' : 'inactive'}" data-id="${n.id}">
+                    <div class="notice-item ${active ? '' : 'inactive'}" data-id="${n.id}">
                         <div class="item-icon">${icon}</div>
                         <div class="content">${escapeHtml(n.content)}</div>
                         <div class="time">${time}</div>
                         <div class="actions">
-                            <button class="btn-toggle" data-id="${n.id}" title="${isActive ? '隐藏' : '显示'}">
-                                <i class="fas ${isActive ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                            <button class="btn-toggle" data-id="${n.id}" title="${active ? '隐藏' : '显示'}">
+                                <i class="fas ${active ? 'fa-eye' : 'fa-eye-slash'}"></i>
                             </button>
                             <button class="btn-delete" data-id="${n.id}" title="删除">
                                 <i class="fas fa-trash"></i>
@@ -550,44 +492,39 @@
                     </div>
                 `;
             });
-            DOM.noticeList.innerHTML = html;
-            DOM.countLabel.textContent = `共 ${notices.length} 条`;
+            noticeList.innerHTML = html;
+            countLabel.textContent = `共 ${notices.length} 条`;
 
-            // 绑定事件 - 使用事件委托方式，更可靠
-            DOM.noticeList.querySelectorAll('.btn-toggle').forEach(btn => {
-                btn.addEventListener('click', function(e) {
+            // 事件绑定
+            noticeList.querySelectorAll('.btn-toggle').forEach(btn => {
+                btn.onclick = function(e) {
                     e.stopPropagation();
-                    const id = parseInt(this.dataset.id);
-                    toggleNotice(id);
-                });
+                    toggleNotice(parseInt(this.dataset.id));
+                };
             });
 
-            DOM.noticeList.querySelectorAll('.btn-delete').forEach(btn => {
-                btn.addEventListener('click', function(e) {
+            noticeList.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.onclick = function(e) {
                     e.stopPropagation();
                     const id = parseInt(this.dataset.id);
                     if (confirm('确定要删除这条通知吗？')) {
                         deleteNotice(id);
                     }
-                });
+                };
             });
         }
 
-        // ===== 防 XSS =====
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
-        // ===== 加载通知 =====
+        // ===== 加载 =====
         async function loadNotices() {
-            if (!supabaseClient) {
-                console.warn('Supabase 未初始化');
-                return;
-            }
+            if (!supabase) return;
             try {
-                const { data, error } = await supabaseClient
+                const { data, error } = await supabase
                     .from('notices')
                     .select('*')
                     .order('display_order', { ascending: true });
@@ -597,84 +534,67 @@
                 renderList();
                 console.log('✅ 已加载 ' + notices.length + ' 条通知');
             } catch(e) {
-                console.error('加载通知失败:', e);
-                showToast('加载失败: ' + e.message, 'error');
+                console.error('加载失败:', e);
+                showToast('加载失败: ' + e.message);
             }
         }
 
-        // ===== 添加通知 =====
+        // ===== 添加 =====
         async function addNotice(content, icon) {
-            if (!supabaseClient) {
-                showToast('⚠️ 未连接，请检查配置', 'error');
-                return;
-            }
-            if (!content || content.trim() === '') {
-                showToast('请输入通知内容', 'error');
-                return;
-            }
+            if (!supabase) { showToast('⚠️ 未连接'); return; }
+            if (!content || content.trim() === '') { showToast('请输入内容'); return; }
 
             try {
                 const maxOrder = notices.length > 0 ? Math.max(...notices.map(n => n.display_order || 0)) : 0;
-                const { data, error } = await supabaseClient
+                const { error } = await supabase
                     .from('notices')
                     .insert({ 
                         content: content.trim(),
                         icon: icon || '📢',
                         is_active: true,
                         display_order: maxOrder + 10
-                    })
-                    .select();
+                    });
 
                 if (error) throw error;
-                showToast('✅ 已添加', 'success');
-                DOM.newMessageInput.value = '';
-                // 重置图标
-                selectedIcon = '📢';
-                DOM.selectedIcon.textContent = '📢';
+                showToast('✅ 已添加');
+                newInput.value = '';
+                currentIcon = '📢';
+                selectedIcon.textContent = '📢';
                 if (navigator.vibrate) navigator.vibrate(20);
-                // 重新加载列表
                 await loadNotices();
             } catch(e) {
                 console.error('添加失败:', e);
-                showToast('❌ 添加失败: ' + e.message, 'error');
+                showToast('❌ 添加失败: ' + e.message);
             }
         }
 
-        // ===== 切换显示/隐藏 =====
+        // ===== 切换 =====
         async function toggleNotice(id) {
-            if (!supabaseClient) {
-                showToast('⚠️ 未连接', 'error');
-                return;
-            }
+            if (!supabase) { showToast('⚠️ 未连接'); return; }
             const notice = notices.find(n => n.id === id);
             if (!notice) return;
             const newStatus = notice.is_active === false;
             try {
-                const { error } = await supabaseClient
+                const { error } = await supabase
                     .from('notices')
                     .update({ is_active: newStatus })
                     .eq('id', id);
 
                 if (error) throw error;
-                showToast(newStatus ? '✅ 已显示' : '⏸️ 已隐藏', 'success');
+                showToast(newStatus ? '✅ 已显示' : '⏸️ 已隐藏');
                 await loadNotices();
-                // 手动触发同步
-                localStorage.setItem('_notice_trigger', Date.now().toString());
             } catch(e) {
                 console.error('切换失败:', e);
-                showToast('❌ 操作失败: ' + e.message, 'error');
+                showToast('❌ 操作失败: ' + e.message);
             }
         }
 
-        // ===== 删除通知（修复版） =====
+        // ===== 删除 =====
         async function deleteNotice(id) {
-            if (!supabaseClient) {
-                showToast('⚠️ 未连接', 'error');
-                return;
-            }
+            if (!supabase) { showToast('⚠️ 未连接'); return; }
             try {
                 console.log('🗑️ 正在删除 ID:', id);
-                const { error } = await supabaseClient
+                const { error } = await supabase
                     .from('notices')
                     .delete()
                     .eq('id', id);
@@ -683,126 +603,91 @@
                     console.error('删除错误:', error);
                     throw error;
                 }
-                showToast('🗑️ 已删除', 'success');
+                showToast('🗑️ 已删除');
                 if (navigator.vibrate) navigator.vibrate(10);
-                // 重新加载列表
                 await loadNotices();
-                // 手动触发同步到其他设备
-                localStorage.setItem('_notice_trigger', Date.now().toString());
-                console.log('✅ 删除成功，已同步');
+                console.log('✅ 删除成功');
             } catch(e) {
                 console.error('删除失败:', e);
-                showToast('❌ 删除失败: ' + e.message, 'error');
+                showToast('❌ 删除失败: ' + e.message);
             }
         }
 
-        // ===== Supabase 初始化 =====
+        // ===== Supabase =====
         function initSupabase() {
-            if (SUPABASE_URL.includes('你的项目ID') || SUPABASE_ANON_KEY.includes('你的anon公钥')) {
-                DOM.syncDot.className = 'dot offline';
-                DOM.syncText.textContent = '⚠️ 请配置 Supabase';
-                showToast('⚠️ 请配置 Supabase URL 和 Key', 'error');
+            if (SUPABASE_URL.includes('你的项目ID')) {
+                syncDot.className = 'dot offline';
+                syncText.textContent = '⚠️ 请配置 Supabase';
+                showToast('⚠️ 请配置 Supabase');
                 return;
             }
-            try {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                DOM.syncDot.className = 'dot connecting';
-                DOM.syncText.textContent = '🔄 连接中...';
 
-                // 测试连接
-                supabaseClient.from('notices').select('count').limit(1)
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                syncDot.className = 'dot connecting';
+                syncText.textContent = '🔄 连接中...';
+
+                supabase.from('notices').select('count').limit(1)
                     .then(({ error }) => {
                         if (error) {
-                            console.error('Supabase 连接失败:', error);
-                            DOM.syncDot.className = 'dot offline';
-                            DOM.syncText.textContent = '❌ 连接失败';
-                            showToast('❌ 连接失败: ' + error.message, 'error');
+                            console.error('连接失败:', error);
+                            syncDot.className = 'dot offline';
+                            syncText.textContent = '❌ 连接失败';
+                            showToast('❌ ' + error.message);
                         } else {
-                            DOM.syncDot.className = 'dot online';
-                            DOM.syncText.textContent = '✅ 已连接';
-                            showToast('✅ 已连接 Supabase', 'success');
+                            syncDot.className = 'dot online';
+                            syncText.textContent = '✅ 已连接';
+                            showToast('✅ 已连接');
                             loadNotices();
                             subscribeToNotices();
                         }
                     });
             } catch(e) {
                 console.error('初始化失败:', e);
-                DOM.syncDot.className = 'dot offline';
-                DOM.syncText.textContent = '❌ 初始化失败';
-                showToast('❌ 初始化失败: ' + e.message, 'error');
+                syncDot.className = 'dot offline';
+                syncText.textContent = '❌ 初始化失败';
             }
         }
 
-        // ===== 订阅实时更新 =====
+        // ===== 订阅 =====
         function subscribeToNotices() {
-            if (!supabaseClient || isSubscribed) return;
-            try {
-                supabaseClient
-                    .channel('notices-channel')
-                    .on('postgres_changes', 
-                        { event: '*', schema: 'public', table: 'notices' },
-                        (payload) => {
-                            console.log('📡 收到更新:', payload);
-                            // 重新加载列表
-                            loadNotices();
-                        }
-                    )
-                    .subscribe((status) => {
-                        if (status === 'SUBSCRIBED') {
-                            isSubscribed = true;
-                            console.log('✅ 已订阅通知更新');
-                        } else if (status === 'CHANNEL_ERROR') {
-                            console.warn('⚠️ 订阅出错，尝试重新订阅');
-                            setTimeout(() => {
-                                if (!isSubscribed) subscribeToNotices();
-                            }, 3000);
-                        }
-                    });
-            } catch(e) {
-                console.error('订阅失败:', e);
-            }
+            if (!supabase) return;
+            supabase
+                .channel('notices-channel')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'notices' },
+                    (payload) => {
+                        console.log('📡 收到更新:', payload);
+                        loadNotices();
+                    }
+                )
+                .subscribe((status) => {
+                    console.log('📡 订阅状态:', status);
+                });
         }
 
-        // ===== 监听其他标签页更新 =====
-        window.addEventListener('storage', function(e) {
-            if (e.key === '_notice_trigger') {
-                console.log('📡 收到其他标签页同步信号');
-                loadNotices();
-            }
-        });
+        // ===== 事件 =====
+        addBtn.onclick = function() {
+            addNotice(newInput.value, currentIcon);
+        };
 
-        // ===== 事件绑定 =====
-        DOM.addBtn.addEventListener('click', function() {
-            const text = DOM.newMessageInput.value.trim();
-            addNotice(text, selectedIcon);
-        });
+        newInput.onkeydown = function(e) {
+            if (e.key === 'Enter') addBtn.click();
+        };
 
-        DOM.newMessageInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                DOM.addBtn.click();
-            }
-        });
-
-        DOM.refreshBtn.addEventListener('click', function() {
+        refreshBtn.onclick = function() {
             loadNotices();
-            showToast('🔄 已刷新', 'success');
-        });
+            showToast('🔄 已刷新');
+        };
 
         // ===== 启动 =====
-        // 检测设备
         const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-        DOM.deviceLabel.textContent = isMobile ? '📱 手机端' : '📺 大屏端';
+        deviceLabel.textContent = isMobile ? '📱 手机端' : '📺 大屏端';
 
-        // 初始化图标选择器
         initIconSelector();
-
-        // 初始化 Supabase
         initSupabase();
 
-        console.log('📌 通知管理页面已加载 (修复版)');
-
-        // 暴露刷新方法
-        window.refreshNotices = loadNotices;
+        console.log('📌 通知管理页面已加载 (修复版 v2)');
 
     })();
 </script>
