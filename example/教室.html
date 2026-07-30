@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>智慧教室 · 触屏主页</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- 引入「今日诗词」SDK -->
+    <script src="https://sdk.jinrishici.com/v2/browser/jinrishici.js" charset="utf-8"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
@@ -67,23 +69,65 @@
             border-radius: 40px;
             white-space: nowrap;
         }
-        #motto {
-            font-size: 1.6rem;
-            font-weight: 300;
-            color: #1d3a5c;
+
+        /* ===== 诗词区域（替换原 motto） ===== */
+        #poemContainer {
             background: rgba(255,255,255,0.4);
             backdrop-filter: blur(4px);
-            padding: 12px 30px;
+            padding: 14px 32px;
             border-radius: 80px;
             border: 1px solid rgba(255,255,255,0.6);
             display: inline-flex;
+            flex-direction: column;
             align-items: center;
-            gap: 14px;
-            white-space: nowrap;
+            gap: 2px;
+            max-width: 600px;
+            min-width: 200px;
+            transition: all 0.3s ease;
         }
-        #motto i { color: #b45309; opacity: 0.8; font-size: 1.4rem; }
+        #poemLine {
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: #1d3a5c;
+            line-height: 1.6;
+            text-align: center;
+            word-break: break-word;
+            font-family: "Noto Serif SC", "华文楷体", "KaiTi", "楷体", serif;
+        }
+        #poemLine::before {
+            content: "“";
+            color: #b45309;
+            opacity: 0.5;
+            margin-right: 4px;
+        }
+        #poemLine::after {
+            content: "”";
+            color: #b45309;
+            opacity: 0.5;
+            margin-left: 4px;
+        }
+        #poemInfo {
+            font-size: 0.85rem;
+            color: #5a7a9a;
+            letter-spacing: 2px;
+            font-weight: 300;
+            opacity: 0.8;
+        }
+        #poemInfo::before {
+            content: "—— ";
+        }
 
-        /* 轮播 */
+        /* 当诗句很长时，缩小字号 */
+        @media (max-width: 600px) {
+            #poemLine { font-size: 1.2rem; }
+            #poemContainer { padding: 12px 20px; max-width: 100%; }
+        }
+        @media (max-width: 420px) {
+            #poemLine { font-size: 1.0rem; }
+            #poemContainer { padding: 10px 14px; border-radius: 40px; }
+        }
+
+        /* ===== 轮播 ===== */
         .carousel-container {
             margin-top: 30px;
             width: 100%;
@@ -268,7 +312,8 @@
             #clock { font-size: 5.2rem; }
             #date { font-size: 1.4rem; }
             .weather-box { padding: 8px 18px; font-size: 1rem; flex-wrap: wrap; }
-            #motto { font-size: 1.2rem; padding: 10px 18px; white-space: normal; }
+            #poemContainer { padding: 12px 20px; max-width: 100%; }
+            #poemLine { font-size: 1.3rem; }
             .fab-main { width: 64px; height: 64px; font-size: 1.8rem; }
             .qr-float { bottom: 120px; right: 20px; padding: 8px; }
             .qr-float img { width: 75px; height: 75px; }
@@ -280,6 +325,8 @@
             .info-row { flex-direction: column; gap: 16px; }
             .weather-box { width: 100%; justify-content: center; }
             .qr-float img { width: 60px; height: 60px; }
+            #poemLine { font-size: 1.1rem; }
+            #poemInfo { font-size: 0.75rem; }
         }
     </style>
 </head>
@@ -296,7 +343,11 @@
                 <span class="weather-desc" id="weatherDesc">加载中</span>
                 <span class="weather-location" id="weatherLocation">📍 安庆·宿松</span>
             </div>
-            <div id="motto"><i class="fas fa-quote-left"></i> <span id="mottoText">日日行，不怕千万里</span></div>
+            <!-- ===== 诗词区域（替换原 motto） ===== -->
+            <div id="poemContainer">
+                <span id="poemLine">🌱 正在采撷诗句...</span>
+                <span id="poemInfo"></span>
+            </div>
         </div>
 
         <div class="carousel-container" id="carouselContainer">
@@ -346,7 +397,8 @@
         const tempEl = document.getElementById('temp');
         const weatherDescEl = document.getElementById('weatherDesc');
         const weatherLocation = document.getElementById('weatherLocation');
-        const mottoTextEl = document.getElementById('mottoText');
+        const poemLineEl = document.getElementById('poemLine');
+        const poemInfoEl = document.getElementById('poemInfo');
         const carouselContent = document.getElementById('carouselContent');
         const carouselIndicators = document.getElementById('carouselIndicators');
         const fabMenu = document.getElementById('fabMenu');
@@ -361,7 +413,92 @@
         let currentIndex = 0;
         let carouselTimer = null;
 
-        // ===== 时钟 =====
+        // ============================================================
+        //  📜 诗词相关（使用「今日诗词」SDK + 本地备用库）
+        // ============================================================
+        const fallbackPoems = [
+            { content: "学而不思则罔，思而不学则殆。", dynasty: "春秋", author: "孔子", title: "论语·为政" },
+            { content: "读书破万卷，下笔如有神。", dynasty: "唐代", author: "杜甫", title: "奉赠韦左丞丈二十二韵" },
+            { content: "黑发不知勤学早，白首方悔读书迟。", dynasty: "唐代", author: "颜真卿", title: "劝学" },
+            { content: "问渠那得清如许？为有源头活水来。", dynasty: "宋代", author: "朱熹", title: "观书有感" },
+            { content: "纸上得来终觉浅，绝知此事要躬行。", dynasty: "宋代", author: "陆游", title: "冬夜读书示子聿" },
+            { content: "少壮不努力，老大徒伤悲。", dynasty: "汉代", author: "佚名", title: "长歌行" },
+            { content: "欲穷千里目，更上一层楼。", dynasty: "唐代", author: "王之涣", title: "登鹳雀楼" },
+            { content: "长风破浪会有时，直挂云帆济沧海。", dynasty: "唐代", author: "李白", title: "行路难" },
+            { content: "千淘万漉虽辛苦，吹尽狂沙始到金。", dynasty: "唐代", author: "刘禹锡", title: "浪淘沙" },
+            { content: "业精于勤，荒于嬉；行成于思，毁于随。", dynasty: "唐代", author: "韩愈", title: "进学解" }
+        ];
+
+        function getTodayIndex() {
+            const now = new Date();
+            return now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+        }
+
+        function getFallbackByDate() {
+            const idx = getTodayIndex() % fallbackPoems.length;
+            return fallbackPoems[idx];
+        }
+
+        function displayPoem(poem) {
+            if (poem && poem.content) {
+                poemLineEl.textContent = poem.content;
+                const dynasty = poem.dynasty || '未知朝代';
+                const author = poem.author || '佚名';
+                const title = poem.title || '无题';
+                poemInfoEl.textContent = `【${dynasty}】${author} · 《${title}》`;
+            } else {
+                poemLineEl.textContent = '📖 今日暂无诗句';
+                poemInfoEl.textContent = '';
+            }
+        }
+
+        function showPoemLoading() {
+            poemLineEl.textContent = '🌱 正在采撷诗句...';
+            poemInfoEl.textContent = '';
+        }
+
+        function fetchPoemFromJinrishici() {
+            showPoemLoading();
+
+            if (typeof jinrishici === 'undefined' || !jinrishici.load) {
+                // SDK 未加载，使用备用库（按日期）
+                const poem = getFallbackByDate();
+                displayPoem(poem);
+                return;
+            }
+
+            jinrishici.load(
+                function(result) {
+                    try {
+                        const data = result.data;
+                        if (data && data.content) {
+                            const poem = {
+                                content: data.content,
+                                dynasty: data.origin?.dynasty || '未知朝代',
+                                author: data.origin?.author || '佚名',
+                                title: data.origin?.title || '无题'
+                            };
+                            displayPoem(poem);
+                        } else {
+                            throw new Error('数据格式异常');
+                        }
+                    } catch (e) {
+                        console.warn('解析诗词出错，使用备用库:', e);
+                        const poem = getFallbackByDate();
+                        displayPoem(poem);
+                    }
+                },
+                function(err) {
+                    console.warn('今日诗词 SDK 加载出错:', err);
+                    const poem = getFallbackByDate();
+                    displayPoem(poem);
+                }
+            );
+        }
+
+        // ============================================================
+        //  ⏰ 时钟
+        // ============================================================
         function updateClock() {
             const now = new Date();
             clockEl.textContent = [now.getHours(), now.getMinutes(), now.getSeconds()].map(String).map(s => s.padStart(2,'0')).join(':');
@@ -374,7 +511,9 @@
         updateClock();
         setInterval(updateClock, 1000);
 
-        // ===== 天气 =====
+        // ============================================================
+        //  🌤️ 天气
+        // ============================================================
         function fetchWeather() {
             fetch('https://wttr.in/Anqing-Susong?format=j1&lang=zh')
                 .then(r => r.json())
@@ -391,16 +530,9 @@
         fetchWeather();
         setInterval(fetchWeather, 1800000);
 
-        // ===== 励志 =====
-        function fetchMotto() {
-            fetch('https://api.quotable.io/random?tags=inspirational')
-                .then(r => r.json())
-                .then(d => { if(d?.content) mottoTextEl.textContent = d.content; })
-                .catch(() => {});
-        }
-        fetchMotto();
-
-        // ===== 导航 =====
+        // ============================================================
+        //  🧭 导航
+        // ============================================================
         menuItems.forEach(item => {
             item.onclick = function() {
                 const page = this.dataset.page;
@@ -426,7 +558,9 @@
         };
         fabMenu.onclick = function(e) { e.stopPropagation(); };
 
-        // ===== 轮播 =====
+        // ============================================================
+        //  🎠 轮播
+        // ============================================================
         function renderCarousel() {
             const active = notices.filter(n => n.is_active !== false);
             if (active.length === 0) {
@@ -485,7 +619,9 @@
             if (carouselTimer) { clearInterval(carouselTimer); carouselTimer = null; }
         }
 
-        // ===== Supabase =====
+        // ============================================================
+        //  🗄️ Supabase
+        // ============================================================
         function initSupabase() {
             if (SUPABASE_URL.includes('你的项目ID')) {
                 syncDot.className = 'dot offline';
@@ -542,7 +678,9 @@
                 .subscribe();
         }
 
-        // ===== 二维码 =====
+        // ============================================================
+        //  📱 二维码
+        // ============================================================
         function updateQrCode() {
             const url = window.location.href.split('?')[0].split('#')[0];
             const baseUrl = url.replace(/\/[^\/]*$/, '');
@@ -550,14 +688,38 @@
             qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(baseUrl + '/notice.html')}`;
         }
 
-        // ===== 启动 =====
+        // ============================================================
+        //  🚀 启动
+        // ============================================================
+        // 1. 诗词：先显示今日专属（本地库，秒开），再尝试加载 SDK
+        const dailyPoem = getFallbackByDate();
+        displayPoem(dailyPoem);
+
+        // 2. 延迟尝试从 SDK 获取（不阻塞渲染）
+        setTimeout(() => {
+            if (typeof jinrishici !== 'undefined' && jinrishici.load) {
+                fetchPoemFromJinrishici();
+            } else {
+                // SDK 可能还在加载，再等一次
+                setTimeout(() => {
+                    if (typeof jinrishici !== 'undefined' && jinrishici.load) {
+                        fetchPoemFromJinrishici();
+                    } else {
+                        console.log('SDK 未加载，保留本地诗词');
+                    }
+                }, 1500);
+            }
+        }, 400);
+
+        // 3. 其他功能
         initSupabase();
         updateQrCode();
 
-        console.log('✅ 智慧教室主页已启动 (修复版 v2)');
+        console.log('✅ 智慧教室主页已启动 (诗词版)');
 
         // 暴露刷新方法
         window.refreshNotices = loadNotices;
+        window.refreshPoem = fetchPoemFromJinrishici;
 
     })();
 </script>
