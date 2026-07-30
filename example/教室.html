@@ -485,52 +485,51 @@
         //  轮播功能
         // ============================================================
         function renderCarousel() {
-            const active = notices.filter(n => n.is_active !== false);
-            if (active.length === 0) {
-                carouselContent.innerHTML = `<div class="carousel-empty">📢 暂无通知，请添加</div>`;
-                carouselIndicators.innerHTML = '';
-                return;
-            }
+    const active = notices.filter(n => n.is_active !== false);
+    if (active.length === 0) {
+        carouselContent.innerHTML = `<div class="carousel-empty">📢 暂无通知，请添加</div>`;
+        carouselIndicators.innerHTML = '';
+        return;
+    }
 
-            // 构建轮播内容
-            let html = '';
-            active.forEach((n, i) => {
-                const time = new Date(n.updated_at).toLocaleString('zh-CN', { hour12: false, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-                html += `
-                    <div class="carousel-slide" data-index="${i}" style="${i === currentIndex ? 'display:block;' : 'display:none;'}">
-                        <div class="content">${n.content}</div>
-                        <div class="meta">${time}</div>
-                    </div>
-                `;
-            });
-            carouselContent.innerHTML = html;
+    let html = '';
+    active.forEach((n, i) => {
+        const icon = n.icon || '📢';
+        const time = new Date(n.updated_at).toLocaleString('zh-CN', { hour12: false, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        html += `
+            <div class="carousel-slide" data-index="${i}" style="${i === currentIndex ? 'display:block;' : 'display:none;'}">
+                <div class="content"><span style="font-size:2.2rem;margin-right:12px;">${icon}</span>${n.content}</div>
+                <div class="meta">${time}</div>
+            </div>
+        `;
+    });
+    carouselContent.innerHTML = html;
 
-            // 指示器
-            let indicatorsHtml = '';
-            active.forEach((n, i) => {
-                indicatorsHtml += `<span class="dot ${i === currentIndex ? 'active' : ''}" data-index="${i}"></span>`;
-            });
-            carouselIndicators.innerHTML = indicatorsHtml;
+    // 指示器
+    let indicatorsHtml = '';
+    active.forEach((n, i) => {
+        indicatorsHtml += `<span class="dot ${i === currentIndex ? 'active' : ''}" data-index="${i}"></span>`;
+    });
+    carouselIndicators.innerHTML = indicatorsHtml;
 
-            // 点击指示器切换
-            document.querySelectorAll('.carousel-indicators .dot').forEach(dot => {
-                dot.addEventListener('click', function() {
-                    const idx = parseInt(this.dataset.index);
-                    goToSlide(idx);
-                });
-                dot.addEventListener('touchstart', function(e) {
-                    const idx = parseInt(this.dataset.index);
-                    goToSlide(idx);
-                }, { passive: true });
-            });
+    // 点击指示器切换
+    document.querySelectorAll('.carousel-indicators .dot').forEach(dot => {
+        dot.addEventListener('click', function() {
+            const idx = parseInt(this.dataset.index);
+            goToSlide(idx);
+        });
+        dot.addEventListener('touchstart', function(e) {
+            const idx = parseInt(this.dataset.index);
+            goToSlide(idx);
+        }, { passive: true });
+    });
 
-            // 如果没有消息，停止定时器
-            if (active.length <= 1) {
-                stopCarousel();
-            } else {
-                startCarousel();
-            }
-        }
+    if (active.length <= 1) {
+        stopCarousel();
+    } else {
+        startCarousel();
+    }
+}
 
         function goToSlide(index) {
             const slides = document.querySelectorAll('.carousel-slide');
